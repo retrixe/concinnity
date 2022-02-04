@@ -1,3 +1,9 @@
-import { createTheme } from '@mui/material'
+import { createTheme as createMuiTheme } from '@mui/material'
 
-export default createTheme()
+const createTheme = (darkMode: boolean) => createMuiTheme({
+  palette: {
+    mode: darkMode ? 'dark' : 'light'
+  }
+})
+
+export default createTheme

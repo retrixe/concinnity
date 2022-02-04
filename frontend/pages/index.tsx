@@ -1,9 +1,17 @@
 import React from 'react'
+import Title from '../imports/components/title'
+import { AppDiv, TopBar } from '../imports/components/layout'
 
-const Index = () => {
+const IndexPage = () => {
   return (
-    <p>Hello, world!</p>
+    <>
+      <Title title='Home - Concinnity' url='/' description='' />
+      <TopBar />
+      <AppDiv>
+        <p>Hello, world!</p>
+      </AppDiv>
+    </>
   )
 }
 
-export default Index
+export default IndexPage

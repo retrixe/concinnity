@@ -2,7 +2,7 @@ import React from 'react'
 import Document, { Html, Head, Main, NextScript } from 'next/document'
 import createEmotionServer from '@emotion/server/create-instance'
 import createCache from '@emotion/cache'
-import theme from '../imports/theme'
+import createTheme from '../imports/theme'
 
 const ico = '/favicon.png'
 
@@ -14,7 +14,7 @@ class MyDocument extends Document {
           <link rel='icon' href={ico} />
           <meta charSet='utf-8' />
           {/* PWA primary color */}
-          <meta name='theme-color' content={theme.palette.primary.main} />
+          <meta name='theme-color' content={createTheme(false).palette.primary.main} />
           {/* Open Graph Protocol support. */}
           <meta property='og:type' content='website' />
           <meta property='og:image' content={ico} />
