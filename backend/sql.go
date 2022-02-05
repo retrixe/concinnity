@@ -10,19 +10,19 @@ var findUserByNameEmailStmt *sql.Stmt
 var insertTokenStmt *sql.Stmt
 var deleteTokenStmt *sql.Stmt
 
-const findUserByTokenQuery = "SELECT username, password, email, id, token, createdAt from tokens " +
-	"JOIN users ON tokens.id = users.id WHERE token = ? LIMIT 1;"
+const findUserByTokenQuery = "SELECT username, password, email, tokens.id as id, token, createdAt FROM tokens " +
+	"JOIN users ON tokens.id = users.id WHERE token = $1;"
 const findUserByNameEmailQuery = "SELECT username, password, email, id FROM users " +
-	"WHERE username = ? OR email = ? LIMIT 1;"
-const insertTokenQuery = "INSERT INTO tokens (username, token, createdAt, id) VALUES (?, ?, ?, ?);"
-const deleteTokenQuery = "DELETE FROM tokens WHERE token = ?;"
+	"WHERE username = $1 OR email = $2 LIMIT 1;"
+const insertTokenQuery = "INSERT INTO tokens (token, createdAt, id) VALUES ($1, $2, $3);"
+const deleteTokenQuery = "DELETE FROM tokens WHERE token = $1;"
 
-const createUsersTableQuery = `CREATE TABLE users (
+const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
 	username VARCHAR(16) UNIQUE,
 	password VARCHAR(100),
 	email TEXT UNIQUE,
 	id UUID UNIQUE);`
-const createTokensTableQuery = `CREATE TABLE tokens (
+const createTokensTableQuery = `CREATE TABLE IF NOT EXISTS tokens (
 	token VARCHAR(128) UNIQUE,
 	createdAt TIMESTAMPTZ,
 	id UUID);`
