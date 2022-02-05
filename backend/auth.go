@@ -26,8 +26,29 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
 			http.StatusUnauthorized)
 		return nil
 	} else {
-		// TODO: Set properties on t if not nil.
-		return &User{} // TODO
+		var (
+			username  string
+			password  string
+			email     string
+			id        []byte
+			token     string
+			createdAt time.Time
+		)
+		err := res.Scan(&username, &password, &email, &id, &token, &createdAt)
+		if err != nil {
+			handleInternalServerError(w, err)
+			return nil
+		} else if t != nil {
+			t.CreatedAt = createdAt
+			t.Token = token
+			t.ID = id
+		}
+		return &User{
+			Username: username,
+			Password: password,
+			Email:    email,
+			ID:       id,
+		}
 	}
 }
 
