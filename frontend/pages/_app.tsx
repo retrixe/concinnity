@@ -2,7 +2,7 @@ import React from 'react'
 import Head from 'next/head'
 import { AppProps } from 'next/app'
 import createCache from '@emotion/cache'
-import { RecoilRoot, useRecoilValue } from 'recoil'
+import { RecoilRoot, useRecoilState } from 'recoil'
 import { CacheProvider, EmotionCache } from '@emotion/react'
 import { useMediaQuery, ThemeProvider, CssBaseline } from '@mui/material'
 import { darkModeAtom } from '../imports/recoil-atoms'
@@ -12,10 +12,26 @@ import createTheme from '../imports/theme'
 const clientSideEmotionCache = createCache({ key: 'css' })
 
 function AppThemeProvider (props: React.PropsWithChildren<{}>) {
+  const [darkMode, setDarkMode] = useRecoilState(darkModeAtom)
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
-  const darkMode = useRecoilValue(darkModeAtom)
-  const darkModeSetting = darkMode === true ? true : (darkMode === false ? false : prefersDarkMode)
+  const darkModeSetting = darkMode === true || (darkMode === undefined && prefersDarkMode)
   const theme = React.useMemo(() => createTheme(darkModeSetting), [darkModeSetting])
+
+  // Save darkMode to localStorage.
+  React.useEffect(() => {
+    if (typeof localStorage === 'undefined') return
+    const darkModePref = localStorage.getItem('darkMode')
+    if (darkModePref === 'true') setDarkMode(true)
+    else if (darkModePref === 'false') setDarkMode(false)
+    else if (darkModePref === 'system') setDarkMode(undefined)
+  }, [setDarkMode])
+  React.useEffect(() => {
+    if (typeof localStorage === 'undefined') return
+    localStorage.setItem('darkMode', darkMode === true
+      ? 'true'
+      : (darkMode === false ? 'false' : 'system'))
+  }, [darkMode])
+
   return <ThemeProvider theme={theme}>{props.children}</ThemeProvider>
 }
 
