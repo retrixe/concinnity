@@ -9,8 +9,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// TODO: log internal server errors
-
 /*
 Endpoints:
 - GET /

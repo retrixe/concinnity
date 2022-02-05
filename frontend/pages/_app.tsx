@@ -2,7 +2,7 @@ import React from 'react'
 import Head from 'next/head'
 import { AppProps } from 'next/app'
 import createCache from '@emotion/cache'
-import { RecoilRoot, useRecoilState } from 'recoil'
+import { RecoilRoot, useRecoilValue } from 'recoil'
 import { CacheProvider, EmotionCache } from '@emotion/react'
 import { useMediaQuery, ThemeProvider, CssBaseline } from '@mui/material'
 import { darkModeAtom } from '../imports/recoil-atoms'
@@ -13,7 +13,7 @@ const clientSideEmotionCache = createCache({ key: 'css' })
 
 function AppThemeProvider (props: React.PropsWithChildren<{}>) {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
-  const [darkMode] = useRecoilState(darkModeAtom)
+  const darkMode = useRecoilValue(darkModeAtom)
   const darkModeSetting = darkMode === true ? true : (darkMode === false ? false : prefersDarkMode)
   const theme = React.useMemo(() => createTheme(darkModeSetting), [darkModeSetting])
   return <ThemeProvider theme={theme}>{props.children}</ThemeProvider>

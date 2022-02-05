@@ -19,7 +19,7 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
 
 	res, err := findUserByTokenStmt.Query(token)
 	if err != nil {
-		http.Error(w, errorJson("Internal Server Error!"), http.StatusInternalServerError)
+		handleInternalServerError(w, err)
 		return nil
 	} else if !res.Next() {
 		http.Error(w, errorJson("You are not authenticated to access this resource!"),
@@ -68,7 +68,7 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, errorJson("No account with this username/email exists!"), http.StatusBadRequest)
 			return
 		} else if err != nil {
-			http.Error(w, errorJson("Internal Server Error!"), http.StatusInternalServerError)
+			handleInternalServerError(w, err)
 			return
 		}
 		tokenBytes := make([]byte, 64)
@@ -76,10 +76,10 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 		token := hex.EncodeToString(tokenBytes)
 		result, err := insertTokenStmt.Exec(user.Username, token, time.Now().UTC(), user.ID)
 		if err != nil {
-			http.Error(w, errorJson("Internal Server Error!"), http.StatusInternalServerError)
+			handleInternalServerError(w, err)
 			return
-		} else if rows, err := result.RowsAffected(); err != nil || rows == 1 {
-			http.Error(w, errorJson("Internal Server Error!"), http.StatusInternalServerError)
+		} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
+			handleInternalServerError(w, err) // nil err solved by Ostrich algorithm
 			return
 		}
 		// Add cookie to browser.
@@ -107,12 +107,12 @@ func LogoutEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 		result, err := deleteTokenStmt.Exec(token.Token)
 		if err != nil {
-			http.Error(w, errorJson("Internal Server Error!"), http.StatusInternalServerError)
+			handleInternalServerError(w, err)
 			return
 		}
 		rows, err := result.RowsAffected()
 		if err != nil {
-			http.Error(w, errorJson("Internal Server Error!"), http.StatusInternalServerError)
+			handleInternalServerError(w, err)
 			return
 		} else if rows == 0 {
 			http.Error(w, errorJson("You are not authenticated to access this resource!"),
