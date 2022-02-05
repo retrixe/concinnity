@@ -11,12 +11,28 @@ import (
 	"time"
 )
 
-func IsAuthenticated(w http.ResponseWriter, r *http.Request) bool {
-	return true // TODO
+func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
+	token := r.Header.Get("token")
+	if cookie, err := r.Cookie("token"); err == nil {
+		token = cookie.Value
+	}
+
+	res, err := findUserByTokenStmt.Query(token)
+	if err != nil {
+		http.Error(w, errorJson("Internal Server Error!"), http.StatusInternalServerError)
+		return nil
+	} else if !res.Next() {
+		http.Error(w, errorJson("You are not authenticated to access this resource!"),
+			http.StatusUnauthorized)
+		return nil
+	} else {
+		// TODO: Set properties on t if not nil.
+		return &User{} // TODO
+	}
 }
 
 func StatusEndpoint(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" && IsAuthenticated(w, r) {
+	if r.Method == "GET" && IsAuthenticated(w, r, nil) != nil {
 		w.Write([]byte("{\"online\":true,\"authenticated\":true}"))
 	} else if r.Method == "GET" {
 		w.Write([]byte("{\"online\":true,\"authenticated\":false}"))
@@ -71,7 +87,7 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 			Name:     "token",
 			Value:    token,
 			HttpOnly: true,
-			// TODO: Secure
+			Secure:   secureCookies,
 			MaxAge:   3600 * 24 * 31,
 			SameSite: http.SameSiteStrictMode,
 		})
@@ -85,13 +101,11 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 
 func LogoutEndpoint(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		token := r.Header.Get("Authorization")
-		if token == "" {
-			http.Error(w, "{\"error\":\"You are not authenticated to access this resource!\"}",
-				http.StatusUnauthorized)
+		token := Token{}
+		if IsAuthenticated(w, r, &token) == nil {
 			return
 		}
-		result, err := deleteTokenStmt.Exec(token)
+		result, err := deleteTokenStmt.Exec(token.Token)
 		if err != nil {
 			http.Error(w, errorJson("Internal Server Error!"), http.StatusInternalServerError)
 			return
@@ -101,7 +115,7 @@ func LogoutEndpoint(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, errorJson("Internal Server Error!"), http.StatusInternalServerError)
 			return
 		} else if rows == 0 {
-			http.Error(w, "{\"error\":\"You are not authenticated to access this resource!\"}",
+			http.Error(w, errorJson("You are not authenticated to access this resource!"),
 				http.StatusUnauthorized)
 			return
 		}
@@ -110,7 +124,7 @@ func LogoutEndpoint(w http.ResponseWriter, r *http.Request) {
 			Name:     "token",
 			Value:    "null",
 			HttpOnly: true,
-			// TODO: Secure
+			Secure:   secureCookies,
 			MaxAge:   -1,
 			SameSite: http.SameSiteStrictMode,
 		})

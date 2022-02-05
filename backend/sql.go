@@ -10,7 +10,8 @@ var findUserByNameEmailStmt *sql.Stmt
 var insertTokenStmt *sql.Stmt
 var deleteTokenStmt *sql.Stmt
 
-const findUserByTokenQuery = "" // TODO
+const findUserByTokenQuery = "SELECT username, password, email, id, token, createdAt from tokens " +
+	"JOIN users ON tokens.id = users.id WHERE token = ? LIMIT 1;"
 const findUserByNameEmailQuery = "SELECT username, password, email, id FROM users " +
 	"WHERE username = ? OR email = ? LIMIT 1;"
 const insertTokenQuery = "INSERT INTO tokens (username, token, createdAt, id) VALUES (?, ?, ?, ?);"
@@ -22,10 +23,9 @@ const createUsersTableQuery = `CREATE TABLE users (
 	email TEXT UNIQUE,
 	id UUID UNIQUE);`
 const createTokensTableQuery = `CREATE TABLE tokens (
-	username VARCHAR(16) UNIQUE,
 	token VARCHAR(128) UNIQUE,
 	createdAt TIMESTAMPTZ,
-	id UUID UNIQUE);`
+	id UUID);`
 
 // TODO rooms - members, id, chat, timestamp, paused, lastActionTime, createdAt
 

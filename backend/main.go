@@ -9,6 +9,8 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// TODO: log internal server errors
+
 /*
 Endpoints:
 - GET /
@@ -20,15 +22,17 @@ Endpoints:
 */
 
 var db *sql.DB
+var secureCookies bool
 
 func main() {
+	log.SetOutput(os.Stderr)
 	// TODO: use environment variables or config
-	// Initialise everything to do with SQL.
+	secureCookies = false
 	connStr := "dbname=concinnity user=postgres host=localhost password=postgres sslmode=disable"
 	var err error
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatal(err)
+		log.Panicln("Failed to open connection to database!", err)
 	}
 	CreateSqlTables()
 	PrepareSqlStatements()
@@ -55,6 +59,8 @@ func main() {
 	if os.Getenv("PORT") != "" {
 		port = os.Getenv("PORT")
 	}
+	log.SetOutput(os.Stdout)
 	log.Println("Listening to port " + port)
+	log.SetOutput(os.Stderr)
 	http.ListenAndServe(":"+port, nil)
 }
