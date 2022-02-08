@@ -97,7 +97,7 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 		tokenBytes := make([]byte, 64)
 		_, _ = rand.Read(tokenBytes)
 		token := hex.EncodeToString(tokenBytes)
-		result, err := insertTokenStmt.Exec(user.Username, token, time.Now().UTC(), user.ID)
+		result, err := insertTokenStmt.Exec(token, time.Now().UTC(), user.ID)
 		if err != nil {
 			handleInternalServerError(w, err)
 			return
@@ -106,7 +106,7 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// Add cookie to browser.
-		r.AddCookie(&http.Cookie{
+		http.SetCookie(w, &http.Cookie{
 			Name:     "token",
 			Value:    token,
 			HttpOnly: true,
@@ -143,7 +143,7 @@ func LogoutEndpoint(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// Delete cookie on browser.
-		r.AddCookie(&http.Cookie{
+		http.SetCookie(w, &http.Cookie{
 			Name:     "token",
 			Value:    "null",
 			HttpOnly: true,

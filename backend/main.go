@@ -66,7 +66,7 @@ func main() {
 	http.ListenAndServe(":"+port, handlers.CORS(
 		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PATCH", "DELETE", "OPTIONS"}),
 		handlers.AllowedHeaders([]string{"Content-Type", "Authentication"}),
-		handlers.AllowedOrigins([]string{"*"}),
+		handlers.AllowedOrigins([]string{"*"}), // Breaks credentialed auth
 		handlers.AllowCredentials(),
 	)(http.DefaultServeMux))
 }
