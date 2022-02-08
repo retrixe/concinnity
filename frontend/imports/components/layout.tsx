@@ -11,13 +11,13 @@ const TopBarCenteredContent = styled.div({})
 
 export const FlexSpacer = styled.div({ flex: 1 })
 
-export const TopBar = () => {
+export const TopBar = (props: { variant?: 'dense' }) => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom) // System then Dark then Light
   const themeToggle = () => setDarkMode(state => state === false ? undefined : state !== true)
   return (
     <AppBar position='static' enableColorOnDark elevation={1}>
       <TopBarCenteredContent>
-        <Toolbar variant='dense'>
+        <Toolbar variant={props.variant}>
           <Typography variant='h6'>Concinnity</Typography>
           <FlexSpacer />
           <IconButton color='inherit' onClick={themeToggle}>
