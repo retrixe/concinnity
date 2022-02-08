@@ -12,7 +12,7 @@ import (
 )
 
 func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
-	token := r.Header.Get("token")
+	token := r.Header.Get("Authentication")
 	if cookie, err := r.Cookie("token"); err == nil {
 		token = cookie.Value
 	}
@@ -22,8 +22,10 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
 		handleInternalServerError(w, err)
 		return nil
 	} else if !res.Next() {
-		http.Error(w, errorJson("You are not authenticated to access this resource!"),
-			http.StatusUnauthorized)
+		if w != nil {
+			http.Error(w, errorJson("You are not authenticated to access this resource!"),
+				http.StatusUnauthorized)
+		}
 		return nil
 	} else {
 		var (
@@ -53,7 +55,7 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
 }
 
 func StatusEndpoint(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" && IsAuthenticated(w, r, nil) != nil {
+	if r.Method == "GET" && IsAuthenticated(nil, r, nil) != nil {
 		w.Write([]byte("{\"online\":true,\"authenticated\":true}"))
 	} else if r.Method == "GET" {
 		w.Write([]byte("{\"online\":true,\"authenticated\":false}"))

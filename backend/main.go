@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/handlers"
 	_ "github.com/lib/pq"
 )
 
@@ -14,8 +15,9 @@ Endpoints:
 - GET /
 - POST /api/login
 - POST /api/logout
-- GET/POST/PATCH/DELETE /api/room/:id
-- WS /api/room/:id/connect
+TODO: Finish design and work on their API.
+- POST /api/register
+- GET/POST/PATCH/DELETE/WS /api/room/:id
 - POST /api/room/:id/join
 */
 
@@ -35,6 +37,7 @@ func main() {
 	CreateSqlTables()
 	PrepareSqlStatements()
 
+	// TODO: use gin maybe
 	// Endpoints
 	http.HandleFunc("/", StatusEndpoint)
 	http.HandleFunc("/api/login", LoginEndpoint)
@@ -60,5 +63,10 @@ func main() {
 	log.SetOutput(os.Stdout)
 	log.Println("Listening to port " + port)
 	log.SetOutput(os.Stderr)
-	http.ListenAndServe(":"+port, nil)
+	http.ListenAndServe(":"+port, handlers.CORS(
+		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PATCH", "DELETE", "OPTIONS"}),
+		handlers.AllowedHeaders([]string{"Content-Type", "Authentication"}),
+		handlers.AllowedOrigins([]string{"*"}),
+		handlers.AllowCredentials(),
+	)(http.DefaultServeMux))
 }
