@@ -36,7 +36,7 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
         if (res.error) setError(res.error)
         else {
           localStorage.setItem('token', res.token)
-          setLoginStatus(true)
+          setLoginStatus(res.username)
           handleClose()
         }
       } catch (e) { setError('An unknown network error occurred.') }

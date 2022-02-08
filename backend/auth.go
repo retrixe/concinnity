@@ -55,12 +55,13 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
 }
 
 func StatusEndpoint(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" && IsAuthenticated(nil, r, nil) != nil {
-		w.Write([]byte("{\"online\":true,\"authenticated\":true}"))
-	} else if r.Method == "GET" {
-		w.Write([]byte("{\"online\":true,\"authenticated\":false}"))
-	} else {
+	if r.Method != "GET" {
 		http.Error(w, errorJson("Method Not Allowed!"), http.StatusMethodNotAllowed)
+	} else if user := IsAuthenticated(nil, r, nil); user != nil {
+		usernameJson, _ := json.Marshal(user.Username)
+		w.Write([]byte("{\"online\":true,\"authenticated\":true,\"username\":" + string(usernameJson) + "}"))
+	} else {
+		w.Write([]byte("{\"online\":true,\"authenticated\":false}"))
 	}
 }
 
@@ -115,8 +116,9 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 			SameSite: http.SameSiteStrictMode,
 		})
 		json.NewEncoder(w).Encode(struct {
-			Token string `json:"token"`
-		}{Token: token})
+			Token    string `json:"token"`
+			Username string `json:"username"`
+		}{Token: token, Username: user.Username})
 	} else {
 		http.Error(w, errorJson("Method Not Allowed!"), http.StatusMethodNotAllowed)
 	}

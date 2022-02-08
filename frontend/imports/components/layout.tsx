@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import styled from '@emotion/styled'
-import { useRouter } from 'next/router'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilState } from 'recoil'
 import { AppBar, IconButton, Toolbar, Tooltip, Typography } from '@mui/material'
 import SettingsBrightnessOutlined from '@mui/icons-material/SettingsBrightnessOutlined'
 import LightModeOutlined from '@mui/icons-material/LightModeOutlined'
@@ -17,9 +16,8 @@ const TopBarCenteredContent = styled.div({})
 export const FlexSpacer = styled.div({ flex: 1 })
 
 export const TopBar = (props: { variant?: 'dense' }) => {
-  const router = useRouter()
-  const loginStatus = useRecoilValue(loginStatusAtom)
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom) // System then Dark then Light
+  const [loginStatus, setLoginStatus] = useRecoilState(loginStatusAtom)
   const [loginDialog, setLoginDialog] = useState(false)
 
   const themeToggle = () => setDarkMode(state => state === false ? undefined : state !== true)
@@ -27,8 +25,9 @@ export const TopBar = (props: { variant?: 'dense' }) => {
     const token = localStorage.getItem('token')
     if (loginStatus && token) {
       fetch(config.serverUrl + '/api/logout', { method: 'POST', headers: { Authentication: token } })
+        .then(() => localStorage.removeItem('token'))
+        .then(() => setLoginStatus(false))
         .catch(console.error)
-      router.push('/').catch(console.error)
     } else setLoginDialog(true)
   }
 
