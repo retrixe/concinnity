@@ -1,3 +1,4 @@
+/** @jsxImportSource @emotion/react */
 import React, { useRef, useState } from 'react'
 import { useSetRecoilState } from 'recoil'
 import {
@@ -18,24 +19,34 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const handleClose = () => {
+    setUsername('')
+    setPassword('')
+    setError('')
+    props.handleClose()
+  }
   const handleLoginDialog = async () => {
     if (username && password) {
       try {
-        const req = await fetch(config.serverUrl + '/login')
+        const req = await fetch(config.serverUrl + '/api/login', {
+          method: 'POST',
+          body: JSON.stringify({ username, password })
+        })
         const res = await req.json()
         if (res.error) setError(res.error)
         else {
+          localStorage.setItem('token', res.token)
           setLoginStatus(true)
-          props.handleClose()
+          handleClose()
         }
-      } catch (e) { }
+      } catch (e) { setError('An unknown network error occurred.') }
     } else if (!username) setError('Enter a username or e-mail.')
     else if (!password) setError('Enter a password.')
   }
   return (
-    <Dialog open={props.shown} onClose={props.handleClose}>
+    <Dialog open={props.shown} onClose={handleClose}>
       <DialogTitle>Login</DialogTitle>
-      <DialogContent>
+      <DialogContent css={{ paddingBottom: 0 }}>
         <TextField
           value={username} onChange={e => setUsername(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && passwordRef.current?.focus()}
@@ -46,7 +57,7 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
           onKeyDown={e => e.key === 'Enter' && handleLoginDialog()}
           margin='dense' label='Password' type='password' fullWidth inputRef={passwordRef}
         />
-        <Typography color='error'>{error}</Typography>
+        <Typography color='error' css={{ marginTop: 8 }} gutterBottom>{error}</Typography>
       </DialogContent>
       <DialogActions>
         <Button disabled>Register (N/A)</Button>

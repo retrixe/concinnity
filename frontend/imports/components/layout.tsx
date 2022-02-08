@@ -24,8 +24,10 @@ export const TopBar = (props: { variant?: 'dense' }) => {
 
   const themeToggle = () => setDarkMode(state => state === false ? undefined : state !== true)
   const handleLogin = () => {
-    if (loginStatus) {
-      fetch(config.serverUrl + '/logout').catch(console.error)
+    const token = localStorage.getItem('token')
+    if (loginStatus && token) {
+      fetch(config.serverUrl + '/api/logout', { method: 'POST', headers: { Authentication: token } })
+        .catch(console.error)
       router.push('/').catch(console.error)
     } else setLoginDialog(true)
   }
