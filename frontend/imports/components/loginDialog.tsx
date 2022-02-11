@@ -19,12 +19,14 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+
   const handleClose = () => {
     setUsername('')
     setPassword('')
     setError('')
     props.handleClose()
   }
+
   const handleLoginDialog = async () => {
     if (username && password) {
       try {
@@ -43,9 +45,11 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
     } else if (!username) setError('Enter a username or e-mail.')
     else if (!password) setError('Enter a password.')
   }
+
   return (
     <Dialog open={props.shown} onClose={handleClose}>
       <DialogTitle>Login</DialogTitle>
+
       <DialogContent css={{ paddingBottom: 0 }}>
         <TextField
           value={username} onChange={e => setUsername(e.target.value)}
@@ -59,6 +63,7 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
         />
         <Typography color='error' css={{ marginTop: 8 }} gutterBottom>{error}</Typography>
       </DialogContent>
+
       <DialogActions>
         <Button disabled>Register (N/A)</Button>
         <Button onClick={handleLoginDialog}>Login</Button>

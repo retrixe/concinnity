@@ -18,13 +18,17 @@ export const darkModeAtom = atom<boolean | undefined>({
 export const loginStatusAtom = atom<false | string>({
   key: 'loginStatus',
   default: false,
-  effects: [({ setSelf }) => { // TODO: Make this a separate function? Run in intervals?
+  effects: [({ setSelf }) => {
     if (typeof localStorage === 'undefined') return
-    const token = localStorage.getItem('token')
-    if (!token) return
-    fetch(config.serverUrl, { headers: { Authentication: token } })
-      .then(async res => await res.json())
-      .then(res => setSelf(res.username))
-      .catch(console.error)
+    const loadAtomState = () => {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      fetch(config.serverUrl, { headers: { Authentication: token } })
+        .then(async res => await res.json())
+        .then(res => setSelf(res.username))
+        .catch(console.error)
+    }
+    loadAtomState()
+    setInterval(loadAtomState, 5000)
   }]
 })

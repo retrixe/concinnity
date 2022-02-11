@@ -14,13 +14,21 @@ const IndexPage = () => {
   })
   return (
     <>
-      <Title title='Home - Concinnity' url='/' description='' />
+      <Title
+        title='Concinnity' url='/'
+        description='Concinnity - Watch video files together with others on the internet.'
+      />
       <TopBar />
       <AppDiv>
         <Typography variant='h5' align='center'>
           Watch video files together with others on the internet.
         </Typography>
-        <Typography align='center'>Concinnity handles syncing up the video for you \o/</Typography>
+        <Typography align='center'>
+          Concinnity handles syncing up the video for you \o/
+        </Typography>
+        <Typography align='center'>
+          To start, login at the top right of the page.
+        </Typography>
       </AppDiv>
     </>
   )

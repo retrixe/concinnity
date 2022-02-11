@@ -12,9 +12,17 @@ const IndexPage = () => {
   React.useEffect(() => {
     if (!loginStatus) router.replace('/').catch(console.error)
   })
+
+  const handleStartWatching = () => {
+    // TODO: Create a new room, then go to the page /room/:id.
+  }
+
   return (
     <>
-      <Title title='Home - Concinnity' url='/' description='' />
+      <Title
+        title='Home - Concinnity' url='/home'
+        description='Concinnity - Watch video files together with others on the internet.'
+      />
       <TopBar />
       <AppDiv>
         <Typography variant='h5' align='center'>
@@ -24,7 +32,7 @@ const IndexPage = () => {
           Concinnity handles syncing up the video for you \o/
         </Typography>
         <Typography align='center'>
-          <Button variant='contained'>Start Watching</Button>
+          <Button variant='contained' onClick={handleStartWatching}>Start Watching</Button>
         </Typography>
       </AppDiv>
     </>
