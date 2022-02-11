@@ -15,8 +15,8 @@ Endpoints:
 - GET /
 - POST /api/login
 - POST /api/logout
-TODO: Finish design and work on their API.
 - POST /api/register
+TODO: Finish design and work on their API.
 - GET/POST/PATCH/DELETE/WS /api/room/:id
 - POST /api/room/:id/join
 */
@@ -42,6 +42,7 @@ func main() {
 	http.HandleFunc("/", StatusEndpoint)
 	http.HandleFunc("/api/login", LoginEndpoint)
 	http.HandleFunc("/api/logout", LogoutEndpoint)
+	http.HandleFunc("/api/register", RegisterEndpoint)
 	http.HandleFunc("/api/room", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
