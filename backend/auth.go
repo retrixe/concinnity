@@ -18,6 +18,13 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
 	if cookie, err := r.Cookie("token"); err == nil {
 		token = cookie.Value
 	}
+	if token == "" {
+		if w != nil {
+			http.Error(w, errorJson("You are not authenticated to access this resource!"),
+				http.StatusUnauthorized)
+		}
+		return nil
+	}
 
 	res, err := findUserByTokenStmt.Query(token)
 	if err != nil {
@@ -35,10 +42,11 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
 			password  string
 			email     string
 			id        []byte
+			verified  bool
 			token     string
 			createdAt time.Time
 		)
-		err := res.Scan(&username, &password, &email, &id, &token, &createdAt)
+		err := res.Scan(&username, &password, &email, &id, &verified, &token, &createdAt)
 		if err != nil {
 			handleInternalServerError(w, err)
 			return nil
@@ -52,6 +60,7 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
 			Password: password,
 			Email:    email,
 			ID:       id,
+			Verified: verified,
 		}
 	}
 }
@@ -89,12 +98,15 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 		var user User
 		err = findUserByNameOrEmailStmt.QueryRow(data.Username, data.Username).Scan(
-			&user.Username, &user.Password, &user.Email, &user.ID)
+			&user.Username, &user.Password, &user.Email, &user.ID, &user.Verified)
 		if err != nil && errors.Is(err, sql.ErrNoRows) {
-			http.Error(w, errorJson("No account with this username/email exists!"), http.StatusBadRequest)
+			http.Error(w, errorJson("No account with this username/email exists!"), http.StatusUnauthorized)
 			return
 		} else if err != nil {
 			handleInternalServerError(w, err)
+			return
+		} else if !user.Verified {
+			http.Error(w, errorJson("Your account is not verified yet!"), http.StatusForbidden)
 			return
 		}
 		tokenBytes := make([]byte, 64)
@@ -182,10 +194,9 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, errorJson("No username, e-mail or password provided!"), http.StatusBadRequest)
 			return
 		} // TODO: Check if username, password and e-mail are valid.
-		// TODO: Implement e-mail verification in some form
 		// Check if an account with this username or email already exists.
 		var u User
-		err = findUserByEmailStmt.QueryRow(data.Email).Scan(&u.Username, &u.Password, &u.Email, &u.ID)
+		err = findUserByEmailStmt.QueryRow(data.Email).Scan(&u.Username, &u.Password, &u.Email, &u.ID, &u.Verified)
 		if err == nil {
 			http.Error(w, errorJson("An account with this e-mail already exists!"), http.StatusConflict)
 			return
@@ -193,7 +204,7 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 			handleInternalServerError(w, err)
 			return
 		}
-		err = findUserByUsernameStmt.QueryRow(data.Username).Scan(&u.Username, &u.Password, &u.Email, &u.ID)
+		err = findUserByUsernameStmt.QueryRow(data.Username).Scan(&u.Username, &u.Password, &u.Email, &u.ID, &u.Verified)
 		if err == nil {
 			http.Error(w, errorJson("An account with this username already exists!"), http.StatusConflict)
 			return
@@ -204,7 +215,7 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 		// Create the account.
 		hash := HashPassword(data.Password, GenerateSalt())
 		uuid := uuid.New()
-		result, err := insertUserStmt.Exec(data.Username, hash, data.Email, uuid)
+		result, err := createUserStmt.Exec(data.Username, hash, data.Email, uuid)
 		if err != nil {
 			handleInternalServerError(w, err)
 			return
@@ -212,31 +223,7 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 			handleInternalServerError(w, err) // nil err solved by Ostrich algorithm
 			return
 		}
-		// Log the user in.
-		tokenBytes := make([]byte, 64)
-		_, _ = rand.Read(tokenBytes)
-		token := hex.EncodeToString(tokenBytes)
-		result, err = insertTokenStmt.Exec(token, time.Now().UTC(), uuid)
-		if err != nil {
-			handleInternalServerError(w, err)
-			return
-		} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
-			handleInternalServerError(w, err) // nil err solved by Ostrich algorithm
-			return
-		}
-		// Add cookie to browser.
-		http.SetCookie(w, &http.Cookie{
-			Name:     "token",
-			Value:    token,
-			HttpOnly: true,
-			Secure:   secureCookies,
-			MaxAge:   3600 * 24 * 31,
-			SameSite: http.SameSiteStrictMode,
-		})
-		json.NewEncoder(w).Encode(struct {
-			Token    string `json:"token"`
-			Username string `json:"username"`
-		}{Token: token, Username: data.Username})
+		w.Write([]byte("{\"success\":true}"))
 	} else {
 		http.Error(w, errorJson("Method Not Allowed!"), http.StatusMethodNotAllowed)
 	}

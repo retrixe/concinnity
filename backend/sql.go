@@ -9,20 +9,20 @@ var findUserByTokenStmt *sql.Stmt
 var findUserByNameOrEmailStmt *sql.Stmt
 var findUserByUsernameStmt *sql.Stmt
 var findUserByEmailStmt *sql.Stmt
-var insertUserStmt *sql.Stmt
+var createUserStmt *sql.Stmt
 
 var insertTokenStmt *sql.Stmt
 var deleteTokenStmt *sql.Stmt
 
-const findUserByTokenQuery = "SELECT username, password, email, tokens.id as id, token, createdAt FROM tokens " +
+const findUserByTokenQuery = "SELECT username, password, email, tokens.id as id, verified, token, createdAt FROM tokens " +
 	"JOIN users ON tokens.id = users.id WHERE token = $1;"
-const findUserByNameOrEmailQuery = "SELECT username, password, email, id FROM users " +
+const findUserByNameOrEmailQuery = "SELECT username, password, email, id, verified FROM users " +
 	"WHERE username = $1 OR email = $2 LIMIT 1;"
-const findUserByUsernameQuery = "SELECT username, password, email, id FROM users " +
+const findUserByUsernameQuery = "SELECT username, password, email, id, verified FROM users " +
 	"WHERE username = $1 LIMIT 1;"
-const findUserByEmailQuery = "SELECT username, password, email, id FROM users " +
+const findUserByEmailQuery = "SELECT username, password, email, id, verified FROM users " +
 	"WHERE email = $1 LIMIT 1;"
-const insertUserQuery = "INSERT INTO users (username, password, email, id) VALUES ($1, $2, $3, $4);"
+const createUserQuery = "INSERT INTO users (username, password, email, id) VALUES ($1, $2, $3, $4);"
 
 const insertTokenQuery = "INSERT INTO tokens (token, createdAt, id) VALUES ($1, $2, $3);"
 const deleteTokenQuery = "DELETE FROM tokens WHERE token = $1;"
@@ -31,7 +31,8 @@ const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
 	username VARCHAR(16) UNIQUE,
 	password VARCHAR(100),
 	email TEXT UNIQUE,
-	id UUID UNIQUE);`
+	id UUID UNIQUE,
+	verified BOOLEAN DEFAULT FALSE);`
 const createTokensTableQuery = `CREATE TABLE IF NOT EXISTS tokens (
 	token VARCHAR(128) UNIQUE,
 	createdAt TIMESTAMPTZ,
@@ -69,7 +70,7 @@ func PrepareSqlStatements() {
 	if err != nil {
 		log.Panicln("Failed to prepare query to find user by email!", err)
 	}
-	insertUserStmt, err = db.Prepare(insertUserQuery)
+	createUserStmt, err = db.Prepare(createUserQuery)
 	if err != nil {
 		log.Panicln("Failed to prepare query to insert user!", err)
 	}

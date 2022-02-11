@@ -24,6 +24,7 @@ TODO: Finish design and work on their API.
 var db *sql.DB
 var secureCookies bool
 
+// TODO: implement e-mail verification option, add forgot password endpoint
 func main() {
 	log.SetOutput(os.Stderr)
 	// TODO: use environment variables or config

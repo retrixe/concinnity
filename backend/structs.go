@@ -6,6 +6,7 @@ type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
+	Verified bool   `json:"verified"`
 	ID       []byte `json:"id"`
 }
 

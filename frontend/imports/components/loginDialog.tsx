@@ -22,15 +22,16 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
   const passwordRef = useRef<HTMLInputElement>()
   const confirmRef = useRef<HTMLInputElement>()
   const emailRef = useRef<HTMLInputElement>()
-  const [inProgress, setInProgress] = useState(false)
   const [passwordMatches, setPasswordMatches] = useState(false)
   const [registerMode, setRegisterMode] = useState(false)
+  const [inProgress, setInProgress] = useState(false)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
 
   const emailPresent = !registerMode || (registerMode && email)
+  const errorColor = error.startsWith('Your account has been created!') ? 'primary' : 'error'
 
   const handleClose = () => {
     setPasswordMatches(false)
@@ -55,7 +56,9 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
         })
         const res = await req.json()
         if (res.error) setError(res.error)
-        else {
+        else if (res.success) {
+          setError('Your account has been created! Wait for an admin to verify you.')
+        } else {
           localStorage.setItem('token', res.token)
           setLoginStatus(res.username)
           handleClose()
@@ -98,7 +101,12 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
             margin='dense' label='Confirm Password' type='password' fullWidth inputRef={confirmRef}
           />
         )}
-        <Typography color='error' css={{ marginTop: 8 }} gutterBottom>{error}</Typography>
+        {!registerMode && (
+          <Typography css={{ marginTop: 8 }} gutterBottom color='primary'>
+            Forgot your password? Contact the site admins.
+          </Typography>
+        )}
+        <Typography color={errorColor} css={{ marginTop: 8 }} gutterBottom>{error}</Typography>
       </DialogContent>
 
       <DialogActions>
