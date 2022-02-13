@@ -14,13 +14,14 @@ var createUserStmt *sql.Stmt
 var insertTokenStmt *sql.Stmt
 var deleteTokenStmt *sql.Stmt
 
-const findUserByTokenQuery = "SELECT username, password, email, tokens.id as id, verified, token, createdAt FROM tokens " +
+const findUserByTokenQuery = "SELECT username, password, email, tokens.id AS id, users.createdAt " +
+	"AS userCreatedAt, verified, token, tokens.createdAt AS tokenCreatedAt FROM tokens " +
 	"JOIN users ON tokens.id = users.id WHERE token = $1;"
-const findUserByNameOrEmailQuery = "SELECT username, password, email, id, verified FROM users " +
+const findUserByNameOrEmailQuery = "SELECT username, password, email, id, createdAt, verified FROM users " +
 	"WHERE username = $1 OR email = $2 LIMIT 1;"
-const findUserByUsernameQuery = "SELECT username, password, email, id, verified FROM users " +
+const findUserByUsernameQuery = "SELECT username, password, email, id, createdAt, verified FROM users " +
 	"WHERE username = $1 LIMIT 1;"
-const findUserByEmailQuery = "SELECT username, password, email, id, verified FROM users " +
+const findUserByEmailQuery = "SELECT username, password, email, id, createdAt, verified FROM users " +
 	"WHERE email = $1 LIMIT 1;"
 const createUserQuery = "INSERT INTO users (username, password, email, id) VALUES ($1, $2, $3, $4);"
 
@@ -32,13 +33,23 @@ const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
 	password VARCHAR(100),
 	email TEXT UNIQUE,
 	id UUID UNIQUE,
+	createdAt TIMESTAMPTZ DEFAULT NOW(),
 	verified BOOLEAN DEFAULT FALSE);`
 const createTokensTableQuery = `CREATE TABLE IF NOT EXISTS tokens (
 	token VARCHAR(128) UNIQUE,
-	createdAt TIMESTAMPTZ,
+	createdAt TIMESTAMPTZ DEFAULT NOW(),
 	id UUID);`
-
-// TODO rooms - members, id, chat, timestamp, paused, lastActionTime, createdAt
+const createRoomsTableQuery = `CREATE TABLE IF NOT EXISTS rooms (
+	id UUID UNIQUE,
+	type VARCHAR(24),
+	title VARCHAR(200),
+	extra VARCHAR(200),
+	chat VARCHAR(2100)[] DEFAULT '{}',
+	members VARCHAR(16)[] DEFAULT '{}',
+	paused BOOLEAN DEFAULT TRUE,
+	timestamp INTEGER DEFAULT 0,
+	lastActionTime TIMESTAMPTZ DEFAULT NOW(),
+	createdAt TIMESTAMPTZ DEFAULT NOW());`
 
 func CreateSqlTables() {
 	_, err := db.Exec(createUsersTableQuery)
@@ -48,6 +59,10 @@ func CreateSqlTables() {
 	_, err = db.Exec(createTokensTableQuery)
 	if err != nil {
 		log.Panicln("Failed to create tokens table!", err)
+	}
+	_, err = db.Exec(createRoomsTableQuery)
+	if err != nil {
+		log.Panicln("Failed to create rooms table!", err)
 	}
 }
 

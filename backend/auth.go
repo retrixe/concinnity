@@ -39,29 +39,31 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
 		return nil
 	} else {
 		var (
-			username  string
-			password  string
-			email     string
-			id        []byte
-			verified  bool
-			token     string
-			createdAt time.Time
+			username       string
+			password       string
+			email          string
+			id             []byte
+			userCreatedAt  time.Time
+			verified       bool
+			token          string
+			tokenCreatedAt time.Time
 		)
-		err := res.Scan(&username, &password, &email, &id, &verified, &token, &createdAt)
+		err := res.Scan(&username, &password, &email, &id, &userCreatedAt, &verified, &token, &tokenCreatedAt)
 		if err != nil {
 			handleInternalServerError(w, err)
 			return nil
 		} else if t != nil {
-			t.CreatedAt = createdAt
+			t.CreatedAt = tokenCreatedAt
 			t.Token = token
 			t.ID = id
 		}
 		return &User{
-			Username: username,
-			Password: password,
-			Email:    email,
-			ID:       id,
-			Verified: verified,
+			Username:  username,
+			Password:  password,
+			Email:     email,
+			ID:        id,
+			Verified:  verified,
+			CreatedAt: userCreatedAt,
 		}
 	}
 }
@@ -99,7 +101,7 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 		var user User
 		err = findUserByNameOrEmailStmt.QueryRow(data.Username, data.Username).Scan(
-			&user.Username, &user.Password, &user.Email, &user.ID, &user.Verified)
+			&user.Username, &user.Password, &user.Email, &user.ID, &user.CreatedAt, &user.Verified)
 		if err != nil && errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, errorJson("No account with this username/email exists!"), http.StatusUnauthorized)
 			return
@@ -208,7 +210,8 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 		// Check if an account with this username or email already exists.
 		var u User
-		err = findUserByEmailStmt.QueryRow(data.Email).Scan(&u.Username, &u.Password, &u.Email, &u.ID, &u.Verified)
+		err = findUserByEmailStmt.QueryRow(data.Email).Scan(
+			&u.Username, &u.Password, &u.Email, &u.ID, &u.CreatedAt, &u.Verified)
 		if err == nil {
 			http.Error(w, errorJson("An account with this e-mail already exists!"), http.StatusConflict)
 			return
@@ -216,7 +219,8 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 			handleInternalServerError(w, err)
 			return
 		}
-		err = findUserByUsernameStmt.QueryRow(data.Username).Scan(&u.Username, &u.Password, &u.Email, &u.ID, &u.Verified)
+		err = findUserByUsernameStmt.QueryRow(data.Username).Scan(
+			&u.Username, &u.Password, &u.Email, &u.ID, &u.CreatedAt, &u.Verified)
 		if err == nil {
 			http.Error(w, errorJson("An account with this username already exists!"), http.StatusConflict)
 			return

@@ -3,11 +3,12 @@ package main
 import "time"
 
 type User struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Email    string `json:"email"`
-	Verified bool   `json:"verified"`
-	ID       []byte `json:"id"`
+	ID        []byte    `json:"id"`
+	Username  string    `json:"username"`
+	Password  string    `json:"password"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"createdAt"`
+	Verified  bool      `json:"verified"`
 }
 
 type Token struct {
@@ -16,7 +17,15 @@ type Token struct {
 	ID        []byte    `json:"id"`
 }
 
-/* type Room struct { // TODO
-	ID        []byte    `json:id`
-	Timestamp time.Time `json:"timestamp"`
-} */
+type Room struct {
+	ID             []byte    `json:"id"`
+	Type           string    `json:"type"`
+	Title          string    `json:"title"`
+	Extra          string    `json:"extra"`
+	Chat           []string  `json:"chat"`
+	Members        []string  `json:"members"`
+	Paused         bool      `json:"paused"`
+	Timestamp      int       `json:"timestamp"`
+	CreatedAt      time.Time `json:"createdAt"`
+	LastActionTime time.Time `json:"lastActionTime"`
+}
