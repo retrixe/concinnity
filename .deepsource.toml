@@ -1,0 +1,23 @@
+version = 1
+
+[[analyzers]]
+name = "javascript"
+enabled = true
+
+  [analyzers.meta]
+  plugins = ["react"]
+
+[[analyzers]]
+name = "go"
+enabled = true
+
+  [analyzers.meta]
+  import_root = "github.com/retrixe/concinnity"
+
+[[transformers]]
+name = "gofmt"
+enabled = true
+
+[[transformers]]
+name = "standardjs"
+enabled = true
