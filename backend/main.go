@@ -16,15 +16,21 @@ Endpoints:
 - POST /api/login
 - POST /api/logout
 - POST /api/register
-TODO: Finish design and work on their API.
-- GET/POST/PATCH/DELETE/WS /api/room/:id
-- POST /api/room/:id/join
+- GET /api/room/:id - Get the room's info
+- POST /api/room - Create a new room and join it
+- POST /api/room/:id - Join an existing room
+- WS /api/room/:id - Get live updates to room's info
+- GET /api/room/:id/leave - Leave a room
+
+You can be a member of up to 3 rooms at once.
+Rooms are deleted after 10 minutes of no members.
+Implement a rate limit of 3reqs/10min on creating rooms.
 */
 
 var db *sql.DB
 var secureCookies bool
 
-// TODO: implement e-mail verification option, add forgot password endpoint
+// TODO: implement e-mail verification option, add forgot password endpoint, room member limit
 func main() {
 	log.SetOutput(os.Stderr)
 	// TODO: use environment variables or config
@@ -38,20 +44,18 @@ func main() {
 	CreateSqlTables()
 	PrepareSqlStatements()
 
-	// TODO: use gin maybe
+	// TODO: use gin or iris or httprouter maybe
 	// Endpoints
 	http.HandleFunc("/", StatusEndpoint)
 	http.HandleFunc("/api/login", LoginEndpoint)
 	http.HandleFunc("/api/logout", LogoutEndpoint)
 	http.HandleFunc("/api/register", RegisterEndpoint)
 	http.HandleFunc("/api/room", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
+		if r.Method == "GET" { // /api/room/:id and /api/room/:id/leave
 			http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
-		} else if r.Method == "POST" {
+		} else if r.Method == "POST" { // /api/room and /api/room/:id
 			http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
-		} else if r.Method == "PATCH" {
-			http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
-		} else if r.Method == "DELETE" {
+		} else if r.Method == "OPTIONS" { // /api/room/;id
 			http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
 		} else {
 			http.Error(w, errorJson("Method Not Allowed!"), http.StatusMethodNotAllowed)
