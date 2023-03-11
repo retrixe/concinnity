@@ -20,6 +20,7 @@ const onEnter = (func: () => void | Promise<void>) => (e: React.KeyboardEvent<HT
 const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void }) => {
   const [title, setTitle] = useState('')
   const [fileName, setFileName] = useState('')
+  const [fileUrl, setFileUrl] = useState<URL | null>(null)
   const [error, setError] = useState('')
   const [inProgress, setInProgress] = useState(false)
 
@@ -43,26 +44,18 @@ const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void })
         router.push(`/room/${res.id}`).catch(console.error)
       }
     } catch (e) { setError('An unknown network error occurred.') }
+    setInProgress(false)
   }
 
-  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) {
+  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.length !== 1) {
       return
     }
     const file = e.target.files[0]
     setFileName(file.name)
 
-    const reader = new FileReader()
-    reader.onload = (evt) => {
-      if (!evt?.target?.result) {
-        return
-      }
-      // Extract video content from video file
-      const { result } = evt.target
-
-      // TODO: Store video content in global state for later use
-    }
-    reader.readAsBinaryString(file)
+    const url = URL.createObjectURL(file)
+    setFileUrl(new URL(url))
   }
 
   const createButtonDisabled = !title && !fileName
@@ -82,6 +75,7 @@ const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void })
           flex-direction: row;
           align-items: center;
           margin-top: 16px;
+          min-width: 400px;
         `}
         >
           <Button
@@ -92,7 +86,7 @@ const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void })
             `}
           >
             Select Video
-            <input type='file' hidden onChange={handleFileUpload} />
+            <input type='file' hidden onChange={handleFileSelect} />
           </Button>
 
           <Typography>{fileName}</Typography>
