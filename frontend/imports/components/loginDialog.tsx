@@ -33,18 +33,27 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
   const emailPresent = !registerMode || (registerMode && email)
   const errorColor = error.startsWith('Your account has been created!') ? 'primary' : 'error'
 
-  const handleClose = () => {
+  const clearDialog = () => {
     setPasswordMatches(false)
-    setRegisterMode(false)
     setInProgress(false)
     setUsername('')
     setPassword('')
     setEmail('')
     setError('')
+  }
+
+  const handleClose = () => {
+    setRegisterMode(false)
+    clearDialog()
     props.handleClose()
   }
-  const handleRegister = () => setRegisterMode(state => !state)
-  const handleLoginDialog = async () => {
+
+  const handleRegister = () => {
+    setRegisterMode(state => !state)
+    clearDialog()
+  }
+
+  const handleSubmit = async () => {
     if (registerMode && !passwordMatches) setError('Your entered passwords don\'t match!')
     else if (username && password && emailPresent) {
       setInProgress(true)
@@ -74,7 +83,7 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
   const loginButtonDisabled = !username || !password || !emailPresent
   return (
     <Dialog open={props.shown} onClose={handleClose}>
-      <DialogTitle>Login</DialogTitle>
+      <DialogTitle>{registerMode ? 'Register' : 'Login'}</DialogTitle>
 
       <DialogContent css={{ paddingBottom: 0 }}>
         <TextField
@@ -91,13 +100,13 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
         )}
         <TextField
           value={password} onChange={e => setPassword(e.target.value)}
-          onKeyDown={onEnter(() => registerMode ? confirmRef.current?.focus() : handleLoginDialog())}
+          onKeyDown={onEnter(() => registerMode ? confirmRef.current?.focus() : handleSubmit())}
           margin='dense' label='Password' type='password' fullWidth inputRef={passwordRef}
         />
         {registerMode && (
           <TextField
             onChange={e => setPasswordMatches(e.target.value === password)}
-            onKeyDown={onEnter(async () => await handleLoginDialog())}
+            onKeyDown={onEnter(async () => await handleSubmit())}
             margin='dense' label='Confirm Password' type='password' fullWidth inputRef={confirmRef}
           />
         )}
@@ -113,7 +122,7 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
         <Button onClick={handleRegister} color='secondary' disabled={inProgress}>
           {registerMode ? 'Login' : 'Register'}
         </Button>
-        <Button onClick={handleLoginDialog} disabled={loginButtonDisabled || inProgress}>
+        <Button onClick={handleSubmit} disabled={loginButtonDisabled || inProgress}>
           {registerMode ? 'Register' : 'Login'}
         </Button>
       </DialogActions>

@@ -20,7 +20,7 @@ const onEnter = (func: () => void | Promise<void>) => (e: React.KeyboardEvent<HT
 const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void }) => {
   const [title, setTitle] = useState('')
   const [fileName, setFileName] = useState('')
-  const [fileUrl, setFileUrl] = useState<URL | null>(null)
+  const [fileUrl, setFileUrl] = useState('')
   const [error, setError] = useState('')
   const [inProgress, setInProgress] = useState(false)
 
@@ -41,7 +41,10 @@ const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void })
       if (res.error) setError(res.error)
       else {
         props.handleClose()
-        router.push(`/room/${res.id}`).catch(console.error)
+        router.push({
+          pathname: `/room/${res.id}`,
+          query: fileUrl ? { fileUrl } : {}
+        }, `/room/${res.id}`).catch(console.error)
       }
     } catch (e) { setError('An unknown network error occurred.') }
     setInProgress(false)
@@ -55,7 +58,7 @@ const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void })
     setFileName(file.name)
 
     const url = URL.createObjectURL(file)
-    setFileUrl(new URL(url))
+    setFileUrl(url)
   }
 
   const createButtonDisabled = !title && !fileName
