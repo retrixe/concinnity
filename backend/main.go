@@ -51,12 +51,27 @@ func main() {
 	http.HandleFunc("/api/login", LoginEndpoint)
 	http.HandleFunc("/api/logout", LogoutEndpoint)
 	http.HandleFunc("/api/register", RegisterEndpoint)
+	// TODO handle this in another way
+	// No URL params
 	http.HandleFunc("/api/room", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" { // /api/room/:id and /api/room/:id/leave
+		println(r.Method)
+		if r.Method == "POST" {
+			// POST /api/room
+			CreateRoom(w, r)
+		} else {
+			http.Error(w, errorJson("Method Not Allowed!"), http.StatusMethodNotAllowed)
+		}
+	})
+	// A / in the end means there's URL params
+	http.HandleFunc("/api/room/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			// GET /api/room/:id and GET /api/room/:id/leave
+			GetRoom(w, r)
+		} else if r.Method == "POST" {
+			// POST /api/room/:id
 			http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
-		} else if r.Method == "POST" { // /api/room and /api/room/:id
-			http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
-		} else if r.Method == "OPTIONS" { // /api/room/;id
+		} else if r.Method == "OPTIONS" {
+			// OPTIONS /api/room/:id
 			http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
 		} else {
 			http.Error(w, errorJson("Method Not Allowed!"), http.StatusMethodNotAllowed)
