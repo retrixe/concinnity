@@ -4,6 +4,7 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "jsx": "preserve",
+    "jsxImportSource": "@emotion/react",
     "target": "es2016",
     "noImplicitAny": true,
     "removeComments": false,

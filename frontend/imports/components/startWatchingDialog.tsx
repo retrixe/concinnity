@@ -1,4 +1,3 @@
-/** @jsxImportSource @emotion/react */
 import React, { ChangeEvent, useState } from 'react'
 import {
   Dialog,
