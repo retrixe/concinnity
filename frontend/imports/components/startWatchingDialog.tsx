@@ -34,7 +34,8 @@ const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void })
     try {
       const req = await fetch(config.serverUrl + '/api/room', {
         method: 'POST',
-        body: JSON.stringify({ title })
+        body: JSON.stringify({ title, type: 'localFile', fileName }),
+        headers: { Authentication: localStorage.getItem('token') ?? '' }
       })
       const res: { error?: string, id: string } = await req.json()
       if (res.error) setError(res.error)

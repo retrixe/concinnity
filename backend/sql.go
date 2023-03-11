@@ -14,6 +14,9 @@ var createUserStmt *sql.Stmt
 var insertTokenStmt *sql.Stmt
 var deleteTokenStmt *sql.Stmt
 
+var insertRoomStmt *sql.Stmt
+var findRoomByIdStmt *sql.Stmt
+
 const findUserByTokenQuery = "SELECT username, password, email, tokens.id AS id, users.createdAt " +
 	"AS userCreatedAt, verified, token, tokens.createdAt AS tokenCreatedAt FROM tokens " +
 	"JOIN users ON tokens.id = users.id WHERE token = $1;"
@@ -27,6 +30,10 @@ const createUserQuery = "INSERT INTO users (username, password, email, id) VALUE
 
 const insertTokenQuery = "INSERT INTO tokens (token, createdAt, id) VALUES ($1, $2, $3);"
 const deleteTokenQuery = "DELETE FROM tokens WHERE token = $1;"
+
+const insertRoomQuery = "INSERT INTO rooms (id, type, title, extra, members) " +
+	"VALUES ($1, $2, $3, $4, $5);"
+const findRoomByIdQuery = "SELECT * FROM rooms WHERE id = $1;"
 
 // TODO: Rename token.id to userId?
 // TODO: UUIDs are yucky, can we use nanoid instead for rooms?
@@ -100,5 +107,14 @@ func PrepareSqlStatements() {
 	deleteTokenStmt, err = db.Prepare(deleteTokenQuery)
 	if err != nil {
 		log.Panicln("Failed to prepare query to delete token!", err)
+	}
+
+	insertRoomStmt, err = db.Prepare(insertRoomQuery)
+	if err != nil {
+		log.Panicln("Failed to prepare query to insert room!", err)
+	}
+	findRoomByIdStmt, err = db.Prepare(findRoomByIdQuery)
+	if err != nil {
+		log.Panicln("Failed to prepare query to find room by id!", err)
 	}
 }
