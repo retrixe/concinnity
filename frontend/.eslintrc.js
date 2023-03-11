@@ -15,7 +15,13 @@ module.exports = {
   ignorePatterns: ['.eslintrc.js'],
   rules: {
     '@typescript-eslint/triple-slash-reference': 'off',
+    '@typescript-eslint/consistent-type-imports': 'off',
     '@typescript-eslint/strict-boolean-expressions': 'off',
-    '@typescript-eslint/explicit-function-return-type': 'off'
+    '@typescript-eslint/no-confusing-void-expression': 'off',
+    '@typescript-eslint/explicit-function-return-type': 'off',
+    'react/no-unknown-property': ['error', { ignore: ['css'] }],
+    // TODO: Remove these rules being switched off.
+    '@typescript-eslint/promise-function-async': 'off',
+    '@typescript-eslint/no-misused-promises': 'off',
   }
 }

@@ -11,7 +11,7 @@ import createTheme from '../imports/theme'
 // Client-side cache, shared for the whole session of the user in the browser.
 const clientSideEmotionCache = createCache({ key: 'css' })
 
-function AppThemeProvider (props: React.PropsWithChildren<{}>) {
+function AppThemeProvider (props: React.PropsWithChildren<Record<string, unknown>>) {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom)
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
   const darkModeSetting = darkMode === true || (darkMode === undefined && prefersDarkMode)
