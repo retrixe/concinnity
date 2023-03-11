@@ -12,7 +12,7 @@ import {
 import config from '../../config.json'
 import { loginStatusAtom } from '../recoil-atoms'
 
-const onEnter = (func: () => void | Promise<void>) => (e: React.KeyboardEvent<HTMLDivElement>) => {
+const onEnter = <T,>(func: () => T) => (e: React.KeyboardEvent<HTMLDivElement>) => {
   if (e.key === 'Enter') return func()
 }
 
@@ -52,7 +52,7 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
     clearDialog()
   }
 
-  const handleSubmit = async () => {
+  const submit = async () => {
     if (registerMode && !passwordMatches) setError('Your entered passwords don\'t match!')
     else if (username && password && emailPresent) {
       setInProgress(true)
@@ -77,6 +77,8 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
     else if (!password) setError('Enter your password!')
     else if (!emailPresent) setError('Enter your e-mail!')
   }
+
+  const handleSubmit = () => { submit().catch(console.error) }
 
   const usernameFieldLabel = (!registerMode ? 'Email Address/' : '') + 'Username'
   const loginButtonDisabled = !username || !password || !emailPresent
@@ -105,7 +107,7 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
         {registerMode && (
           <TextField
             onChange={e => setPasswordMatches(e.target.value === password)}
-            onKeyDown={onEnter(async () => await handleSubmit())}
+            onKeyDown={onEnter(() => handleSubmit())}
             margin='dense' label='Confirm Password' type='password' fullWidth inputRef={confirmRef}
           />
         )}

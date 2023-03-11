@@ -62,7 +62,7 @@ MyDocument.getInitialProps = async ctx => {
   const cache = createCache({ key: 'css' })
   const { extractCriticalToChunks } = createEmotionServer(cache)
 
-  ctx.renderPage = () =>
+  ctx.renderPage = () => // eslint-disable-line @typescript-eslint/promise-function-async
     originalRenderPage({
       enhanceApp: (App: any) => {
         const EnhancedApp = (props: any) => <App emotionCache={cache} {...props} />

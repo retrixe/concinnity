@@ -12,7 +12,7 @@ import config from '../../config.json'
 import { useRouter } from 'next/router'
 import { css } from '@emotion/react'
 
-const onEnter = (func: () => void | Promise<void>) => (e: React.KeyboardEvent<HTMLDivElement>) => {
+const onEnter = <T,>(func: () => T) => (e: React.KeyboardEvent<HTMLDivElement>) => {
   if (e.key === 'Enter') return func()
 }
 
@@ -29,7 +29,7 @@ const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void })
     props.handleClose()
   }
 
-  const handleCreateRoom = async () => {
+  const createRoom = async () => {
     setInProgress(true)
     try {
       const req = await fetch(config.serverUrl + '/api/room', {
@@ -48,6 +48,8 @@ const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void })
     } catch (e) { setError('An unknown network error occurred.') }
     setInProgress(false)
   }
+
+  const handleCreateRoom = () => { createRoom().catch(console.error) }
 
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.length !== 1) {

@@ -19,9 +19,6 @@ module.exports = {
     '@typescript-eslint/strict-boolean-expressions': 'off',
     '@typescript-eslint/no-confusing-void-expression': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
-    'react/no-unknown-property': ['error', { ignore: ['css'] }],
-    // TODO: Remove these rules being switched off.
-    '@typescript-eslint/promise-function-async': 'off',
-    '@typescript-eslint/no-misused-promises': 'off',
+    'react/no-unknown-property': ['error', { ignore: ['css'] }]
   }
 }
