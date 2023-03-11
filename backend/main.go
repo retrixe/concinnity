@@ -41,6 +41,7 @@ func main() {
 	if err != nil {
 		log.Panicln("Failed to open connection to database!", err)
 	}
+	db.SetMaxOpenConns(10)
 	CreateSqlTables()
 	PrepareSqlStatements()
 
@@ -69,10 +70,10 @@ func main() {
 	log.SetOutput(os.Stdout)
 	log.Println("Listening to port " + port)
 	log.SetOutput(os.Stderr)
-	log.Fatalln(http.ListenAndServe(":"+port, handlers.CORS(
+	http.ListenAndServe(":"+port, handlers.CORS(
 		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PATCH", "DELETE", "OPTIONS"}),
 		handlers.AllowedHeaders([]string{"Content-Type", "Authentication"}),
 		handlers.AllowedOrigins([]string{"*"}), // Breaks credentialed auth
 		handlers.AllowCredentials(),
-	)(http.DefaultServeMux)))
+	)(http.DefaultServeMux))
 }

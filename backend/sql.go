@@ -28,19 +28,22 @@ const createUserQuery = "INSERT INTO users (username, password, email, id) VALUE
 const insertTokenQuery = "INSERT INTO tokens (token, createdAt, id) VALUES ($1, $2, $3);"
 const deleteTokenQuery = "DELETE FROM tokens WHERE token = $1;"
 
+// TODO: Rename token.id to userId?
+// TODO: UUIDs are yucky, can we use nanoid instead for rooms?
+// TODO: Do we need user IDs even? Isn't username sufficient? Should usernames even be unique?
 const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
 	username VARCHAR(16) UNIQUE,
 	password VARCHAR(100),
 	email TEXT UNIQUE,
-	id UUID UNIQUE,
+	id UUID PRIMARY KEY,
 	createdAt TIMESTAMPTZ DEFAULT NOW(),
 	verified BOOLEAN DEFAULT FALSE);`
 const createTokensTableQuery = `CREATE TABLE IF NOT EXISTS tokens (
-	token VARCHAR(128) UNIQUE,
+	token VARCHAR(128) PRIMARY KEY,
 	createdAt TIMESTAMPTZ DEFAULT NOW(),
 	id UUID);`
 const createRoomsTableQuery = `CREATE TABLE IF NOT EXISTS rooms (
-	id UUID UNIQUE,
+	id UUID PRIMARY KEY,
 	type VARCHAR(24),
 	title VARCHAR(200),
 	extra VARCHAR(200),
