@@ -72,6 +72,5 @@ func GetRoom(w http.ResponseWriter, r *http.Request) {
 		handleInternalServerError(w, err)
 		return
 	}
-	json, _ := json.Marshal(room)
-	w.Write(json)
+	json.NewEncoder(w).Encode(room)
 }
