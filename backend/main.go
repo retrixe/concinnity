@@ -54,7 +54,6 @@ func main() {
 	// TODO handle this in another way
 	// No URL params
 	http.HandleFunc("/api/room", func(w http.ResponseWriter, r *http.Request) {
-		println(r.Method)
 		if r.Method == "POST" {
 			// POST /api/room
 			CreateRoom(w, r)
