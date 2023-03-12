@@ -52,7 +52,6 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetRoom(w http.ResponseWriter, r *http.Request) {
-	// TODO: Allow guests
 	token := Token{}
 	if IsAuthenticated(w, r, &token) == nil {
 		http.Error(w, errorJson("You are not authenticated!"),

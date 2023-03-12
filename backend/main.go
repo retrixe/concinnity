@@ -67,7 +67,7 @@ func main() {
 		if r.Method == "GET" {
 			// GET /api/room/:id and GET /api/room/:id/leave
 			GetRoom(w, r)
-		} else if r.Method == "POST" {
+		} else if r.Method == "PATCH" {
 			// POST /api/room/:id
 			http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
 		} else if r.Method == "OPTIONS" {

@@ -46,10 +46,7 @@ const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void })
           query: fileUrl ? { fileUrl } : {}
         }, `/room/${res.id}`).catch(console.error)
       }
-    } catch (e) {
-      console.log(e)
-      setError('An unknown network error occurred.')
-    }
+    } catch (e) { setError('An unknown network error occurred.') }
     setInProgress(false)
   }
 
