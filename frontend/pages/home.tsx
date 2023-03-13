@@ -13,7 +13,7 @@ const IndexPage = () => {
   const router = useRouter()
   const loginStatus = useRecoilValue(loginStatusAtom)
   React.useEffect(() => {
-    if (!loginStatus) router.replace('/').catch(console.error)
+    if (loginStatus === false) router.replace('/').catch(console.error)
   })
 
   return (

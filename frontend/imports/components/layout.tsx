@@ -10,6 +10,7 @@ import Login from '@mui/icons-material/Login'
 import config from '../../config.json'
 import LoginDialog from './loginDialog'
 import { darkModeAtom, loginStatusAtom } from '../recoil-atoms'
+import { useRouter } from 'next/router'
 
 const TopBarCenteredContent = styled.div({})
 
@@ -19,6 +20,7 @@ export const TopBar = (props: { variant?: 'dense' }) => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom) // System then Dark then Light
   const [loginStatus, setLoginStatus] = useRecoilState(loginStatusAtom)
   const [loginDialog, setLoginDialog] = useState(false)
+  const router = useRouter()
 
   const themeToggle = () => setDarkMode(state => state === false ? undefined : state !== true)
   const handleLogin = () => {
@@ -27,6 +29,7 @@ export const TopBar = (props: { variant?: 'dense' }) => {
       fetch(config.serverUrl + '/api/logout', { method: 'POST', headers: { Authentication: token } })
         .then(() => localStorage.removeItem('token'))
         .then(() => setLoginStatus(false))
+        .then(async () => await router.replace('/'))
         .catch(console.error)
     } else setLoginDialog(true)
   }
@@ -41,7 +44,7 @@ export const TopBar = (props: { variant?: 'dense' }) => {
             <FlexSpacer />
             <IconButton color='inherit' onClick={handleLogin}>
               <Tooltip title={loginStatus ? 'Logout' : 'Login'}>
-                {loginStatus ? <Logout /> : <Login />}
+                {loginStatus !== false ? <Logout /> : <Login />}
               </Tooltip>
             </IconButton>
             <IconButton color='inherit' onClick={themeToggle}>

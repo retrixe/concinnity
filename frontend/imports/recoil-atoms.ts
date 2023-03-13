@@ -23,6 +23,8 @@ export const loginStatusAtom = atom<false | string>({
     const loadAtomState = () => {
       const token = localStorage.getItem('token')
       if (!token) return
+      // If loading, set self to empty
+      setSelf('')
       fetch(config.serverUrl, { headers: { Authentication: token } })
         .then(async res => await res.json())
         .then(res => setSelf(res.username))
