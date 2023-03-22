@@ -23,7 +23,6 @@ type Room struct {
 	Title          string    `json:"title"`
 	Extra          string    `json:"extra"`
 	Chat           []string  `json:"chat"`
-	Members        []string  `json:"members"`
 	Paused         bool      `json:"paused"`
 	Timestamp      int       `json:"timestamp"`
 	CreatedAt      time.Time `json:"createdAt"`

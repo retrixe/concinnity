@@ -39,8 +39,7 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: Use nanoid for IDs
 	uuid := uuid.New()
-	result, err := insertRoomStmt.Exec(
-		uuid.String(), data.Type, data.Title, data.FileName, pq.Array([]string{user.Username}))
+	result, err := insertRoomStmt.Exec(uuid.String(), data.Type, data.Title, data.FileName)
 	if err != nil {
 		handleInternalServerError(w, err)
 		return
@@ -65,7 +64,7 @@ func GetRoom(w http.ResponseWriter, r *http.Request) {
 	room := Room{}
 	err := findRoomByIdStmt.QueryRow(id).Scan(
 		&room.ID, &room.Type, &room.Title, &room.Extra,
-		pq.Array(&room.Chat), pq.Array(&room.Members), &room.Paused, &room.Timestamp,
+		pq.Array(&room.Chat), &room.Paused, &room.Timestamp,
 		&room.CreatedAt, &room.LastActionTime)
 	if err != nil {
 		handleInternalServerError(w, err)

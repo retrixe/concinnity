@@ -31,8 +31,8 @@ const createUserQuery = "INSERT INTO users (username, password, email, id) VALUE
 const insertTokenQuery = "INSERT INTO tokens (token, createdAt, id) VALUES ($1, $2, $3);"
 const deleteTokenQuery = "DELETE FROM tokens WHERE token = $1;"
 
-const insertRoomQuery = "INSERT INTO rooms (id, type, title, extra, members) " +
-	"VALUES ($1, $2, $3, $4, $5);"
+const insertRoomQuery = "INSERT INTO rooms (id, type, title, extra) " +
+	"VALUES ($1, $2, $3, $4);"
 const findRoomByIdQuery = "SELECT * FROM rooms WHERE id = $1;"
 
 // TODO: Rename token.id to userId?
@@ -49,13 +49,15 @@ const createTokensTableQuery = `CREATE TABLE IF NOT EXISTS tokens (
 	token VARCHAR(128) PRIMARY KEY,
 	createdAt TIMESTAMPTZ DEFAULT NOW(),
 	id UUID);`
+
+// type - something to the effect of local, youtube, etc
+// extra - carries information like file name or YouTube ID
 const createRoomsTableQuery = `CREATE TABLE IF NOT EXISTS rooms (
 	id UUID PRIMARY KEY,
 	type VARCHAR(24),
 	title VARCHAR(200),
 	extra VARCHAR(200),
 	chat VARCHAR(2100)[] DEFAULT '{}',
-	members VARCHAR(16)[] DEFAULT '{}',
 	paused BOOLEAN DEFAULT TRUE,
 	timestamp INTEGER DEFAULT 0,
 	lastActionTime TIMESTAMPTZ DEFAULT NOW(),
