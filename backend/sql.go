@@ -35,7 +35,6 @@ const insertRoomQuery = "INSERT INTO rooms (id, type, title, extra) " +
 	"VALUES ($1, $2, $3, $4);"
 const findRoomByIdQuery = "SELECT * FROM rooms WHERE id = $1;"
 
-// TODO: UUIDs are yucky, can we use nanoid instead for rooms?
 // TODO: Do we need user IDs even? Isn't username sufficient? Should usernames even be unique?
 const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
 	username VARCHAR(16) UNIQUE,
@@ -49,7 +48,7 @@ const createTokensTableQuery = `CREATE TABLE IF NOT EXISTS tokens (
 	createdAt TIMESTAMPTZ DEFAULT NOW(),
 	userId UUID);`
 const createRoomsTableQuery = `CREATE TABLE IF NOT EXISTS rooms (
-	id UUID PRIMARY KEY,
+	id VARCHAR(24) PRIMARY KEY,
 	type VARCHAR(24), /* localFile, youtube, netflix, etc */
 	title VARCHAR(200),
 	extra VARCHAR(200), /* carries information like file name, YouTube ID, etc */

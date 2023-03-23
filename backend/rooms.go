@@ -5,8 +5,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/lib/pq"
+	nanoid "github.com/matoous/go-nanoid/v2"
 )
 
 func CreateRoom(w http.ResponseWriter, r *http.Request) {
@@ -37,9 +37,8 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Use nanoid for IDs
-	uuid := uuid.New()
-	result, err := insertRoomStmt.Exec(uuid.String(), data.Type, data.Title, data.FileName)
+	id := nanoid.Must(12)
+	result, err := insertRoomStmt.Exec(id, data.Type, data.Title, data.FileName)
 	if err != nil {
 		handleInternalServerError(w, err)
 		return
@@ -47,7 +46,7 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 		handleInternalServerError(w, err)
 		return
 	}
-	w.Write([]byte("{\"id\":\"" + uuid.String() + "\"}"))
+	w.Write([]byte("{\"id\":\"" + id + "\"}"))
 }
 
 func GetRoom(w http.ResponseWriter, r *http.Request) {

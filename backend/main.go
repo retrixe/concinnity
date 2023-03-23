@@ -51,8 +51,6 @@ func main() {
 	http.HandleFunc("/api/login", LoginEndpoint)
 	http.HandleFunc("/api/logout", LogoutEndpoint)
 	http.HandleFunc("/api/register", RegisterEndpoint)
-	// TODO handle this in another way
-	// No URL params
 	http.HandleFunc("/api/room", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			// POST /api/room
@@ -61,7 +59,6 @@ func main() {
 			http.Error(w, errorJson("Method Not Allowed!"), http.StatusMethodNotAllowed)
 		}
 	})
-	// A / in the end means there's URL params
 	http.HandleFunc("/api/room/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			// GET /api/room/:id and GET /api/room/:id/leave
