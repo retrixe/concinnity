@@ -35,11 +35,10 @@ const insertRoomQuery = "INSERT INTO rooms (id, type, title, extra) " +
 	"VALUES ($1, $2, $3, $4);"
 const findRoomByIdQuery = "SELECT * FROM rooms WHERE id = $1;"
 
-// TODO: Do we need user IDs even? Isn't username sufficient? Should usernames even be unique?
 const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
-	username VARCHAR(16) UNIQUE,
+	username VARCHAR(16),
 	password VARCHAR(100),
-	email TEXT UNIQUE,
+	email VARCHAR(319) UNIQUE,
 	id UUID PRIMARY KEY,
 	createdAt TIMESTAMPTZ DEFAULT NOW(),
 	verified BOOLEAN DEFAULT FALSE);`
