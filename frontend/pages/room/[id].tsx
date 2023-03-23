@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { useRecoilValue } from 'recoil'
 import config from '../../config.json'
 import { loginStatusAtom } from '../../imports/recoil-atoms'
-import { AppDiv, TopBar } from '../../imports/components/layout'
+import { AppDiv, FlexSpacer, TopBar } from '../../imports/components/layout'
 import { Room } from '../../imports/types'
 import { VideoPlayer } from '../../imports/components/videoPlayer'
 import LoginDialog from '../../imports/components/loginDialog'
@@ -45,12 +45,19 @@ const RoomPage = () => {
       <LoginDialog shown={loginDialog} handleClose={() => setLoginDialog(false)} />
       <AppDiv>
         <Typography variant='h4'>{room?.title}</Typography>
-        {error && <Typography color='error'>{error}</Typography>}
-        <VideoPlayer url={typeof fileUrl === 'string' ? fileUrl : undefined} />
-        <Typography>
-          <b>{room?.extra && room.extra}</b>
-          {' is being played.'}
-        </Typography>
+        <div>
+          {error && <Typography color='error'>{error}</Typography>}
+          <VideoPlayer
+            url={typeof fileUrl === 'string' ? fileUrl : undefined}
+            videoName={room?.extra ?? 'Loading'}
+          />
+          {room?.extra &&
+            <Typography>
+              <b>{room?.extra && room.extra}</b>
+              {' is being played.'}
+            </Typography>}
+        </div>
+        <FlexSpacer />
       </AppDiv>
     </>
   )
