@@ -17,9 +17,9 @@ var deleteTokenStmt *sql.Stmt
 var insertRoomStmt *sql.Stmt
 var findRoomByIdStmt *sql.Stmt
 
-const findUserByTokenQuery = "SELECT username, password, email, tokens.id AS id, users.createdAt " +
+const findUserByTokenQuery = "SELECT username, password, email, id, users.createdAt " +
 	"AS userCreatedAt, verified, token, tokens.createdAt AS tokenCreatedAt FROM tokens " +
-	"JOIN users ON tokens.id = users.id WHERE token = $1;"
+	"JOIN users ON tokens.userId = users.id WHERE token = $1;"
 const findUserByNameOrEmailQuery = "SELECT username, password, email, id, createdAt, verified FROM users " +
 	"WHERE username = $1 OR email = $2 LIMIT 1;"
 const findUserByUsernameQuery = "SELECT username, password, email, id, createdAt, verified FROM users " +
@@ -28,14 +28,13 @@ const findUserByEmailQuery = "SELECT username, password, email, id, createdAt, v
 	"WHERE email = $1 LIMIT 1;"
 const createUserQuery = "INSERT INTO users (username, password, email, id) VALUES ($1, $2, $3, $4);"
 
-const insertTokenQuery = "INSERT INTO tokens (token, createdAt, id) VALUES ($1, $2, $3);"
+const insertTokenQuery = "INSERT INTO tokens (token, createdAt, userId) VALUES ($1, $2, $3);"
 const deleteTokenQuery = "DELETE FROM tokens WHERE token = $1;"
 
 const insertRoomQuery = "INSERT INTO rooms (id, type, title, extra) " +
 	"VALUES ($1, $2, $3, $4);"
 const findRoomByIdQuery = "SELECT * FROM rooms WHERE id = $1;"
 
-// TODO: Rename token.id to userId?
 // TODO: UUIDs are yucky, can we use nanoid instead for rooms?
 // TODO: Do we need user IDs even? Isn't username sufficient? Should usernames even be unique?
 const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
@@ -48,15 +47,12 @@ const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
 const createTokensTableQuery = `CREATE TABLE IF NOT EXISTS tokens (
 	token VARCHAR(128) PRIMARY KEY,
 	createdAt TIMESTAMPTZ DEFAULT NOW(),
-	id UUID);`
-
-// type - something to the effect of local, youtube, etc
-// extra - carries information like file name or YouTube ID
+	userId UUID);`
 const createRoomsTableQuery = `CREATE TABLE IF NOT EXISTS rooms (
 	id UUID PRIMARY KEY,
-	type VARCHAR(24),
+	type VARCHAR(24), /* localFile, youtube, netflix, etc */
 	title VARCHAR(200),
-	extra VARCHAR(200),
+	extra VARCHAR(200), /* carries information like file name, YouTube ID, etc */
 	chat VARCHAR(2100)[] DEFAULT '{}',
 	paused BOOLEAN DEFAULT TRUE,
 	timestamp INTEGER DEFAULT 0,

@@ -14,7 +14,7 @@ type User struct {
 type Token struct {
 	CreatedAt time.Time `json:"createdAt"`
 	Token     string    `json:"token"`
-	ID        []byte    `json:"id"`
+	UserID    []byte    `json:"userId"`
 }
 
 type Room struct {

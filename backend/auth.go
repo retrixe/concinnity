@@ -58,7 +58,7 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
 		} else if t != nil {
 			t.CreatedAt = tokenCreatedAt
 			t.Token = token
-			t.ID = id
+			t.UserID = id
 		}
 		return &User{
 			Username:  username,
