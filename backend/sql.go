@@ -45,7 +45,7 @@ const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
 const createTokensTableQuery = `CREATE TABLE IF NOT EXISTS tokens (
 	token VARCHAR(128) PRIMARY KEY,
 	createdAt TIMESTAMPTZ DEFAULT NOW(),
-	userId UUID);`
+	userId UUID REFERENCES users(id));`
 const createRoomsTableQuery = `CREATE TABLE IF NOT EXISTS rooms (
 	id VARCHAR(24) PRIMARY KEY,
 	type VARCHAR(24), /* localFile, youtube, netflix, etc */
