@@ -18,13 +18,13 @@ Endpoints:
 - POST /api/register
 - GET /api/room/:id - Get the room's info
 - POST /api/room - Create a new room and join it
-- POST /api/room/:id - Join an existing room
-- WS /api/room/:id - Get live updates to room's info
-- GET /api/room/:id/leave - Leave a room
+- TODO: POST /api/room/:id - Join an existing room
+- TODO: WS /api/room/:id - Get live updates to room's info
+- TODO: GET /api/room/:id/leave - Leave a room
 
-You can be a member of up to 3 rooms at once.
-Rooms are deleted after 10 minutes of no members.
-Implement a rate limit of 3reqs/10min on creating rooms.
+TODO: You can be a member of up to 3 rooms at once.
+TODO: Rooms are deleted after 10 minutes of no members.
+TODO: Implement a rate limit of 3reqs/10min on creating rooms.
 */
 
 var db *sql.DB
