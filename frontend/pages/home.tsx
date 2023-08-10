@@ -7,7 +7,7 @@ import { AppDiv, TopBar } from '../imports/components/layout'
 import { loginStatusAtom } from '../imports/recoil-atoms'
 import StartWatchingDialog from '../imports/components/startWatchingDialog'
 
-const IndexPage = () => {
+const IndexPage = (): JSX.Element => {
   const [startWatchingShown, setStartWatchingShown] = React.useState(false)
 
   const router = useRouter()

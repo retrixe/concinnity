@@ -1,6 +1,7 @@
 const { join } = require('path')
 const standard = ['standard-with-typescript', 'standard-react', 'standard-jsx']
 module.exports = {
+  root: true,
   env: {
     es6: true,
     node: true,
@@ -15,10 +16,8 @@ module.exports = {
   ignorePatterns: ['.eslintrc.js'],
   rules: {
     '@typescript-eslint/triple-slash-reference': 'off',
-    '@typescript-eslint/consistent-type-imports': 'off',
     '@typescript-eslint/strict-boolean-expressions': 'off',
     '@typescript-eslint/no-confusing-void-expression': 'off',
-    '@typescript-eslint/explicit-function-return-type': 'off',
     'react/no-unknown-property': ['error', { ignore: ['css'] }]
   }
 }

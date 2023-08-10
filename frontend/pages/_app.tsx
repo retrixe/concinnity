@@ -1,9 +1,9 @@
 import React from 'react'
 import Head from 'next/head'
-import { AppProps } from 'next/app'
+import { type AppProps } from 'next/app'
 import createCache from '@emotion/cache'
 import { RecoilRoot, useRecoilState } from 'recoil'
-import { CacheProvider, EmotionCache } from '@emotion/react'
+import { CacheProvider, type EmotionCache } from '@emotion/react'
 import { useMediaQuery, ThemeProvider, CssBaseline } from '@mui/material'
 import { darkModeAtom } from '../imports/recoil-atoms'
 import createTheme from '../imports/theme'
@@ -11,7 +11,7 @@ import createTheme from '../imports/theme'
 // Client-side cache, shared for the whole session of the user in the browser.
 const clientSideEmotionCache = createCache({ key: 'css' })
 
-function AppThemeProvider (props: React.PropsWithChildren<Record<string, unknown>>) {
+function AppThemeProvider (props: React.PropsWithChildren<Record<string, unknown>>): JSX.Element {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom)
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
   const darkModeSetting = darkMode === true || (darkMode === undefined && prefersDarkMode)
@@ -28,7 +28,7 @@ function AppThemeProvider (props: React.PropsWithChildren<Record<string, unknown
   return <ThemeProvider theme={theme}>{props.children}</ThemeProvider>
 }
 
-export default function MyApp (props: AppProps & { emotionCache?: EmotionCache }) {
+export default function MyApp (props: AppProps & { emotionCache?: EmotionCache }): JSX.Element {
   const { Component, emotionCache = clientSideEmotionCache, pageProps } = props
 
   return (

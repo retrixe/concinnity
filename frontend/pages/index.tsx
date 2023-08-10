@@ -6,7 +6,7 @@ import Title from '../imports/components/title'
 import { AppDiv, TopBar } from '../imports/components/layout'
 import { loginStatusAtom } from '../imports/recoil-atoms'
 
-const IndexPage = () => {
+const IndexPage = (): JSX.Element => {
   const router = useRouter()
   const loginStatus = useRecoilValue(loginStatusAtom)
   React.useEffect(() => {

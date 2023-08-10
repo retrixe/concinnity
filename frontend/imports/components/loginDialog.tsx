@@ -16,7 +16,7 @@ const onEnter = <T,>(func: () => T) => (e: React.KeyboardEvent<HTMLDivElement>) 
   if (e.key === 'Enter') return func()
 }
 
-const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
+const LoginDialog = (props: { shown: boolean, handleClose: () => void }): JSX.Element => {
   const setLoginStatus = useSetRecoilState(loginStatusAtom)
   const passwordRef = useRef<HTMLInputElement>()
   const confirmRef = useRef<HTMLInputElement>()
@@ -32,7 +32,7 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
   const emailPresent = !registerMode || (registerMode && email)
   const errorColor = error.startsWith('Your account has been created!') ? 'primary' : 'error'
 
-  const clearDialog = () => {
+  const clearDialog = (): void => {
     setPasswordMatches(false)
     setInProgress(false)
     setUsername('')
@@ -41,18 +41,18 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
     setError('')
   }
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     setRegisterMode(false)
     clearDialog()
     props.handleClose()
   }
 
-  const handleRegister = () => {
+  const handleRegister = (): void => {
     setRegisterMode(state => !state)
     clearDialog()
   }
 
-  const submit = async () => {
+  const submit = async (): Promise<void> => {
     if (registerMode && !passwordMatches) setError('Your entered passwords don\'t match!')
     else if (username && password && emailPresent) {
       setInProgress(true)
@@ -78,7 +78,7 @@ const LoginDialog = (props: { shown: boolean, handleClose: () => void }) => {
     else if (!emailPresent) setError('Enter your e-mail!')
   }
 
-  const handleSubmit = () => { submit().catch(console.error) }
+  const handleSubmit = (): void => { submit().catch(console.error) }
 
   const usernameFieldLabel = (!registerMode ? 'Email Address/' : '') + 'Username'
   const loginButtonDisabled = !username || !password || !emailPresent

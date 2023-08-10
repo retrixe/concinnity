@@ -7,7 +7,7 @@ import createTheme from '../imports/theme'
 const ico = '/favicon.png'
 
 class MyDocument extends Document {
-  render () {
+  render (): JSX.Element {
     return (
       <Html lang='en' dir='ltr'>
         <Head>
@@ -65,7 +65,7 @@ MyDocument.getInitialProps = async ctx => {
   ctx.renderPage = () => // eslint-disable-line @typescript-eslint/promise-function-async
     originalRenderPage({
       enhanceApp: (App: any) => {
-        const EnhancedApp = (props: any) => <App emotionCache={cache} {...props} />
+        const EnhancedApp = (props: any): JSX.Element => <App emotionCache={cache} {...props} />
         return EnhancedApp
       }
     })

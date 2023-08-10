@@ -5,11 +5,11 @@ import { useRecoilValue } from 'recoil'
 import config from '../../config.json'
 import { loginStatusAtom } from '../../imports/recoil-atoms'
 import { AppDiv, FlexSpacer, TopBar } from '../../imports/components/layout'
-import { Room } from '../../imports/types'
+import { type Room } from '../../imports/types'
 import { VideoPlayer } from '../../imports/components/videoPlayer'
 import LoginDialog from '../../imports/components/loginDialog'
 
-const RoomPage = () => {
+const RoomPage = (): JSX.Element => {
   const { id, fileUrl } = useRouter().query
 
   const loginStatus = useRecoilValue(loginStatusAtom)

@@ -16,14 +16,14 @@ const TopBarCenteredContent = styled.div({})
 
 export const FlexSpacer = styled.div({ flex: 1 })
 
-export const TopBar = (props: { variant?: 'dense' }) => {
+export const TopBar = (props: { variant?: 'dense' }): JSX.Element => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom) // System then Dark then Light
   const [loginStatus, setLoginStatus] = useRecoilState(loginStatusAtom)
   const [loginDialog, setLoginDialog] = useState(false)
   const router = useRouter()
 
-  const themeToggle = () => setDarkMode(state => state === false ? undefined : state !== true)
-  const handleLogin = () => {
+  const themeToggle = (): void => setDarkMode(state => state === false ? undefined : state !== true)
+  const handleLogin = (): void => {
     const token = localStorage.getItem('token')
     if (loginStatus && token) {
       fetch(config.serverUrl + '/api/logout', { method: 'POST', headers: { Authentication: token } })

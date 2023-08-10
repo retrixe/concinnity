@@ -20,7 +20,7 @@ export const loginStatusAtom = atom<false | string>({
   default: false,
   effects: [({ setSelf }) => {
     if (typeof localStorage === 'undefined') return
-    const loadAtomState = () => {
+    const loadAtomState = (): void => {
       const token = localStorage.getItem('token')
       if (!token) return
       // If loading, set self to empty

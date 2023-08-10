@@ -1,14 +1,14 @@
-
 import { css } from '@emotion/react'
-import React, { SyntheticEvent, useState } from 'react'
+import React, { type SyntheticEvent, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Button } from '@mui/material'
 import { Controls } from './controls'
-import BaseReactPlayer, { BaseReactPlayerProps, OnProgressProps } from 'react-player/base'
+import { type BaseReactPlayerProps, type OnProgressProps } from 'react-player/base'
+import type BaseReactPlayer from 'react-player/base'
 // Fix for Hydration error
 const ReactPlayer = dynamic(async () => await import('./reactPlayerWrapper'), { ssr: false })
 
-const formatTime = (time: number) => {
+const formatTime = (time: number): string => {
   if (isNaN(time)) {
     return '00:00'
   }
@@ -24,8 +24,8 @@ const formatTime = (time: number) => {
   }
 }
 
-const LoadFileButton = (props: { setFileUrl: (url: string) => void }) => {
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+const LoadFileButton = (props: { setFileUrl: (url: string) => void }): JSX.Element => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>): void => {
     if (e.target.files?.length !== 1) {
       return
     }
@@ -46,7 +46,7 @@ const LoadFileButton = (props: { setFileUrl: (url: string) => void }) => {
   )
 }
 
-export const VideoPlayer = (props: { url?: string, videoName: string }) => {
+export const VideoPlayer = (props: { url?: string, videoName: string }): JSX.Element => {
   const [url, setUrl] = useState(props.url)
 
   const [playing, setPlaying] = useState(false)
@@ -69,7 +69,7 @@ export const VideoPlayer = (props: { url?: string, videoName: string }) => {
   const formatCurrentTime = formatTime(currentTime)
   const formatDuration = formatTime(duration)
 
-  const progressHandler = (state: OnProgressProps) => {
+  const progressHandler = (state: OnProgressProps): void => {
     if (count > 3 && controlRef?.current) {
       controlRef.current.style.visibility = 'hidden'
     } else if (controlRef?.current?.style?.visibility === 'visible') {
@@ -81,40 +81,40 @@ export const VideoPlayer = (props: { url?: string, videoName: string }) => {
     }
   }
 
-  const playPauseHandler = () => {
+  const playPauseHandler = (): void => {
     setPlaying(!playing)
   }
 
-  const seekHandler = (_e: Event, value: number) => {
+  const seekHandler = (_e: Event, value: number): void => {
     const newPlayed = value / 100
     setPlayed(newPlayed)
     videoPlayerRef?.current?.seekTo(newPlayed)
   }
 
-  const seekMouseUpHandler = (_e: SyntheticEvent<Element, Event>, value: number) => {
+  const seekMouseUpHandler = (_e: SyntheticEvent<Element, Event>, value: number): void => {
     setSeeking(false)
     videoPlayerRef?.current?.seekTo(value / 100)
   }
 
-  const volumeChangeHandler = (_e: Event, value: number) => {
+  const volumeChangeHandler = (_e: Event, value: number): void => {
     setVolume(value / 100)
     setMuted(value === 0)
   }
 
-  const volumeSeekUpHandler = (e: SyntheticEvent<Element, Event>, value: number) => {
+  const volumeSeekUpHandler = (e: SyntheticEvent<Element, Event>, value: number): void => {
     volumeChangeHandler(e.nativeEvent, value)
   }
 
-  const muteHandler = () => {
+  const muteHandler = (): void => {
     // TODO: verify volume is not 0
     setMuted(!muted)
   }
 
-  const onSeekMouseDownHandler = () => {
+  const onSeekMouseDownHandler = (): void => {
     setSeeking(true)
   }
 
-  const mouseMoveHandler = () => {
+  const mouseMoveHandler = (): void => {
     if (!controlRef.current) {
       return
     }

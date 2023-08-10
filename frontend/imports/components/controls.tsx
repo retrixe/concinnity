@@ -1,6 +1,6 @@
 import { IconButton, Slider, Typography } from '@mui/material'
 import { Pause, PlayArrow, VolumeOff, VolumeUp } from '@mui/icons-material'
-import React, { SyntheticEvent } from 'react'
+import React, { type SyntheticEvent } from 'react'
 
 interface Props {
   videoName: string
@@ -21,7 +21,7 @@ interface Props {
   // TODO: subs
 }
 
-export const Controls = (props: Props) => {
+export const Controls = (props: Props): JSX.Element => {
   return (
     <div ref={props.controlRef}>
       <div>

@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useState } from 'react'
+import React, { type ChangeEvent, useState } from 'react'
 import {
   Dialog,
   DialogActions,
@@ -16,7 +16,7 @@ const onEnter = <T,>(func: () => T) => (e: React.KeyboardEvent<HTMLDivElement>) 
   if (e.key === 'Enter') return func()
 }
 
-const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void }) => {
+const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void }): JSX.Element => {
   const [title, setTitle] = useState('')
   const [fileName, setFileName] = useState('')
   const [fileUrl, setFileUrl] = useState('')
@@ -25,11 +25,11 @@ const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void })
 
   const router = useRouter()
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     props.handleClose()
   }
 
-  const createRoom = async () => {
+  const createRoom = async (): Promise<void> => {
     setInProgress(true)
     try {
       const req = await fetch(config.serverUrl + '/api/room', {
@@ -50,9 +50,9 @@ const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void })
     setInProgress(false)
   }
 
-  const handleCreateRoom = () => { createRoom().catch(console.error) }
+  const handleCreateRoom = (): void => { createRoom().catch(console.error) }
 
-  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>): void => {
     if (e.target.files?.length !== 1) {
       return
     }
