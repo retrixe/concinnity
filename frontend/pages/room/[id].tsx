@@ -1,4 +1,4 @@
-import { Typography } from '@mui/material'
+import { Button, Typography } from '@mui/material'
 import { useRouter } from 'next/router'
 import React, { useEffect, useState } from 'react'
 import config from '../../config.json'
@@ -34,6 +34,7 @@ const RoomPage = (): JSX.Element => {
     setLoginDialog(!loginStatus)
   }, [loginStatus])
 
+  // TODO: Add Home button to leave room
   return (
     <>
       <TopBar />
@@ -42,15 +43,18 @@ const RoomPage = (): JSX.Element => {
         <Typography variant='h4'>{room?.title}</Typography>
         <div>
           {error && <Typography color='error'>{error}</Typography>}
-          <VideoPlayer
-            url={typeof fileUrl === 'string' ? fileUrl : undefined}
-            videoName={room?.extra ?? 'Loading'}
-          />
           {room?.extra &&
             <Typography>
               <b>{room?.extra && room.extra}</b>
               {' is being played.'}
             </Typography>}
+          {!error && room && (
+            <VideoPlayer
+              url={typeof fileUrl === 'string' ? fileUrl : undefined}
+              videoName={room?.extra ?? 'Loading'}
+            />
+          )}
+          {!error && <Button variant='outlined'>Play New Video</Button> /* TODO: bring up something like the startWatchingDialog which changes the value of extra */}
         </div>
         <FlexSpacer />
       </AppDiv>

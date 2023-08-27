@@ -24,7 +24,7 @@ const formatTime = (time: number): string => {
   }
 }
 
-const LoadFileButton = (props: { setFileUrl: (url: string) => void }): JSX.Element => {
+const LoadFileButton = (props: { setFileUrl: (url: string) => void, fileName: string }): JSX.Element => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>): void => {
     if (e.target.files?.length !== 1) {
       return
@@ -40,7 +40,7 @@ const LoadFileButton = (props: { setFileUrl: (url: string) => void }): JSX.Eleme
       variant='outlined'
       css={css`margin-right: 8px;`}
     >
-      Select Video
+      Select Video: {props.fileName}
       <input type='file' hidden onChange={handleFileSelect} />
     </Button>
   )
@@ -170,7 +170,7 @@ export const VideoPlayer = (props: { url?: string, videoName: string }): JSX.Ele
             margin: 10px 0;
           `}
           >
-            <LoadFileButton setFileUrl={setUrl} />
+            <LoadFileButton setFileUrl={setUrl} fileName={props.videoName} />
           </div>
           )}
     </>

@@ -34,7 +34,8 @@ const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void })
     try {
       const req = await fetch(config.serverUrl + '/api/room', {
         method: 'POST',
-        body: JSON.stringify({ title, type: 'localFile', fileName }),
+        // TODO: support remoteFile
+        body: JSON.stringify({ title, type: 'localFile', extra: fileName }),
         headers: { Authentication: localStorage.getItem('token') ?? '' }
       })
       const res: { error?: string, id: string } = await req.json()
@@ -63,7 +64,7 @@ const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void })
     setFileUrl(url)
   }
 
-  const createButtonDisabled = !title && !fileName
+  const createButtonDisabled = !title || !fileName
   return (
     <Dialog open={props.shown} onClose={handleClose}>
       <DialogTitle>Create a Room</DialogTitle>
