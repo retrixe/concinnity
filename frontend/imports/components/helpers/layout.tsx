@@ -7,9 +7,9 @@ import LightModeOutlined from '@mui/icons-material/LightModeOutlined'
 import DarkModeOutlined from '@mui/icons-material/DarkModeOutlined'
 import Logout from '@mui/icons-material/Logout'
 import Login from '@mui/icons-material/Login'
-import config from '../../config.json'
+import config from '../../../config.json'
 import LoginDialog from './loginDialog'
-import { darkModeAtom, loginStatusAtom } from '../recoil-atoms'
+import { darkModeAtom, loginStatusAtom } from '../../recoil-atoms'
 import { useRouter } from 'next/router'
 
 const TopBarCenteredContent = styled.div({})

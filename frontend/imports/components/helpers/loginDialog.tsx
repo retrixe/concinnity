@@ -9,8 +9,8 @@ import {
   TextField,
   Typography
 } from '@mui/material'
-import config from '../../config.json'
-import { loginStatusAtom } from '../recoil-atoms'
+import config from '../../../config.json'
+import { loginStatusAtom } from '../../recoil-atoms'
 
 const onEnter = <T,>(func: () => T) => (e: React.KeyboardEvent<HTMLDivElement>) => {
   if (e.key === 'Enter') return func()

@@ -2,8 +2,8 @@ import React from 'react'
 import { useRouter } from 'next/router'
 import { useRecoilValue } from 'recoil'
 import { Typography } from '@mui/material'
-import Title from '../imports/components/title'
-import { AppDiv, TopBar } from '../imports/components/layout'
+import Title from '../imports/components/helpers/title'
+import { AppDiv, TopBar } from '../imports/components/helpers/layout'
 import { loginStatusAtom } from '../imports/recoil-atoms'
 
 const IndexPage = (): JSX.Element => {

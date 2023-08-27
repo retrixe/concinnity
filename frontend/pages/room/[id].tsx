@@ -4,10 +4,10 @@ import React, { useState } from 'react'
 import { useRecoilValue } from 'recoil'
 import config from '../../config.json'
 import { loginStatusAtom } from '../../imports/recoil-atoms'
-import { AppDiv, FlexSpacer, TopBar } from '../../imports/components/layout'
+import { AppDiv, FlexSpacer, TopBar } from '../../imports/components/helpers/layout'
 import { type Room } from '../../imports/types'
-import { VideoPlayer } from '../../imports/components/videoPlayer'
-import LoginDialog from '../../imports/components/loginDialog'
+import { VideoPlayer } from '../../imports/components/room/videoPlayer'
+import LoginDialog from '../../imports/components/helpers/loginDialog'
 
 const RoomPage = (): JSX.Element => {
   const { id, fileUrl } = useRouter().query

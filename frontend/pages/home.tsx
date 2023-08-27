@@ -2,10 +2,10 @@ import React from 'react'
 import { useRouter } from 'next/router'
 import { useRecoilValue } from 'recoil'
 import { Button, Typography } from '@mui/material'
-import Title from '../imports/components/title'
-import { AppDiv, TopBar } from '../imports/components/layout'
+import Title from '../imports/components/helpers/title'
+import { AppDiv, TopBar } from '../imports/components/helpers/layout'
 import { loginStatusAtom } from '../imports/recoil-atoms'
-import StartWatchingDialog from '../imports/components/startWatchingDialog'
+import StartWatchingDialog from '../imports/components/home/startWatchingDialog'
 
 const IndexPage = (): JSX.Element => {
   const [startWatchingShown, setStartWatchingShown] = React.useState(false)

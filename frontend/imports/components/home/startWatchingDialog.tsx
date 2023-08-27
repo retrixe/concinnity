@@ -8,7 +8,7 @@ import {
   TextField,
   Typography
 } from '@mui/material'
-import config from '../../config.json'
+import config from '../../../config.json'
 import { useRouter } from 'next/router'
 import { css } from '@emotion/react'
 
