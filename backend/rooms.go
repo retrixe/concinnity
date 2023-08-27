@@ -1,7 +1,9 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 
@@ -26,19 +28,29 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var data struct {
-		Title    string `json:"title"`
-		Type     string `json:"type"`
-		FileName string `json:"fileName"`
+		Title string `json:"title"`
+		Type  string `json:"type"`
+		Extra string `json:"extra"`
 	}
 
 	err = json.Unmarshal(body, &data)
 	if err != nil {
 		http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
 		return
+	} else if data.Type != "localFile" && data.Type != "remoteFile" {
+		http.Error(w, errorJson("Invalid room type!"), http.StatusBadRequest)
+		return
+	} else if data.Title == "" {
+		http.Error(w, errorJson("Title cannot be empty!"), http.StatusBadRequest)
+		return
+	} else if data.Extra == "" {
+		http.Error(w, errorJson("Extra data cannot be empty with '"+data.Type+"' type of room!"),
+			http.StatusBadRequest)
+		return
 	}
 
 	id := nanoid.Must(12)
-	result, err := insertRoomStmt.Exec(id, data.Type, data.Title, data.FileName)
+	result, err := insertRoomStmt.Exec(id, data.Type, data.Title, data.Extra)
 	if err != nil {
 		handleInternalServerError(w, err)
 		return
@@ -52,8 +64,7 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 func GetRoom(w http.ResponseWriter, r *http.Request) {
 	token := Token{}
 	if IsAuthenticated(w, r, &token) == nil {
-		http.Error(w, errorJson("You are not authenticated!"),
-			http.StatusForbidden)
+		http.Error(w, errorJson("You are not authenticated!"), http.StatusForbidden)
 		return
 	}
 
@@ -65,7 +76,10 @@ func GetRoom(w http.ResponseWriter, r *http.Request) {
 		&room.ID, &room.Type, &room.Title, &room.Extra,
 		pq.Array(&room.Chat), &room.Paused, &room.Timestamp,
 		&room.CreatedAt, &room.LastActionTime)
-	if err != nil {
+	if errors.Is(sql.ErrNoRows, err) {
+		http.Error(w, errorJson("Room not found!"), http.StatusNotFound)
+		return
+	} else if err != nil {
 		handleInternalServerError(w, err)
 		return
 	}

@@ -18,6 +18,7 @@ Endpoints:
 - POST /api/register
 - GET /api/room/:id - Get the room's info
 - POST /api/room - Create a new room and join it
+- PATCH /api/room/:id - Update the room's info
 - TODO: POST /api/room/:id - Join an existing room
 - TODO: WS /api/room/:id - Get live updates to room's info
 - TODO: GET /api/room/:id/leave - Leave a room
