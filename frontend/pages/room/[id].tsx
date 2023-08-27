@@ -1,23 +1,22 @@
 import { Typography } from '@mui/material'
 import { useRouter } from 'next/router'
-import React, { useState } from 'react'
-import { useRecoilValue } from 'recoil'
+import React, { useEffect, useState } from 'react'
 import config from '../../config.json'
-import { loginStatusAtom } from '../../imports/recoil-atoms'
 import { AppDiv, FlexSpacer, TopBar } from '../../imports/components/helpers/layout'
 import { type Room } from '../../imports/types'
 import { VideoPlayer } from '../../imports/components/room/videoPlayer'
 import LoginDialog from '../../imports/components/helpers/loginDialog'
+import { useLoginStatus } from '../../imports/store'
 
 const RoomPage = (): JSX.Element => {
   const { id, fileUrl } = useRouter().query
 
-  const loginStatus = useRecoilValue(loginStatusAtom)
+  const loginStatus = useLoginStatus(state => state.loginStatus)
   const [room, setRoom] = useState<Room | undefined>()
   const [error, setError] = useState('')
   const [loginDialog, setLoginDialog] = useState(false)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof id !== 'string' || !id) return
     fetch(config.serverUrl + `/api/room/${id}`, {
       method: 'GET',
@@ -31,12 +30,8 @@ const RoomPage = (): JSX.Element => {
     }).catch(console.error)
   }, [id])
 
-  React.useEffect(() => {
-    if (!loginStatus && loginStatus !== '') {
-      setLoginDialog(true)
-    } else {
-      setLoginDialog(false)
-    }
+  useEffect(() => {
+    setLoginDialog(!loginStatus)
   }, [loginStatus])
 
   return (

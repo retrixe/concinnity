@@ -1,5 +1,4 @@
 import React, { useRef, useState } from 'react'
-import { useSetRecoilState } from 'recoil'
 import {
   Dialog,
   DialogActions,
@@ -10,14 +9,14 @@ import {
   Typography
 } from '@mui/material'
 import config from '../../../config.json'
-import { loginStatusAtom } from '../../recoil-atoms'
+import { useLoginStatus } from '../../store'
 
 const onEnter = <T,>(func: () => T) => (e: React.KeyboardEvent<HTMLDivElement>) => {
   if (e.key === 'Enter') return func()
 }
 
 const LoginDialog = (props: { shown: boolean, handleClose: () => void }): JSX.Element => {
-  const setLoginStatus = useSetRecoilState(loginStatusAtom)
+  const { setLoginStatus } = useLoginStatus()
   const passwordRef = useRef<HTMLInputElement>()
   const confirmRef = useRef<HTMLInputElement>()
   const emailRef = useRef<HTMLInputElement>()

@@ -1,14 +1,13 @@
 import React from 'react'
 import { useRouter } from 'next/router'
-import { useRecoilValue } from 'recoil'
 import { Typography } from '@mui/material'
 import Title from '../imports/components/helpers/title'
 import { AppDiv, TopBar } from '../imports/components/helpers/layout'
-import { loginStatusAtom } from '../imports/recoil-atoms'
+import { useLoginStatus } from '../imports/store'
 
 const IndexPage = (): JSX.Element => {
   const router = useRouter()
-  const loginStatus = useRecoilValue(loginStatusAtom)
+  const loginStatus = useLoginStatus(state => state.loginStatus)
   React.useEffect(() => {
     if (loginStatus) router.replace('/home').catch(console.error)
   })

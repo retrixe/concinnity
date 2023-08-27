@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import styled from '@emotion/styled'
-import { useRecoilState } from 'recoil'
 import { AppBar, IconButton, Toolbar, Tooltip, Typography } from '@mui/material'
 import SettingsBrightnessOutlined from '@mui/icons-material/SettingsBrightnessOutlined'
 import LightModeOutlined from '@mui/icons-material/LightModeOutlined'
@@ -9,20 +8,20 @@ import Logout from '@mui/icons-material/Logout'
 import Login from '@mui/icons-material/Login'
 import config from '../../../config.json'
 import LoginDialog from './loginDialog'
-import { darkModeAtom, loginStatusAtom } from '../../recoil-atoms'
 import { useRouter } from 'next/router'
+import { useDarkMode, useLoginStatus } from '../../store'
 
 const TopBarCenteredContent = styled.div({})
 
 export const FlexSpacer = styled.div({ flex: 1 })
 
 export const TopBar = (props: { variant?: 'dense' }): JSX.Element => {
-  const [darkMode, setDarkMode] = useRecoilState(darkModeAtom) // System then Dark then Light
-  const [loginStatus, setLoginStatus] = useRecoilState(loginStatusAtom)
+  const { darkMode, setDarkMode } = useDarkMode() // System then Dark then Light
+  const { loginStatus, setLoginStatus } = useLoginStatus()
   const [loginDialog, setLoginDialog] = useState(false)
   const router = useRouter()
 
-  const themeToggle = (): void => setDarkMode(state => state === false ? undefined : state !== true)
+  const themeToggle = (): void => setDarkMode(darkMode === false ? undefined : darkMode !== true)
   const handleLogin = (): void => {
     const token = localStorage.getItem('token')
     if (loginStatus && token) {

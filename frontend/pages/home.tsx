@@ -1,17 +1,16 @@
 import React from 'react'
 import { useRouter } from 'next/router'
-import { useRecoilValue } from 'recoil'
 import { Button, Typography } from '@mui/material'
 import Title from '../imports/components/helpers/title'
 import { AppDiv, TopBar } from '../imports/components/helpers/layout'
-import { loginStatusAtom } from '../imports/recoil-atoms'
 import StartWatchingDialog from '../imports/components/home/startWatchingDialog'
+import { useLoginStatus } from '../imports/store'
 
 const IndexPage = (): JSX.Element => {
   const [startWatchingShown, setStartWatchingShown] = React.useState(false)
 
   const router = useRouter()
-  const loginStatus = useRecoilValue(loginStatusAtom)
+  const loginStatus = useLoginStatus(state => state.loginStatus)
   React.useEffect(() => {
     if (loginStatus === false) router.replace('/').catch(console.error)
   })
