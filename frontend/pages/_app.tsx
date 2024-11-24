@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import Head from 'next/head'
-import { type AppProps } from 'next/app'
+import type { AppProps } from 'next/app'
 import createCache from '@emotion/cache'
 import { CacheProvider, type EmotionCache } from '@emotion/react'
 import { ThemeProvider, CssBaseline } from '@mui/material'
@@ -10,14 +10,17 @@ import createTheme from '../imports/theme'
 // Client-side cache, shared for the whole session of the user in the browser.
 const clientSideEmotionCache = createCache({ key: 'css' })
 
-function AppThemeProvider (props: React.PropsWithChildren<Record<string, unknown>>): JSX.Element {
+function AppThemeProvider(
+  props: React.PropsWithChildren<Record<string, unknown>>,
+): React.JSX.Element {
   const { loadLoginStatus } = useLoginStatus()
   const { useDarkModeValue, loadDarkModeSetting } = useDarkMode()
   const darkMode = useDarkModeValue()
   const theme = React.useMemo(() => createTheme(darkMode), [darkMode])
 
   useEffect(loadDarkModeSetting, [loadDarkModeSetting]) // Read darkMode from localStorage.
-  useEffect(() => { // Load login status.
+  useEffect(() => {
+    // Load login status.
     loadLoginStatus()
     const interval = setInterval(loadLoginStatus, 5000)
     return () => clearInterval(interval)
@@ -26,7 +29,9 @@ function AppThemeProvider (props: React.PropsWithChildren<Record<string, unknown
   return <ThemeProvider theme={theme}>{props.children}</ThemeProvider>
 }
 
-export default function MyApp (props: AppProps & { emotionCache?: EmotionCache }): JSX.Element {
+export default function MyApp(
+  props: AppProps & { emotionCache?: EmotionCache },
+): React.JSX.Element {
   const { Component, emotionCache = clientSideEmotionCache, pageProps } = props
 
   return (

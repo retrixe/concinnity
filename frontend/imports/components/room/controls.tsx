@@ -8,9 +8,9 @@ interface Props {
   playing: boolean
   played: number
   onSeek: (e: Event, newValue: number) => void
-  onMouseSeekUp: (e: SyntheticEvent<Element, Event>, newValue: number) => void
+  onMouseSeekUp: (e: SyntheticEvent, newValue: number) => void
   onVolumeChangeHandler: (e: Event, newValue: number) => void
-  onVolumeSeekUp: (e: SyntheticEvent<Element, Event>, newValue: number) => void
+  onVolumeSeekUp: (e: SyntheticEvent, newValue: number) => void
   volume: number
   mute: boolean
   onMute: () => void
@@ -21,7 +21,7 @@ interface Props {
   // TODO: subs
 }
 
-export const Controls = (props: Props): JSX.Element => {
+export const Controls = (props: Props): React.JSX.Element => {
   return (
     <div ref={props.controlRef}>
       <div>
@@ -40,7 +40,8 @@ export const Controls = (props: Props): JSX.Element => {
             value={props.played * 100}
             onChange={(e, number) => props.onSeek(e, number as number)}
             onChangeCommitted={(e, number) =>
-              props.onMouseSeekUp(e as SyntheticEvent<Element, Event>, number as number)}
+              props.onMouseSeekUp(e as SyntheticEvent, number as number)
+            }
             onMouseDown={() => props.onMouseSeekDown()}
             component='div'
           />
@@ -57,10 +58,13 @@ export const Controls = (props: Props): JSX.Element => {
           value={props.volume * 100}
           onChange={(e, number) => props.onVolumeChangeHandler(e, number as number)}
           onChangeCommitted={(e, number) =>
-            props.onVolumeSeekUp(e as SyntheticEvent<Element, Event>, number as number)}
+            props.onVolumeSeekUp(e as SyntheticEvent, number as number)
+          }
           component='div'
         />
-        <span>{props.currentTime}/{props.duration}</span>
+        <span>
+          {props.currentTime}/{props.duration}
+        </span>
       </div>
     </div>
   )

@@ -1503,6 +1503,7 @@ __metadata:
     eslint-config-prettier: "npm:^9.1.0"
     eslint-config-standard-jsx: "npm:^11.0.0"
     eslint-config-standard-react: "npm:^13.0.0"
+    eslint-import-resolver-node: "npm:^0.3.9"
     eslint-plugin-import: "npm:^2.31.0"
     eslint-plugin-n: "npm:^17.14.0"
     eslint-plugin-prettier: "npm:^5.2.1"

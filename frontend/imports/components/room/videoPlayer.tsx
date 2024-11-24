@@ -3,7 +3,7 @@ import React, { type SyntheticEvent, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Button } from '@mui/material'
 import { Controls } from './controls'
-import { type BaseReactPlayerProps, type OnProgressProps } from 'react-player/base'
+import type { BaseReactPlayerProps, OnProgressProps } from 'react-player/base'
 import type BaseReactPlayer from 'react-player/base'
 // Fix for Hydration error
 const ReactPlayer = dynamic(async () => await import('./reactPlayerWrapper'), { ssr: false })
@@ -24,7 +24,10 @@ const formatTime = (time: number): string => {
   }
 }
 
-const LoadFileButton = (props: { setFileUrl: (url: string) => void, fileName: string }): JSX.Element => {
+const LoadFileButton = (props: {
+  setFileUrl: (url: string) => void
+  fileName: string
+}): React.JSX.Element => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>): void => {
     if (e.target.files?.length !== 1) {
       return
@@ -38,7 +41,9 @@ const LoadFileButton = (props: { setFileUrl: (url: string) => void, fileName: st
     <Button
       component='label'
       variant='outlined'
-      css={css`margin-right: 8px;`}
+      css={css`
+        margin-right: 8px;
+      `}
     >
       Select Video: {props.fileName}
       <input type='file' hidden onChange={handleFileSelect} />
@@ -46,7 +51,7 @@ const LoadFileButton = (props: { setFileUrl: (url: string) => void, fileName: st
   )
 }
 
-export const VideoPlayer = (props: { url?: string, videoName: string }): JSX.Element => {
+export const VideoPlayer = (props: { url?: string; videoName: string }): React.JSX.Element => {
   const [url, setUrl] = useState(props.url)
 
   const [playing, setPlaying] = useState(false)
@@ -59,12 +64,8 @@ export const VideoPlayer = (props: { url?: string, videoName: string }): JSX.Ele
   const controlRef = React.useRef<HTMLDivElement>(null)
   const videoPlayerRef = React.useRef<BaseReactPlayer<BaseReactPlayerProps>>(null)
 
-  const currentTime = videoPlayerRef.current
-    ? videoPlayerRef.current.getCurrentTime()
-    : 0
-  const duration = videoPlayerRef.current
-    ? videoPlayerRef.current.getDuration()
-    : 0
+  const currentTime = videoPlayerRef.current ? videoPlayerRef.current.getCurrentTime() : 0
+  const duration = videoPlayerRef.current ? videoPlayerRef.current.getDuration() : 0
 
   const formatCurrentTime = formatTime(currentTime)
   const formatDuration = formatTime(duration)
@@ -91,7 +92,7 @@ export const VideoPlayer = (props: { url?: string, videoName: string }): JSX.Ele
     videoPlayerRef?.current?.seekTo(newPlayed)
   }
 
-  const seekMouseUpHandler = (_e: SyntheticEvent<Element, Event>, value: number): void => {
+  const seekMouseUpHandler = (_e: SyntheticEvent, value: number): void => {
     setSeeking(false)
     videoPlayerRef?.current?.seekTo(value / 100)
   }
@@ -101,7 +102,7 @@ export const VideoPlayer = (props: { url?: string, videoName: string }): JSX.Ele
     setMuted(value === 0)
   }
 
-  const volumeSeekUpHandler = (e: SyntheticEvent<Element, Event>, value: number): void => {
+  const volumeSeekUpHandler = (e: SyntheticEvent, value: number): void => {
     volumeChangeHandler(e.nativeEvent, value)
   }
 
@@ -124,43 +125,43 @@ export const VideoPlayer = (props: { url?: string, videoName: string }): JSX.Ele
 
   return (
     <>
-      {url
-        ? (
-          <div onMouseMove={mouseMoveHandler}>
-            <ReactPlayer
-              playerRef={videoPlayerRef}
-              css={css`
-                background-color: #000;
-                margin: 10px 0;
-              `}
-              url={url}
-              width={800}
-              height={450}
-              onProgress={progressHandler}
-              playing={playing}
-              volume={volume}
-              muted={muted}
-            />
-            <Controls
-              videoName={props.videoName}
-              controlRef={controlRef}
-              onPlayPause={playPauseHandler}
-              playing={playing}
-              played={played}
-              onSeek={seekHandler}
-              onMouseSeekUp={seekMouseUpHandler}
-              onMouseSeekDown={onSeekMouseDownHandler}
-              volume={volume}
-              onVolumeChangeHandler={volumeChangeHandler}
-              onVolumeSeekUp={volumeSeekUpHandler}
-              mute={muted}
-              onMute={muteHandler}
-              duration={formatDuration}
-              currentTime={formatCurrentTime}
-            />
-          </div>)
-        : (
-          <div css={css`
+      {url ? (
+        <div onMouseMove={mouseMoveHandler}>
+          <ReactPlayer
+            playerRef={videoPlayerRef}
+            css={css`
+              background-color: #000;
+              margin: 10px 0;
+            `}
+            url={url}
+            width={800}
+            height={450}
+            onProgress={progressHandler}
+            playing={playing}
+            volume={volume}
+            muted={muted}
+          />
+          <Controls
+            videoName={props.videoName}
+            controlRef={controlRef}
+            onPlayPause={playPauseHandler}
+            playing={playing}
+            played={played}
+            onSeek={seekHandler}
+            onMouseSeekUp={seekMouseUpHandler}
+            onMouseSeekDown={onSeekMouseDownHandler}
+            volume={volume}
+            onVolumeChangeHandler={volumeChangeHandler}
+            onVolumeSeekUp={volumeSeekUpHandler}
+            mute={muted}
+            onMute={muteHandler}
+            duration={formatDuration}
+            currentTime={formatCurrentTime}
+          />
+        </div>
+      ) : (
+        <div
+          css={css`
             background-color: #000;
             display: flex;
             justify-content: center;
@@ -169,10 +170,10 @@ export const VideoPlayer = (props: { url?: string, videoName: string }): JSX.Ele
             height: 450px;
             margin: 10px 0;
           `}
-          >
-            <LoadFileButton setFileUrl={setUrl} fileName={props.videoName} />
-          </div>
-          )}
+        >
+          <LoadFileButton setFileUrl={setUrl} fileName={props.videoName} />
+        </div>
+      )}
     </>
   )
 }

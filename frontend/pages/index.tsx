@@ -5,7 +5,7 @@ import Title from '../imports/components/helpers/title'
 import { AppDiv, TopBar } from '../imports/components/helpers/layout'
 import { useLoginStatus } from '../imports/store'
 
-const IndexPage = (): JSX.Element => {
+const IndexPage = (): React.JSX.Element => {
   const router = useRouter()
   const loginStatus = useLoginStatus(state => state.loginStatus)
   React.useEffect(() => {
@@ -14,7 +14,8 @@ const IndexPage = (): JSX.Element => {
   return (
     <>
       <Title
-        title='Concinnity' url='/'
+        title='Concinnity'
+        url='/'
         description='Concinnity - Watch video files together with others on the internet.'
       />
       <TopBar />
@@ -22,12 +23,8 @@ const IndexPage = (): JSX.Element => {
         <Typography variant='h5' align='center'>
           Watch video files together with others on the internet.
         </Typography>
-        <Typography align='center'>
-          Concinnity handles syncing up the video for you \o/
-        </Typography>
-        <Typography align='center'>
-          To start, login at the top right of the page.
-        </Typography>
+        <Typography align='center'>Concinnity handles syncing up the video for you \o/</Typography>
+        <Typography align='center'>To start, login at the top right of the page.</Typography>
       </AppDiv>
     </>
   )

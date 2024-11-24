@@ -15,7 +15,7 @@ const TopBarCenteredContent = styled.div({})
 
 export const FlexSpacer = styled.div({ flex: 1 })
 
-export const TopBar = (props: { variant?: 'dense' }): JSX.Element => {
+export const TopBar = (props: { variant?: 'dense' }): React.JSX.Element => {
   const { darkMode, setDarkMode } = useDarkMode() // System then Dark then Light
   const { loginStatus, setLoginStatus } = useLoginStatus()
   const [loginDialog, setLoginDialog] = useState(false)
@@ -25,7 +25,10 @@ export const TopBar = (props: { variant?: 'dense' }): JSX.Element => {
   const handleLogin = (): void => {
     const token = localStorage.getItem('token')
     if (loginStatus && token) {
-      fetch(config.serverUrl + '/api/logout', { method: 'POST', headers: { Authentication: token } })
+      fetch(config.serverUrl + '/api/logout', {
+        method: 'POST',
+        headers: { Authentication: token },
+      })
         .then(() => localStorage.removeItem('token'))
         .then(() => setLoginStatus(false))
         .then(async () => await router.replace('/'))
@@ -48,9 +51,13 @@ export const TopBar = (props: { variant?: 'dense' }): JSX.Element => {
             </IconButton>
             <IconButton color='inherit' onClick={themeToggle}>
               <Tooltip title='Theme'>
-                {darkMode === true
-                  ? <DarkModeOutlined />
-                  : (darkMode === false ? <LightModeOutlined /> : <SettingsBrightnessOutlined />)}
+                {darkMode === true ? (
+                  <DarkModeOutlined />
+                ) : darkMode === false ? (
+                  <LightModeOutlined />
+                ) : (
+                  <SettingsBrightnessOutlined />
+                )}
               </Tooltip>
             </IconButton>
           </Toolbar>

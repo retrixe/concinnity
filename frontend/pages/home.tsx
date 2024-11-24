@@ -6,7 +6,7 @@ import { AppDiv, TopBar } from '../imports/components/helpers/layout'
 import StartWatchingDialog from '../imports/components/home/startWatchingDialog'
 import { useLoginStatus } from '../imports/store'
 
-const IndexPage = (): JSX.Element => {
+const IndexPage = (): React.JSX.Element => {
   const [startWatchingShown, setStartWatchingShown] = React.useState(false)
 
   const router = useRouter()
@@ -17,9 +17,13 @@ const IndexPage = (): JSX.Element => {
 
   return (
     <>
-      <StartWatchingDialog shown={startWatchingShown} handleClose={() => setStartWatchingShown(false)} />
+      <StartWatchingDialog
+        shown={startWatchingShown}
+        handleClose={() => setStartWatchingShown(false)}
+      />
       <Title
-        title='Home - Concinnity' url='/home'
+        title='Home - Concinnity'
+        url='/home'
         description='Concinnity - Watch video files together with others on the internet.'
       />
       <TopBar />
@@ -31,7 +35,9 @@ const IndexPage = (): JSX.Element => {
           Concinnity handles syncing up the video for you \o/
         </Typography>
         <Typography align='center'>
-          <Button variant='contained' onClick={() => setStartWatchingShown(true)}>Start Watching</Button>
+          <Button variant='contained' onClick={() => setStartWatchingShown(true)}>
+            Start Watching
+          </Button>
         </Typography>
       </AppDiv>
     </>

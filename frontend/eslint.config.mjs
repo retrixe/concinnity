@@ -11,7 +11,14 @@ export default [
   },
   {
     ...love,
-    files: ['imports/**/*.js', 'imports/**/*.ts', 'pages/**/*.js', 'pages/**/*.ts'],
+    files: [
+      'imports/**/*.js',
+      'imports/**/*.ts',
+      'imports/**/*.tsx',
+      'pages/**/*.js',
+      'pages/**/*.ts',
+      'pages/**/*.tsx',
+    ],
   },
   react.configs.flat.recommended,
   { plugins: { 'react-hooks': reactHooks }, rules: reactHooks.configs.recommended.rules },
@@ -19,6 +26,7 @@ export default [
   { rules: standardReact.rules },
   {
     rules: {
+      'react/no-unknown-property': ['error', { ignore: ['css'] }],
       // Make TypeScript ESLint less strict. Perhaps move to ESLint+TS-ESLint+import+promise+n?
       '@typescript-eslint/no-confusing-void-expression': 'off',
       '@typescript-eslint/strict-boolean-expressions': 'off',
@@ -30,9 +38,12 @@ export default [
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-magic-numbers': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'off',
       '@typescript-eslint/no-unsafe-type-assertion': 'off',
+      '@typescript-eslint/class-methods-use-this': 'off',
+      '@typescript-eslint/prefer-destructuring': 'off',
       '@typescript-eslint/use-unknown-in-catch-callback-variable': 'off',
     },
   },

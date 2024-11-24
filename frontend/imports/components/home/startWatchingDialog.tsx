@@ -6,17 +6,22 @@ import {
   DialogTitle,
   Button,
   TextField,
-  Typography
+  Typography,
 } from '@mui/material'
 import config from '../../../config.json'
 import { useRouter } from 'next/router'
 import { css } from '@emotion/react'
 
-const onEnter = <T,>(func: () => T) => (e: React.KeyboardEvent<HTMLDivElement>) => {
-  if (e.key === 'Enter') return func()
-}
+const onEnter =
+  <T,>(func: () => T) =>
+  (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter') return func()
+  }
 
-const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void }): JSX.Element => {
+const StartWatchingDialog = (props: {
+  shown: boolean
+  handleClose: () => void
+}): React.JSX.Element => {
   const [title, setTitle] = useState('')
   const [fileName, setFileName] = useState('')
   const [fileUrl, setFileUrl] = useState('')
@@ -36,22 +41,31 @@ const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void })
         method: 'POST',
         // TODO: support remoteFile
         body: JSON.stringify({ title, type: 'localFile', extra: fileName }),
-        headers: { Authentication: localStorage.getItem('token') ?? '' }
+        headers: { Authentication: localStorage.getItem('token') ?? '' },
       })
-      const res: { error?: string, id: string } = await req.json()
+      const res: { error?: string; id: string } = await req.json()
       if (res.error) setError(res.error)
       else {
         props.handleClose()
-        router.push({
-          pathname: `/room/${res.id}`,
-          query: fileUrl ? { fileUrl } : {}
-        }, `/room/${res.id}`).catch(console.error)
+        router
+          .push(
+            {
+              pathname: `/room/${res.id}`,
+              query: fileUrl ? { fileUrl } : {},
+            },
+            `/room/${res.id}`,
+          )
+          .catch(console.error)
       }
-    } catch (e) { setError('An unknown network error occurred.') }
+    } catch (e) {
+      setError('An unknown network error occurred.')
+    }
     setInProgress(false)
   }
 
-  const handleCreateRoom = (): void => { createRoom().catch(console.error) }
+  const handleCreateRoom = (): void => {
+    createRoom().catch(console.error)
+  }
 
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>): void => {
     if (e.target.files?.length !== 1) {
@@ -71,18 +85,23 @@ const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void })
 
       <DialogContent css={{ paddingBottom: 0 }}>
         <TextField
-          value={title} onChange={e => setTitle(e.target.value)}
+          value={title}
+          onChange={e => setTitle(e.target.value)}
           onKeyDown={onEnter(handleCreateRoom)}
-          margin='dense' label='Title' type='text' fullWidth
+          margin='dense'
+          label='Title'
+          type='text'
+          fullWidth
         />
 
-        <div css={css`
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-          margin-top: 16px;
-          min-width: 400px;
-        `}
+        <div
+          css={css`
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            margin-top: 16px;
+            min-width: 400px;
+          `}
         >
           <Button
             component='label'
@@ -98,7 +117,9 @@ const StartWatchingDialog = (props: { shown: boolean, handleClose: () => void })
           <Typography>{fileName}</Typography>
         </div>
 
-        <Typography color='error' css={{ marginTop: 8 }} gutterBottom>{error}</Typography>
+        <Typography color='error' css={{ marginTop: 8 }} gutterBottom>
+          {error}
+        </Typography>
       </DialogContent>
 
       <DialogActions>

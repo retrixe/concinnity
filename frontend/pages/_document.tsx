@@ -7,7 +7,7 @@ import createTheme from '../imports/theme'
 const ico = '/favicon.png'
 
 class MyDocument extends Document {
-  render (): JSX.Element {
+  render(): React.JSX.Element {
     return (
       <Html lang='en' dir='ltr'>
         <Head>
@@ -60,25 +60,26 @@ MyDocument.getInitialProps = async ctx => {
   // You can consider sharing the same emotion cache between all the SSR requests to speed up performance.
   // However, be aware that it can have global side effects.
   const cache = createCache({ key: 'css' })
-  const { extractCriticalToChunks } = createEmotionServer(cache)
+  const emotionServer = createEmotionServer(cache)
 
-  ctx.renderPage = () => // eslint-disable-line @typescript-eslint/promise-function-async
-    originalRenderPage({
+  ctx.renderPage = async () =>
+    await originalRenderPage({
       enhanceApp: (App: any) => {
-        const EnhancedApp = (props: any): JSX.Element => <App emotionCache={cache} {...props} />
+        const EnhancedApp = (props: any): React.JSX.Element => (
+          <App emotionCache={cache} {...props} />
+        )
         return EnhancedApp
-      }
+      },
     })
 
   const initialProps = await Document.getInitialProps(ctx)
   // This is important. It prevents emotion to render invalid HTML.
   // See https://github.com/mui-org/material-ui/issues/26561#issuecomment-855286153
-  const emotionStyles = extractCriticalToChunks(initialProps.html)
-  const emotionStyleTags = emotionStyles.styles.map((style) => (
+  const emotionStyles = emotionServer.extractCriticalToChunks(initialProps.html)
+  const emotionStyleTags = emotionStyles.styles.map(style => (
     <style
       data-emotion={`${style.key} ${style.ids.join(' ')}`}
       key={style.key}
-      // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{ __html: style.css }}
     />
   ))
@@ -86,7 +87,7 @@ MyDocument.getInitialProps = async ctx => {
   return {
     ...initialProps,
     // Styles fragment is rendered after the app and page rendering finish.
-    styles: [...React.Children.toArray(initialProps.styles), ...emotionStyleTags]
+    styles: [...React.Children.toArray(initialProps.styles), ...emotionStyleTags],
   }
 }
 
