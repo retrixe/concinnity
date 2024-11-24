@@ -1,5 +1,5 @@
 module.exports = {
   compiler: {
-    emotion: true
-  }
+    emotion: true,
+  },
 }

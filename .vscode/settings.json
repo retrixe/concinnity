@@ -4,6 +4,7 @@
     "**/.pnp.*": true
   },
   "eslint.nodePath": "frontend/.yarn/sdks",
+  "prettier.prettierPath": "frontend/.yarn/sdks/prettier/index.cjs",
   "typescript.tsdk": "frontend/.yarn/sdks/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true
 }

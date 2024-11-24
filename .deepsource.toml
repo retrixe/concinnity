@@ -19,5 +19,5 @@ name = "gofmt"
 enabled = true
 
 [[transformers]]
-name = "standardjs"
+name = "prettier"
 enabled = true
