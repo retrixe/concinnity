@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -29,16 +30,25 @@ TODO: Implement a rate limit of 3reqs/10min on creating rooms.
 */
 
 var db *sql.DB
-var secureCookies bool
+var config Config
+
+type Config struct {
+	SecureCookies bool   `json:"secureCookies"`
+	DatabaseURL   string `json:"databaseUrl"`
+}
 
 // TODO: implement e-mail verification option, add forgot password endpoint, room member limit
 func main() {
 	log.SetOutput(os.Stderr)
-	// TODO: use environment variables or config
-	secureCookies = false
-	connStr := "dbname=concinnity user=postgres host=localhost password=postgres sslmode=disable"
-	var err error
-	db, err = sql.Open("postgres", connStr)
+	configFile, err := os.ReadFile("config.json")
+	if err != nil {
+		log.Panicln("Failed to read config file!", err)
+	}
+	err = json.Unmarshal(configFile, &config)
+	if err != nil {
+		log.Panicln("Failed to parse config file!", err)
+	}
+	db, err = sql.Open("postgres", config.DatabaseURL)
 	if err != nil {
 		log.Panicln("Failed to open connection to database!", err)
 	}
@@ -46,7 +56,6 @@ func main() {
 	CreateSqlTables()
 	PrepareSqlStatements()
 
-	// TODO: use gin or iris or httprouter maybe
 	// Endpoints
 	http.HandleFunc("/", StatusEndpoint)
 	http.HandleFunc("/api/login", LoginEndpoint)

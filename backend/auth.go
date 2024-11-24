@@ -131,7 +131,7 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 			Name:     "token",
 			Value:    token,
 			HttpOnly: true,
-			Secure:   secureCookies,
+			Secure:   config.SecureCookies,
 			MaxAge:   3600 * 24 * 31,
 			SameSite: http.SameSiteStrictMode,
 		})
@@ -169,7 +169,7 @@ func LogoutEndpoint(w http.ResponseWriter, r *http.Request) {
 			Name:     "token",
 			Value:    "null",
 			HttpOnly: true,
-			Secure:   secureCookies,
+			Secure:   config.SecureCookies,
 			MaxAge:   -1,
 			SameSite: http.SameSiteStrictMode,
 		})
