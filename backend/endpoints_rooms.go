@@ -11,7 +11,7 @@ import (
 	nanoid "github.com/matoous/go-nanoid/v2"
 )
 
-func CreateRoom(w http.ResponseWriter, r *http.Request) {
+func CreateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Check the body for JSON containing username and password and return a token.
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -61,22 +61,19 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("{\"id\":\"" + id + "\"}"))
 }
 
-func GetRoom(w http.ResponseWriter, r *http.Request) {
+func GetRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	token := Token{}
 	if IsAuthenticated(w, r, &token) == nil {
 		http.Error(w, errorJson("You are not authenticated!"), http.StatusForbidden)
 		return
 	}
 
-	// Get the URL and extract the room ID from /api/rooms/:id
-	id := r.URL.Path[len("/api/rooms"):]
-
 	room := Room{}
-	err := findRoomByIdStmt.QueryRow(id).Scan(
+	err := findRoomByIdStmt.QueryRow(r.PathValue("id")).Scan(
 		&room.ID, &room.Type, &room.Title, &room.Extra,
 		pq.Array(&room.Chat), &room.Paused, &room.Timestamp,
 		&room.CreatedAt, &room.LastActionTime)
-	if errors.Is(sql.ErrNoRows, err) {
+	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, errorJson("Room not found!"), http.StatusNotFound)
 		return
 	} else if err != nil {

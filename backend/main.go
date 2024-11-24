@@ -57,31 +57,26 @@ func main() {
 	PrepareSqlStatements()
 
 	// Endpoints
-	http.HandleFunc("/", StatusEndpoint)
-	http.HandleFunc("/api/login", LoginEndpoint)
-	http.HandleFunc("/api/logout", LogoutEndpoint)
-	http.HandleFunc("/api/register", RegisterEndpoint)
-	http.HandleFunc("/api/room", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "POST" {
-			// POST /api/room
-			CreateRoom(w, r)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" || r.Method != "GET" {
+			http.NotFound(w, r)
 		} else {
-			http.Error(w, errorJson("Method Not Allowed!"), http.StatusMethodNotAllowed)
+			StatusEndpoint(w, r)
 		}
 	})
-	http.HandleFunc("/api/room/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
-			// GET /api/room/:id and GET /api/room/:id/leave
-			GetRoom(w, r)
-		} else if r.Method == "PATCH" {
-			// POST /api/room/:id
-			http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
-		} else if r.Method == "OPTIONS" {
-			// OPTIONS /api/room/:id
-			http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
-		} else {
-			http.Error(w, errorJson("Method Not Allowed!"), http.StatusMethodNotAllowed)
-		}
+	http.HandleFunc("POST /api/login", LoginEndpoint)
+	http.HandleFunc("POST /api/logout", LogoutEndpoint)
+	http.HandleFunc("POST /api/register", RegisterEndpoint)
+	http.HandleFunc("POST /api/room", CreateRoomEndpoint)
+	http.HandleFunc("GET /api/room/{id}", GetRoomEndpoint)
+	http.HandleFunc("GET /api/room/{id}/leave", func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
+	})
+	http.HandleFunc("PATCH /api/room/{id}", func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
+	})
+	http.HandleFunc("OPTIONS /api/room/{id}", func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
 	})
 
 	port := "8000"
