@@ -1,12 +1,12 @@
 export interface Room {
   id: string
   chat: string[]
-  createdAt: Date
   extra: string
-  lastActionTime: Date
   members: string[]
   paused: boolean
   timestamp: number
+  modifiedAt: Date
+  createdAt: Date
   title: string
-  type: 'localFile' | 'youtube' | 'netflix'
+  type: 'localFile' | 'remoteFile'
 }

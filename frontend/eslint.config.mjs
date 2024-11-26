@@ -7,7 +7,7 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 
 export default [
   {
-    ignores: ['.pnp.cjs', '.pnp.loader.mjs', '.yarn'],
+    ignores: ['.pnp.cjs', '.pnp.loader.mjs', '.yarn', '.next'],
   },
   {
     ...love,

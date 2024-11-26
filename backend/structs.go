@@ -18,13 +18,13 @@ type Token struct {
 }
 
 type Room struct {
-	ID             []byte    `json:"id"`
-	Type           string    `json:"type"`
-	Title          string    `json:"title"`
-	Extra          string    `json:"extra"`
-	Chat           []string  `json:"chat"`
-	Paused         bool      `json:"paused"`
-	Timestamp      int       `json:"timestamp"`
-	CreatedAt      time.Time `json:"createdAt"`
-	LastActionTime time.Time `json:"lastActionTime"`
+	ID         []byte    `json:"id"`
+	Type       string    `json:"type"`
+	Title      string    `json:"title"`
+	Extra      string    `json:"extra"`
+	Chat       []string  `json:"chat"`
+	Paused     bool      `json:"paused"`
+	Timestamp  int       `json:"timestamp"`
+	CreatedAt  time.Time `json:"createdAt"`
+	ModifiedAt time.Time `json:"modifiedAt"`
 }

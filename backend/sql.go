@@ -54,7 +54,7 @@ const createRoomsTableQuery = `CREATE TABLE IF NOT EXISTS rooms (
 	chat VARCHAR(2100)[] DEFAULT '{}',
 	paused BOOLEAN DEFAULT TRUE,
 	timestamp INTEGER DEFAULT 0,
-	lastActionTime TIMESTAMPTZ DEFAULT NOW(),
+	modifiedAt TIMESTAMPTZ DEFAULT NOW(),
 	createdAt TIMESTAMPTZ DEFAULT NOW());`
 
 func CreateSqlTables() {

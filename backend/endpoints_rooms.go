@@ -72,7 +72,7 @@ func GetRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	err := findRoomByIdStmt.QueryRow(r.PathValue("id")).Scan(
 		&room.ID, &room.Type, &room.Title, &room.Extra,
 		pq.Array(&room.Chat), &room.Paused, &room.Timestamp,
-		&room.CreatedAt, &room.LastActionTime)
+		&room.CreatedAt, &room.ModifiedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, errorJson("Room not found!"), http.StatusNotFound)
 		return
