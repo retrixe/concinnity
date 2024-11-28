@@ -31,7 +31,7 @@ const createUserQuery = "INSERT INTO users (username, password, email, id) VALUE
 const insertTokenQuery = "INSERT INTO tokens (token, createdAt, userId) VALUES ($1, $2, $3);"
 const deleteTokenQuery = "DELETE FROM tokens WHERE token = $1;"
 
-const insertRoomQuery = "INSERT INTO rooms (id, type, title, extra) " +
+const insertRoomQuery = "INSERT INTO rooms (id, type, title, target) " +
 	"VALUES ($1, $2, $3, $4);"
 const findRoomByIdQuery = "SELECT * FROM rooms WHERE id = $1;"
 
@@ -48,14 +48,15 @@ const createTokensTableQuery = `CREATE TABLE IF NOT EXISTS tokens (
 	userId UUID REFERENCES users(id));`
 const createRoomsTableQuery = `CREATE TABLE IF NOT EXISTS rooms (
 	id VARCHAR(24) PRIMARY KEY,
-	type VARCHAR(24), /* localFile, youtube, netflix, etc */
+	createdAt TIMESTAMPTZ DEFAULT NOW(),
 	title VARCHAR(200),
-	extra VARCHAR(200), /* carries information like file name, YouTube ID, etc */
+	type VARCHAR(24), /* localFile, remoteFile */
+	target VARCHAR(200), /* carries information like file name, YouTube ID, etc */
 	chat VARCHAR(2100)[] DEFAULT '{}',
+	members UUID[] DEFAULT '{}',
 	paused BOOLEAN DEFAULT TRUE,
 	timestamp INTEGER DEFAULT 0,
-	modifiedAt TIMESTAMPTZ DEFAULT NOW(),
-	createdAt TIMESTAMPTZ DEFAULT NOW());`
+	lastAction TIMESTAMPTZ DEFAULT NOW());`
 
 func CreateSqlTables() {
 	_, err := db.Exec(createUsersTableQuery)

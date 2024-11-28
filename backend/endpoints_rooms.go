@@ -28,9 +28,9 @@ func CreateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var data struct {
-		Title string `json:"title"`
-		Type  string `json:"type"`
-		Extra string `json:"extra"`
+		Title  string `json:"title"`
+		Type   string `json:"type"`
+		Target string `json:"target"`
 	}
 
 	err = json.Unmarshal(body, &data)
@@ -43,14 +43,14 @@ func CreateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	} else if data.Title == "" {
 		http.Error(w, errorJson("Title cannot be empty!"), http.StatusBadRequest)
 		return
-	} else if data.Extra == "" {
-		http.Error(w, errorJson("Extra data cannot be empty with '"+data.Type+"' type of room!"),
+	} else if data.Target == "" {
+		http.Error(w, errorJson("Target cannot be empty with room type '"+data.Type+"'!"),
 			http.StatusBadRequest)
 		return
 	}
 
 	id := nanoid.Must(12)
-	result, err := insertRoomStmt.Exec(id, data.Type, data.Title, data.Extra)
+	result, err := insertRoomStmt.Exec(id, data.Type, data.Title, data.Target)
 	if err != nil {
 		handleInternalServerError(w, err)
 		return
@@ -70,9 +70,9 @@ func GetRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	room := Room{}
 	err := findRoomByIdStmt.QueryRow(r.PathValue("id")).Scan(
-		&room.ID, &room.Type, &room.Title, &room.Extra,
-		pq.Array(&room.Chat), &room.Paused, &room.Timestamp,
-		&room.CreatedAt, &room.ModifiedAt)
+		&room.ID, &room.CreatedAt, &room.Title, &room.Type, &room.Target,
+		pq.Array(&room.Chat), pq.Array(&room.Members),
+		&room.Paused, &room.Timestamp, &room.LastAction)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, errorJson("Room not found!"), http.StatusNotFound)
 		return

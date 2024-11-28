@@ -23,7 +23,7 @@ Endpoints:
 - TODO: WS /api/room/:id - Join an existing room
 
 TODO: You can be a member of up to 3 rooms at once.
-TODO: Rooms are deleted after 10 minutes of no members (time tracked through modifiedAt).
+TODO: Rooms are deleted after 10 minutes of no members.
 */
 
 var db *sql.DB

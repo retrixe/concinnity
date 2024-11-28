@@ -46,22 +46,22 @@ const RoomPage = (): React.JSX.Element => {
         <Typography variant='h4'>{room?.title}</Typography>
         <div>
           {error && <Typography color='error'>{error}</Typography>}
-          {room?.extra && (
+          {room?.target && (
             <Typography>
-              <b>{room?.extra && room.extra}</b>
+              <b>{room?.target && room.target}</b>
               {' is being played.'}
             </Typography>
           )}
           {!error && room && (
             <VideoPlayer
               url={typeof fileUrl === 'string' ? fileUrl : undefined}
-              videoName={room?.extra ?? 'Loading'}
+              videoName={room?.target ?? 'Loading'}
             />
           )}
           {
             !error && (
               <Button variant='outlined'>Play New Video</Button>
-            ) /* TODO: bring up something like the startWatchingDialog which changes the value of extra */
+            ) /* TODO: bring up something like the startWatchingDialog which changes the value of target  */
           }
         </div>
         <FlexSpacer />

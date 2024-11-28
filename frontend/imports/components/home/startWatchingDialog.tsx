@@ -40,7 +40,7 @@ const StartWatchingDialog = (props: {
       const req = await fetch(config.serverUrl + '/api/room', {
         method: 'POST',
         // TODO: support remoteFile
-        body: JSON.stringify({ title, type: 'localFile', extra: fileName }),
+        body: JSON.stringify({ title, type: 'localFile', target: fileName }),
         headers: { Authentication: localStorage.getItem('token') ?? '' },
       })
       const res: { error?: string; id: string } = await req.json()
