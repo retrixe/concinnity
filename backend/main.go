@@ -20,7 +20,7 @@ Endpoints:
 - GET /api/room/:id - Get the room's info
 - POST /api/room - Create a new room and join it
 - PATCH /api/room/:id - Update the room's info
-- TODO: WS /api/room/:id - Join an existing room
+- TODO: WS /api/room/:id/join - Join an existing room
 
 TODO: You can be a member of up to 3 rooms at once.
 TODO: Rooms are deleted after 10 minutes of no members.
@@ -66,15 +66,7 @@ func main() {
 	http.HandleFunc("POST /api/register", RegisterEndpoint)
 	http.HandleFunc("POST /api/room", CreateRoomEndpoint)
 	http.HandleFunc("GET /api/room/{id}", GetRoomEndpoint)
-	http.HandleFunc("GET /api/room/{id}/leave", func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
-	})
-	http.HandleFunc("PATCH /api/room/{id}", func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
-	})
-	http.HandleFunc("OPTIONS /api/room/{id}", func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, errorJson("Not Implemented!"), http.StatusNotImplemented) // TODO
-	})
+	http.HandleFunc("GET /api/room/{id}/join", JoinRoomEndpoint)
 
 	port := "8000"
 	if os.Getenv("PORT") != "" {

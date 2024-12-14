@@ -82,3 +82,7 @@ func GetRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewEncoder(w).Encode(room)
 }
+
+func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
+	// TODO: Implement
+}
