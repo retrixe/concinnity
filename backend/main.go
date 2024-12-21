@@ -20,9 +20,9 @@ Endpoints:
 - GET /api/room/:id - Get the room's info
 - POST /api/room - Create a new room and join it
 - PATCH /api/room/:id - Update the room's info
-- TODO: WS /api/room/:id/join - Join an existing room
+- WS /api/room/:id/join - Join an existing room
 
-TODO: You can be a member of up to 3 rooms at once.
+You can be a member of up to 3 rooms at once.
 Rooms are deleted after 10 minutes of no members.
 */
 

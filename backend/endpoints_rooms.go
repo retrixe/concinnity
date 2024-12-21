@@ -93,4 +93,10 @@ func GetRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 
 func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	// TODO: Implement
+	// FIXME - If user is in 3 rooms already, user is disconnected
+	// FIXME - Upon connect, send current room info, state (paused, speed, timestamp, lastAction) and chat
+	// FIXME - Bump modifiedAt timestamp of room and add user to members
+	// FIXME - User sends/receives chat messages and state
+	// FIXME - User receives room info changes
+	// If the target/type change, the client should trash the currently playing file and reset state.
 }

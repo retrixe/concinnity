@@ -1,9 +1,13 @@
 package main
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type User struct {
-	ID        []byte    `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	Username  string    `json:"username"`
 	Password  string    `json:"password"`
 	Email     string    `json:"email"`
@@ -14,11 +18,11 @@ type User struct {
 type Token struct {
 	CreatedAt time.Time `json:"createdAt"`
 	Token     string    `json:"token"`
-	UserID    []byte    `json:"userId"`
+	UserID    uuid.UUID `json:"userId"`
 }
 
 type Room struct {
-	ID         []byte    `json:"id"`
+	ID         uuid.UUID `json:"id"`
 	CreatedAt  time.Time `json:"createdAt"`
 	ModifiedAt time.Time `json:"modifiedAt"`
 	Type       string    `json:"type"`

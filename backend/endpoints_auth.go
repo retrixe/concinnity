@@ -42,7 +42,7 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
 			username       string
 			password       string
 			email          string
-			id             []byte
+			id             uuid.UUID
 			userCreatedAt  time.Time
 			verified       bool
 			token          string
