@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"time"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -20,38 +19,8 @@ func errorJson(err string) string {
 }
 
 func handleInternalServerError(w http.ResponseWriter, err error) {
-	log.Println(err)
+	log.Println("Internal Server Error!", err)
 	http.Error(w, errorJson("Internal Server Error!"), http.StatusInternalServerError)
-}
-
-func CleanInactiveRoomsTask() {
-	for {
-		time.Sleep(10 * time.Minute)
-		CleanInactiveRooms()
-	}
-}
-
-func CleanInactiveRooms() {
-	rows, err := findInactiveRoomsStmt.Query()
-	if err != nil {
-		log.Println("Failed to find inactive rooms!", err)
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var id string
-		err = rows.Scan(&id)
-		if err != nil {
-			log.Println("Failed to scan inactive room!", err)
-			continue
-		}
-		// TODO: Check if there are no members in the room.
-		_, err = deleteRoomStmt.Exec(id)
-		if err != nil {
-			log.Println("Failed to delete inactive room!", err)
-			continue
-		}
-	}
 }
 
 // GenerateSalt returns a 16-character salt readable in UTF-8 format as well.
