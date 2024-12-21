@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"regexp"
 
 	"github.com/lib/pq"
 	nanoid "github.com/matoous/go-nanoid/v2"
@@ -28,6 +29,7 @@ func CreateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var data struct {
+		ID     string `json:"id"`
 		Type   string `json:"type"`
 		Target string `json:"target"`
 	}
@@ -45,9 +47,19 @@ func CreateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := nanoid.Must(12)
+	id := data.ID
+	if id == "" {
+		id = nanoid.Must(12)
+	} else if res, _ := regexp.MatchString("^[a-zA-Z0-9_-]{24}$", id); !res {
+		http.Error(w, errorJson("Invalid room ID!"), http.StatusBadRequest)
+		return
+	}
+
 	result, err := insertRoomStmt.Exec(id, data.Type, data.Target)
-	if err != nil {
+	if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23505" {
+		http.Error(w, errorJson("Room ID already exists!"), http.StatusConflict)
+		return
+	} else if err != nil {
 		handleInternalServerError(w, err)
 		return
 	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
