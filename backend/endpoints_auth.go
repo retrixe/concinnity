@@ -30,14 +30,12 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
 	res, err := findUserByTokenStmt.Query(token)
 	if err != nil {
 		handleInternalServerError(w, err)
-		defer res.Close()
 		return nil
 	} else if !res.Next() {
 		if w != nil {
 			http.Error(w, errorJson("You are not authenticated to access this resource!"),
 				http.StatusUnauthorized)
 		}
-		defer res.Close()
 		return nil
 	} else {
 		var (

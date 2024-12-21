@@ -23,7 +23,7 @@ Endpoints:
 - TODO: WS /api/room/:id/join - Join an existing room
 
 TODO: You can be a member of up to 3 rooms at once.
-TODO: Rooms are deleted after 10 minutes of no members.
+Rooms are deleted after 10 minutes of no members.
 */
 
 var db *sql.DB
@@ -52,6 +52,7 @@ func main() {
 	db.SetMaxOpenConns(10)
 	CreateSqlTables()
 	PrepareSqlStatements()
+	go CleanInactiveRoomsTask()
 
 	// Endpoints
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

@@ -65,7 +65,7 @@ func GetRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	room := Room{}
-	err := findRoomByIdStmt.QueryRow(r.PathValue("id")).Scan(
+	err := findRoomStmt.QueryRow(r.PathValue("id")).Scan(
 		&room.ID, &room.CreatedAt, &room.ModifiedAt,
 		&room.Type, &room.Target, pq.Array(&room.Chat),
 		&room.Paused, &room.Speed, &room.Timestamp, &room.LastAction)

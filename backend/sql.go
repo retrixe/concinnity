@@ -15,7 +15,9 @@ var insertTokenStmt *sql.Stmt
 var deleteTokenStmt *sql.Stmt
 
 var insertRoomStmt *sql.Stmt
-var findRoomByIdStmt *sql.Stmt
+var findRoomStmt *sql.Stmt
+var findInactiveRoomsStmt *sql.Stmt
+var deleteRoomStmt *sql.Stmt
 
 const findUserByTokenQuery = "SELECT username, password, email, id, users.createdAt " +
 	"AS userCreatedAt, verified, token, tokens.createdAt AS tokenCreatedAt FROM tokens " +
@@ -33,8 +35,10 @@ const deleteTokenQuery = "DELETE FROM tokens WHERE token = $1;"
 
 const insertRoomQuery = "INSERT INTO rooms (id, type, target) " +
 	"VALUES ($1, $2, $3);"
-const findRoomByIdQuery = "SELECT (id, createdAt, modifiedAt, type, target, chat, " +
+const findRoomQuery = "SELECT (id, createdAt, modifiedAt, type, target, chat, " +
 	"paused, speed, timestamp, lastAction) FROM rooms WHERE id = $1;"
+const findInactiveRoomsQuery = "SELECT id FROM rooms WHERE modifiedAt < NOW() - INTERVAL '10 minutes';"
+const deleteRoomQuery = "DELETE FROM rooms WHERE id = $1;"
 
 const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
 	username VARCHAR(16),
@@ -111,8 +115,16 @@ func PrepareSqlStatements() {
 	if err != nil {
 		log.Panicln("Failed to prepare query to insert room!", err)
 	}
-	findRoomByIdStmt, err = db.Prepare(findRoomByIdQuery)
+	findRoomStmt, err = db.Prepare(findRoomQuery)
 	if err != nil {
-		log.Panicln("Failed to prepare query to find room by id!", err)
+		log.Panicln("Failed to prepare query to find room!", err)
+	}
+	findInactiveRoomsStmt, err = db.Prepare(findInactiveRoomsQuery)
+	if err != nil {
+		log.Panicln("Failed to prepare query to find inactive rooms!", err)
+	}
+	deleteRoomStmt, err = db.Prepare(deleteRoomQuery)
+	if err != nil {
+		log.Panicln("Failed to prepare query to delete room!", err)
 	}
 }
