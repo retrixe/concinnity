@@ -17,6 +17,7 @@ var deleteTokenStmt *sql.Stmt
 var insertRoomStmt *sql.Stmt
 var findRoomStmt *sql.Stmt
 var findInactiveRoomsStmt *sql.Stmt
+var updateRoomStmt *sql.Stmt
 var deleteRoomStmt *sql.Stmt
 
 const findUserByTokenQuery = "SELECT username, password, email, id, users.createdAt " +
@@ -38,6 +39,7 @@ const insertRoomQuery = "INSERT INTO rooms (id, type, target) " +
 const findRoomQuery = "SELECT (id, createdAt, modifiedAt, type, target, chat, " +
 	"paused, speed, timestamp, lastAction) FROM rooms WHERE id = $1;"
 const findInactiveRoomsQuery = "SELECT id FROM rooms WHERE modifiedAt < NOW() - INTERVAL '10 minutes';"
+const updateRoomQuery = "UPDATE rooms SET type = $2, target = $3, modifiedAt = NOW() WHERE id = $1;"
 const deleteRoomQuery = "DELETE FROM rooms WHERE id = $1;"
 
 const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
@@ -122,6 +124,10 @@ func PrepareSqlStatements() {
 	findInactiveRoomsStmt, err = db.Prepare(findInactiveRoomsQuery)
 	if err != nil {
 		log.Panicln("Failed to prepare query to find inactive rooms!", err)
+	}
+	updateRoomStmt, err = db.Prepare(updateRoomQuery)
+	if err != nil {
+		log.Panicln("Failed to prepare query to update room!", err)
 	}
 	deleteRoomStmt, err = db.Prepare(deleteRoomQuery)
 	if err != nil {

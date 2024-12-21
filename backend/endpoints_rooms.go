@@ -12,42 +12,41 @@ import (
 	nanoid "github.com/matoous/go-nanoid/v2"
 )
 
-func CreateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
-	// Check the body for JSON containing username and password and return a token.
+type roomEndpointBody struct {
+	ID     string `json:"id"`
+	Type   string `json:"type"`
+	Target string `json:"target"`
+}
+
+func readRoomEndpointBody(r *http.Request, data *roomEndpointBody) string {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
-		return
+		return errorJson("Unable to read body!")
 	}
-
-	token := Token{}
-	var user *User = IsAuthenticated(w, r, &token)
-	if user == nil {
-		http.Error(w, errorJson("You are not authenticated!"),
-			http.StatusForbidden)
-		return
-	}
-
-	var data struct {
-		ID     string `json:"id"`
-		Type   string `json:"type"`
-		Target string `json:"target"`
-	}
-
-	err = json.Unmarshal(body, &data)
+	err = json.Unmarshal(body, data)
 	if err != nil {
-		http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
-		return
+		return errorJson("Unable to read body!")
 	} else if data.Type != "localFile" && data.Type != "remoteFile" {
-		http.Error(w, errorJson("Invalid room type!"), http.StatusBadRequest)
-		return
+		return errorJson("Invalid room type!")
 	} else if data.Target == "" {
-		http.Error(w, errorJson("Target cannot be empty with room type '"+data.Type+"'!"),
-			http.StatusBadRequest)
+		return errorJson("Target cannot be empty with room type '" + data.Type + "'!")
+	}
+	return ""
+}
+
+func CreateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
+	if IsAuthenticated(w, r, nil) == nil {
+		http.Error(w, errorJson("You are not authenticated!"), http.StatusForbidden)
 		return
 	}
 
-	id := data.ID
+	var body roomEndpointBody
+	if err := readRoomEndpointBody(r, &body); err != "" {
+		http.Error(w, err, http.StatusBadRequest)
+		return
+	}
+
+	id := body.ID
 	if id == "" {
 		id = nanoid.Must(12)
 	} else if res, _ := regexp.MatchString("^[a-zA-Z0-9_-]{24}$", id); !res {
@@ -55,7 +54,7 @@ func CreateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := insertRoomStmt.Exec(id, data.Type, data.Target)
+	result, err := insertRoomStmt.Exec(id, body.Type, body.Target)
 	if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23505" {
 		http.Error(w, errorJson("Room ID already exists!"), http.StatusConflict)
 		return
@@ -70,8 +69,7 @@ func CreateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetRoomEndpoint(w http.ResponseWriter, r *http.Request) {
-	token := Token{}
-	if IsAuthenticated(w, r, &token) == nil {
+	if IsAuthenticated(w, r, nil) == nil {
 		http.Error(w, errorJson("You are not authenticated!"), http.StatusForbidden)
 		return
 	}
@@ -89,6 +87,35 @@ func GetRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(room)
+}
+
+func UpdateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
+	if IsAuthenticated(w, r, nil) == nil {
+		http.Error(w, errorJson("You are not authenticated!"), http.StatusForbidden)
+		return
+	}
+
+	var body roomEndpointBody
+	if err := readRoomEndpointBody(r, &body); err != "" {
+		http.Error(w, err, http.StatusBadRequest)
+		return
+	}
+
+	id := r.PathValue("id")
+	result, err := updateRoomStmt.Exec(id, body.Type, body.Target)
+	if err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		handleInternalServerError(w, err)
+		return
+	} else if rows != 1 {
+		http.Error(w, errorJson("Room not found!"), http.StatusNotFound)
+		return
+	}
+	w.Write([]byte("{\"success\":true}"))
 }
 
 func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {

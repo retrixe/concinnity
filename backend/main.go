@@ -17,8 +17,8 @@ Endpoints:
 - POST /api/login
 - POST /api/logout
 - POST /api/register
+- POST /api/room - Create a new room
 - GET /api/room/:id - Get the room's info
-- POST /api/room - Create a new room and join it
 - PATCH /api/room/:id - Update the room's info
 - WS /api/room/:id/join - Join an existing room
 
@@ -67,6 +67,7 @@ func main() {
 	http.HandleFunc("POST /api/register", RegisterEndpoint)
 	http.HandleFunc("POST /api/room", CreateRoomEndpoint)
 	http.HandleFunc("GET /api/room/{id}", GetRoomEndpoint)
+	http.HandleFunc("PATCH /api/room/{id}", UpdateRoomEndpoint)
 	http.HandleFunc("GET /api/room/{id}/join", JoinRoomEndpoint)
 
 	port := "8000"
