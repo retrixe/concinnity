@@ -32,39 +32,23 @@ func IsAuthenticated(token string) (*User, *Token, error) {
 		return nil, nil, ErrNotAuthenticated
 	}
 
-	res, err := findUserByTokenStmt.Query(token)
-	if err != nil {
-		return nil, nil, err
-	} else if !res.Next() {
+	user := User{}
+	var tokenCreatedAt time.Time
+	err := findUserByTokenStmt.QueryRow(token).Scan(
+		&user.Username,
+		&user.Password,
+		&user.Email,
+		&user.ID,
+		&user.CreatedAt,
+		&user.Verified,
+		&token,
+		&tokenCreatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil, ErrNotAuthenticated
+	} else if err != nil {
+		return nil, nil, err
 	} else {
-		var (
-			username       string
-			password       string
-			email          string
-			id             uuid.UUID
-			userCreatedAt  time.Time
-			verified       bool
-			token          string
-			tokenCreatedAt time.Time
-		)
-		err := res.Scan(&username, &password, &email, &id, &userCreatedAt, &verified, &token, &tokenCreatedAt)
-		defer res.Close()
-		if err != nil {
-			return nil, nil, err
-		}
-		return &User{
-				Username:  username,
-				Password:  password,
-				Email:     email,
-				ID:        id,
-				Verified:  verified,
-				CreatedAt: userCreatedAt,
-			}, &Token{
-				CreatedAt: tokenCreatedAt,
-				Token:     token,
-				UserID:    id,
-			}, nil
+		return &user, &Token{CreatedAt: tokenCreatedAt, Token: token, UserID: user.ID}, nil
 	}
 }
 

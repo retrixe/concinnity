@@ -181,23 +181,18 @@ func JoinRoomEndpoint(ws *websocket.Conn) {
 	ws.SetDeadline(time.Now().Add(30 * time.Second))
 	var data AuthMessageIncoming
 	if err := websocket.JSON.Receive(ws, &data); err != nil {
-		_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: "Unable to read message!"})
-		_ = ws.WriteClose(4400)
+		wsError(ws, "Unable to read message!", 4400)
 		return
 	}
 	user, _, err := IsAuthenticated(data.Token)
 	if errors.Is(err, ErrNotAuthenticated) {
-		_ = websocket.JSON.Send(ws,
-			ErrorMessageOutgoing{Error: "You are not authenticated to access this resource!"})
-		_ = ws.WriteClose(4401)
+		wsError(ws, "You are not authenticated to access this resource!", 4401)
 		return
 	} else if err != nil {
-		_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: "Internal Server Error!"})
-		_ = ws.WriteClose(4500)
+		wsError(ws, "Internal Server Error!", 4500)
 		return
-	} else if rooms, ok := userRooms.Load(user.ID); ok && len(rooms) >= 3 {
-		_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: "You are in too many rooms!"})
-		_ = ws.WriteClose(4429)
+	} else if rooms, ok := userRooms.Load(user.ID); ok && rooms.Load() >= 3 {
+		wsError(ws, "You are in too many rooms!", 4429)
 		return
 	}
 
@@ -208,12 +203,10 @@ func JoinRoomEndpoint(ws *websocket.Conn) {
 		&room.Type, &room.Target, pq.Array(&room.Chat),
 		&room.Paused, &room.Speed, &room.Timestamp, &room.LastAction)
 	if errors.Is(err, sql.ErrNoRows) {
-		_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: "Room not found!"})
-		_ = ws.WriteClose(4404)
+		wsError(ws, "Room not found!", 4404)
 		return
 	} else if err != nil {
-		_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: "Internal Server Error!"})
-		_ = ws.WriteClose(4500)
+		wsError(ws, "Internal Server Error!", 4500)
 		return
 	}
 
@@ -229,8 +222,7 @@ func JoinRoomEndpoint(ws *websocket.Conn) {
 		},
 	})
 	if err != nil {
-		_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: "Internal Server Error!"})
-		_ = ws.WriteClose(4500)
+		wsError(ws, "Internal Server Error!", 4500)
 		return
 	}
 	err = websocket.JSON.Send(ws, PlayerStateMessageOutgoing{
@@ -243,8 +235,7 @@ func JoinRoomEndpoint(ws *websocket.Conn) {
 		},
 	})
 	if err != nil {
-		_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: "Internal Server Error!"})
-		_ = ws.WriteClose(4500)
+		wsError(ws, "Internal Server Error!", 4500)
 		return
 	}
 	err = websocket.JSON.Send(ws, ChatMessageOutgoing{
@@ -260,4 +251,5 @@ func JoinRoomEndpoint(ws *websocket.Conn) {
 	// FIXME - Bump modifiedAt timestamp of room and add user to members
 	// FIXME - User sends chat messages and state
 	// FIXME - User receives chat messages, state changes and room info changes
+	// FIXME - Add chat message on disconnect: user disconnected (abruptly)
 }

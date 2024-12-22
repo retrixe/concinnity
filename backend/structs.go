@@ -47,11 +47,10 @@ type ChatMessage struct {
 
 func (c ChatMessage) Scan(src interface{}) error {
 	data, ok := src.([]byte)
-	if !ok {
-		dataStr, ok := src.(string)
-		if !ok {
-			return errors.New("invalid type for chat message")
-		}
+	dataStr, okStr := src.(string)
+	if !ok && !okStr {
+		return errors.New("invalid type for chat message")
+	} else if okStr {
 		data = []byte(dataStr)
 	}
 	return json.Unmarshal(data, &c)
