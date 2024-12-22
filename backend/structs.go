@@ -1,6 +1,9 @@
 package main
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -28,10 +31,32 @@ type Room struct {
 	Type       string    `json:"type"`
 	Target     string    `json:"target"`
 
-	Chat []string `json:"chat"`
+	Chat []ChatMessage `json:"chat"`
 
 	Paused     bool      `json:"paused"`
 	Speed      int       `json:"speed"`
 	Timestamp  int       `json:"timestamp"`
 	LastAction time.Time `json:"lastAction"`
+}
+
+type ChatMessage struct {
+	UserID    uuid.UUID `json:"userId"`
+	Message   string    `json:"message"`
+	Timestamp time.Time `json:"timestamp"`
+}
+
+func (c ChatMessage) Scan(src interface{}) error {
+	data, ok := src.([]byte)
+	if !ok {
+		dataStr, ok := src.(string)
+		if !ok {
+			return errors.New("invalid type for chat message")
+		}
+		data = []byte(dataStr)
+	}
+	return json.Unmarshal(data, &c)
+}
+
+func (c ChatMessage) Value() (driver.Value, error) {
+	return json.Marshal(c)
 }

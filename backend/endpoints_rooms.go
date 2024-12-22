@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/lib/pq"
 	nanoid "github.com/matoous/go-nanoid/v2"
 	"golang.org/x/net/websocket"
@@ -131,19 +130,53 @@ type ErrorMessageOutgoing struct {
 	Error string `json:"error"`
 }
 
+type GenericMessage struct {
+	Type string `json:"type"`
+}
+
+type ChatMessageIncoming struct {
+	Type string `json:"type"` // chat
+	Data string `json:"data"`
+}
+
+type PlayerStateMessageIncoming struct {
+	Type string                 `json:"type"` // player_state
+	Data PlayerStateMessageData `json:"data"`
+}
+
+type PlayerStateMessageOutgoing struct {
+	Type string                 `json:"type"` // player_state
+	Data PlayerStateMessageData `json:"data"`
+}
+
+type PlayerStateMessageData struct {
+	Paused     bool      `json:"paused"`
+	Speed      int       `json:"speed"`
+	Timestamp  int       `json:"timestamp"`
+	LastAction time.Time `json:"lastAction"`
+}
+
 type RoomInfoMessageOutgoing struct {
-	ID         uuid.UUID `json:"id"`
+	Type string                      `json:"type"` // room_info
+	Data RoomInfoMessageOutgoingData `json:"data"`
+}
+
+type RoomInfoMessageOutgoingData struct {
+	ID         string    `json:"id"`
 	CreatedAt  time.Time `json:"createdAt"`
 	ModifiedAt time.Time `json:"modifiedAt"`
 	Type       string    `json:"type"`
 	Target     string    `json:"target"`
 }
 
-type PlayerStateMessage struct{}
-
-type ChatMessageIncoming struct{}
+type ChatMessageOutgoing struct {
+	Type string        `json:"type"` // chat
+	Data []ChatMessage `json:"data"`
+}
 
 func JoinRoomEndpoint(ws *websocket.Conn) {
+	// Impl note: If target/type change, client should trash currently playing file and reset state.
+
 	// Wait for auth message
 	ws.SetDeadline(time.Now().Add(30 * time.Second))
 	var data AuthMessageIncoming
@@ -184,10 +217,47 @@ func JoinRoomEndpoint(ws *websocket.Conn) {
 		return
 	}
 
-	// FIXME - Send current room info, player state and chat
-	// FIXME - Upon connect, send current room info, state (paused, speed, timestamp, lastAction) and chat
+	// Send current room info, state and chat
+	err = websocket.JSON.Send(ws, RoomInfoMessageOutgoing{
+		Type: "room_info",
+		Data: RoomInfoMessageOutgoingData{
+			ID:         room.ID,
+			CreatedAt:  room.CreatedAt,
+			ModifiedAt: room.ModifiedAt,
+			Type:       room.Type,
+			Target:     room.Target,
+		},
+	})
+	if err != nil {
+		_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: "Internal Server Error!"})
+		_ = ws.WriteClose(4500)
+		return
+	}
+	err = websocket.JSON.Send(ws, PlayerStateMessageOutgoing{
+		Type: "player_state",
+		Data: PlayerStateMessageData{
+			Paused:     room.Paused,
+			Speed:      room.Speed,
+			Timestamp:  room.Timestamp,
+			LastAction: room.LastAction,
+		},
+	})
+	if err != nil {
+		_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: "Internal Server Error!"})
+		_ = ws.WriteClose(4500)
+		return
+	}
+	err = websocket.JSON.Send(ws, ChatMessageOutgoing{
+		Type: "chat",
+		Data: room.Chat,
+	})
+	if err != nil {
+		_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: "Internal Server Error!"})
+		_ = ws.WriteClose(4500)
+		return
+	}
+
 	// FIXME - Bump modifiedAt timestamp of room and add user to members
 	// FIXME - User sends chat messages and state
 	// FIXME - User receives chat messages, state changes and room info changes
-	// If the target/type change, the client should trash the currently playing file and reset state.
 }
