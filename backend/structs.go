@@ -22,12 +22,13 @@ type Token struct {
 }
 
 type Room struct {
-	ID         uuid.UUID `json:"id"`
+	ID         string    `json:"id"`
 	CreatedAt  time.Time `json:"createdAt"`
 	ModifiedAt time.Time `json:"modifiedAt"`
 	Type       string    `json:"type"`
 	Target     string    `json:"target"`
-	Chat       []string  `json:"chat"`
+
+	Chat []string `json:"chat"`
 
 	Paused     bool      `json:"paused"`
 	Speed      int       `json:"speed"`

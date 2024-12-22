@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	_ "github.com/lib/pq"
+	"golang.org/x/net/websocket"
 )
 
 /*
@@ -68,7 +69,10 @@ func main() {
 	http.HandleFunc("POST /api/room", CreateRoomEndpoint)
 	http.HandleFunc("GET /api/room/{id}", GetRoomEndpoint)
 	http.HandleFunc("PATCH /api/room/{id}", UpdateRoomEndpoint)
-	http.HandleFunc("GET /api/room/{id}/join", JoinRoomEndpoint)
+	http.HandleFunc("GET /api/room/{id}/join", func(w http.ResponseWriter, r *http.Request) {
+		s := websocket.Server{Handler: JoinRoomEndpoint, Handshake: JoinRoomEndpointHandshake}
+		s.ServeHTTP(w, r)
+	})
 
 	port := "8000"
 	if os.Getenv("PORT") != "" {

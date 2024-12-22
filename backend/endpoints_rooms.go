@@ -7,9 +7,12 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 	nanoid "github.com/matoous/go-nanoid/v2"
+	"golang.org/x/net/websocket"
 )
 
 type roomEndpointBody struct {
@@ -115,12 +118,76 @@ func UpdateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("{\"success\":true}"))
 }
 
-func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
-	// TODO: Implement
-	// FIXME - If user is in 3 rooms already, user is disconnected
+func JoinRoomEndpointHandshake(config *websocket.Config, req *http.Request) error {
+	config.Protocol = []string{"v0"}
+	return nil
+}
+
+type AuthMessageIncoming struct {
+	Token string `json:"token"`
+}
+
+type ErrorMessageOutgoing struct {
+	Error string `json:"error"`
+}
+
+type RoomInfoMessageOutgoing struct {
+	ID         uuid.UUID `json:"id"`
+	CreatedAt  time.Time `json:"createdAt"`
+	ModifiedAt time.Time `json:"modifiedAt"`
+	Type       string    `json:"type"`
+	Target     string    `json:"target"`
+}
+
+type PlayerStateMessage struct{}
+
+type ChatMessageIncoming struct{}
+
+func JoinRoomEndpoint(ws *websocket.Conn) {
+	// Wait for auth message
+	ws.SetDeadline(time.Now().Add(30 * time.Second))
+	var data AuthMessageIncoming
+	if err := websocket.JSON.Receive(ws, &data); err != nil {
+		_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: "Unable to read message!"})
+		_ = ws.WriteClose(4400)
+		return
+	}
+	user, _, err := IsAuthenticated(data.Token)
+	if errors.Is(err, ErrNotAuthenticated) {
+		_ = websocket.JSON.Send(ws,
+			ErrorMessageOutgoing{Error: "You are not authenticated to access this resource!"})
+		_ = ws.WriteClose(4401)
+		return
+	} else if err != nil {
+		_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: "Internal Server Error!"})
+		_ = ws.WriteClose(4500)
+		return
+	} else if rooms, ok := userRooms.Load(user.ID); ok && len(rooms) >= 3 {
+		_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: "You are in too many rooms!"})
+		_ = ws.WriteClose(4429)
+		return
+	}
+
+	// Get room details, if not exists, boohoo
+	room := Room{}
+	err = findRoomStmt.QueryRow(ws.Request().PathValue("id")).Scan(
+		&room.ID, &room.CreatedAt, &room.ModifiedAt,
+		&room.Type, &room.Target, pq.Array(&room.Chat),
+		&room.Paused, &room.Speed, &room.Timestamp, &room.LastAction)
+	if errors.Is(err, sql.ErrNoRows) {
+		_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: "Room not found!"})
+		_ = ws.WriteClose(4404)
+		return
+	} else if err != nil {
+		_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: "Internal Server Error!"})
+		_ = ws.WriteClose(4500)
+		return
+	}
+
+	// FIXME - Send current room info, player state and chat
 	// FIXME - Upon connect, send current room info, state (paused, speed, timestamp, lastAction) and chat
 	// FIXME - Bump modifiedAt timestamp of room and add user to members
-	// FIXME - User sends/receives chat messages and state
-	// FIXME - User receives room info changes
+	// FIXME - User sends chat messages and state
+	// FIXME - User receives chat messages, state changes and room info changes
 	// If the target/type change, the client should trash the currently playing file and reset state.
 }

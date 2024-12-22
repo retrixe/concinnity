@@ -8,9 +8,9 @@ import (
 	"github.com/puzpuzpuz/xsync/v3"
 )
 
-var roomMembers xsync.MapOf[string, xsync.MapOf[uuid.UUID, int]]
+var roomMembers xsync.MapOf[string, xsync.MapOf[uuid.UUID, chan interface{}]]
 
-// var userRooms xsync.MapOf[uuid.UUID, []string]: For WebSocket to consider
+var userRooms xsync.MapOf[uuid.UUID, []string]
 
 func CleanInactiveRoomsTask() {
 	for {
