@@ -14,31 +14,29 @@ import (
 	"github.com/google/uuid"
 )
 
-func IsAuthenticated(w http.ResponseWriter, r *http.Request) (*User, *Token) {
-	token := r.Header.Get("Authentication")
-	if cookie, err := r.Cookie("token"); err == nil {
-		token = cookie.Value
+var ErrNotAuthenticated = errors.New("request not authenticated")
+
+func IsAuthenticatedHTTP(w http.ResponseWriter, r *http.Request) (*User, *Token) {
+	user, token, err := IsAuthenticated(GetTokenFromHTTP(r))
+	if errors.Is(err, ErrNotAuthenticated) {
+		http.Error(w, errorJson("You are not authenticated to access this resource!"),
+			http.StatusUnauthorized)
+	} else if err != nil {
+		handleInternalServerError(w, err)
 	}
+	return user, token
+}
+
+func IsAuthenticated(token string) (*User, *Token, error) {
 	if token == "" {
-		if w != nil {
-			http.Error(w, errorJson("You are not authenticated to access this resource!"),
-				http.StatusUnauthorized)
-		}
-		return nil, nil
+		return nil, nil, ErrNotAuthenticated
 	}
 
 	res, err := findUserByTokenStmt.Query(token)
 	if err != nil {
-		if w != nil {
-			handleInternalServerError(w, err)
-		}
-		return nil, nil
+		return nil, nil, err
 	} else if !res.Next() {
-		if w != nil {
-			http.Error(w, errorJson("You are not authenticated to access this resource!"),
-				http.StatusUnauthorized)
-		}
-		return nil, nil
+		return nil, nil, ErrNotAuthenticated
 	} else {
 		var (
 			username       string
@@ -53,10 +51,7 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request) (*User, *Token) {
 		err := res.Scan(&username, &password, &email, &id, &userCreatedAt, &verified, &token, &tokenCreatedAt)
 		defer res.Close()
 		if err != nil {
-			if w != nil {
-				handleInternalServerError(w, err)
-			}
-			return nil, nil
+			return nil, nil, err
 		}
 		return &User{
 				Username:  username,
@@ -69,16 +64,19 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request) (*User, *Token) {
 				CreatedAt: tokenCreatedAt,
 				Token:     token,
 				UserID:    id,
-			}
+			}, nil
 	}
 }
 
 func StatusEndpoint(w http.ResponseWriter, r *http.Request) {
-	if user, _ := IsAuthenticated(nil, r); user != nil {
+	user, _, err := IsAuthenticated(GetTokenFromHTTP(r))
+	if errors.Is(err, ErrNotAuthenticated) {
+		w.Write([]byte("{\"online\":true,\"authenticated\":false}"))
+	} else if err != nil {
+		handleInternalServerError(w, err)
+	} else {
 		usernameJson, _ := json.Marshal(user.Username)
 		w.Write([]byte("{\"online\":true,\"authenticated\":true,\"username\":" + string(usernameJson) + "}"))
-	} else {
-		w.Write([]byte("{\"online\":true,\"authenticated\":false}"))
 	}
 }
 
@@ -141,7 +139,7 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutEndpoint(w http.ResponseWriter, r *http.Request) {
-	_, token := IsAuthenticated(w, r)
+	_, token := IsAuthenticatedHTTP(w, r)
 	if token == nil {
 		return
 	}

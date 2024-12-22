@@ -35,7 +35,7 @@ func readRoomEndpointBody(r *http.Request, data *roomEndpointBody) string {
 }
 
 func CreateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
-	if user, _ := IsAuthenticated(w, r); user == nil {
+	if user, _ := IsAuthenticatedHTTP(w, r); user == nil {
 		return
 	}
 
@@ -68,7 +68,7 @@ func CreateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetRoomEndpoint(w http.ResponseWriter, r *http.Request) {
-	if user, _ := IsAuthenticated(w, r); user == nil {
+	if user, _ := IsAuthenticatedHTTP(w, r); user == nil {
 		return
 	}
 
@@ -88,7 +88,7 @@ func GetRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
-	if user, _ := IsAuthenticated(w, r); user == nil {
+	if user, _ := IsAuthenticatedHTTP(w, r); user == nil {
 		return
 	}
 

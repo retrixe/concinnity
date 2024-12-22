@@ -23,6 +23,14 @@ func handleInternalServerError(w http.ResponseWriter, err error) {
 	http.Error(w, errorJson("Internal Server Error!"), http.StatusInternalServerError)
 }
 
+func GetTokenFromHTTP(r *http.Request) string {
+	token := r.Header.Get("Authentication")
+	if cookie, err := r.Cookie("token"); err == nil {
+		token = cookie.Value
+	}
+	return token
+}
+
 // GenerateSalt returns a 16-character salt readable in UTF-8 format as well.
 func GenerateSalt() []byte {
 	saltBytes := make([]byte, 12)
