@@ -7,10 +7,13 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"sync/atomic"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 	nanoid "github.com/matoous/go-nanoid/v2"
+	"github.com/puzpuzpuz/xsync/v3"
 	"golang.org/x/net/websocket"
 )
 
@@ -114,6 +117,23 @@ func UpdateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errorJson("Room not found!"), http.StatusNotFound)
 		return
 	}
+	// Send message to all room members about the change
+	members, ok := roomMembers.Load(id)
+	if ok {
+		members.Range(func(key uuid.UUID, value chan interface{}) bool {
+			value <- RoomInfoMessageOutgoing{
+				Type: "room_info",
+				Data: RoomInfoMessageOutgoingData{
+					ID:         id,
+					CreatedAt:  nil,
+					ModifiedAt: nil,
+					Type:       body.Type,
+					Target:     body.Target,
+				},
+			}
+			return true
+		})
+	}
 	w.Write([]byte("{\"success\":true}"))
 }
 
@@ -162,11 +182,11 @@ type RoomInfoMessageOutgoing struct {
 }
 
 type RoomInfoMessageOutgoingData struct {
-	ID         string    `json:"id"`
-	CreatedAt  time.Time `json:"createdAt"`
-	ModifiedAt time.Time `json:"modifiedAt"`
-	Type       string    `json:"type"`
-	Target     string    `json:"target"`
+	ID         string     `json:"id"`
+	CreatedAt  *time.Time `json:"createdAt,omitempty"`
+	ModifiedAt *time.Time `json:"modifiedAt,omitempty"`
+	Type       string     `json:"type"`
+	Target     string     `json:"target"`
 }
 
 type ChatMessageOutgoing struct {
@@ -215,8 +235,8 @@ func JoinRoomEndpoint(ws *websocket.Conn) {
 		Type: "room_info",
 		Data: RoomInfoMessageOutgoingData{
 			ID:         room.ID,
-			CreatedAt:  room.CreatedAt,
-			ModifiedAt: room.ModifiedAt,
+			CreatedAt:  &room.CreatedAt,
+			ModifiedAt: &room.ModifiedAt,
 			Type:       room.Type,
 			Target:     room.Target,
 		},
@@ -243,12 +263,57 @@ func JoinRoomEndpoint(ws *websocket.Conn) {
 		Data: room.Chat,
 	})
 	if err != nil {
-		_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: "Internal Server Error!"})
-		_ = ws.WriteClose(4500)
+		wsError(ws, "Internal Server Error!", 4500)
 		return
 	}
 
-	// FIXME - Bump modifiedAt timestamp of room and add user to members
+	writeChannel := make(chan interface{}, 16)
+	// Register user to room
+	members, _ := roomMembers.LoadOrStore(room.ID, xsync.NewMapOf[uuid.UUID, chan interface{}]())
+	members.Store(user.ID, writeChannel)
+	roomCounter, _ := userRooms.LoadOrStore(user.ID, atomic.Int32{})
+	roomCounter.Add(1)
+	unregisterUser := func() {
+		members.Delete(user.ID)
+		val := roomCounter.Add(-1)
+		if val == 0 {
+			userRooms.Delete(user.ID)
+		}
+	}
+
+	// Create write thread
+	go (func() {
+		for msg, ok := <-writeChannel; ok; {
+			err := websocket.JSON.Send(ws, msg)
+			if err != nil {
+				unregisterUser()
+				wsError(ws, "Internal Server Error!", 4500)
+				return
+			}
+		}
+	})()
+
+	// Send chat message: user connected
+	chatMsg := ChatMessage{
+		UserID:    uuid.Nil,
+		Message:   user.ID.String() + " connected",
+		Timestamp: time.Now(),
+	}
+	result, err := insertChatMessageRoomStmt.Exec(room.ID, chatMsg)
+	if err != nil {
+		unregisterUser()
+		wsError(ws, "Internal Server Error!", 4500)
+		return
+	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
+		unregisterUser()
+		wsError(ws, "Internal Server Error!", 4500)
+		return
+	}
+	members.Range(func(key uuid.UUID, value chan interface{}) bool {
+		value <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
+		return true
+	})
+
 	// FIXME - User sends chat messages and state
 	// FIXME - User receives chat messages, state changes and room info changes
 	// FIXME - Add chat message on disconnect: user disconnected (abruptly)
