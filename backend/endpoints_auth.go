@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
+func IsAuthenticated(w http.ResponseWriter, r *http.Request) (*User, *Token) {
 	token := r.Header.Get("Authentication")
 	if cookie, err := r.Cookie("token"); err == nil {
 		token = cookie.Value
@@ -24,19 +24,21 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
 			http.Error(w, errorJson("You are not authenticated to access this resource!"),
 				http.StatusUnauthorized)
 		}
-		return nil
+		return nil, nil
 	}
 
 	res, err := findUserByTokenStmt.Query(token)
 	if err != nil {
-		handleInternalServerError(w, err)
-		return nil
+		if w != nil {
+			handleInternalServerError(w, err)
+		}
+		return nil, nil
 	} else if !res.Next() {
 		if w != nil {
 			http.Error(w, errorJson("You are not authenticated to access this resource!"),
 				http.StatusUnauthorized)
 		}
-		return nil
+		return nil, nil
 	} else {
 		var (
 			username       string
@@ -51,26 +53,28 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request, t *Token) *User {
 		err := res.Scan(&username, &password, &email, &id, &userCreatedAt, &verified, &token, &tokenCreatedAt)
 		defer res.Close()
 		if err != nil {
-			handleInternalServerError(w, err)
-			return nil
-		} else if t != nil {
-			t.CreatedAt = tokenCreatedAt
-			t.Token = token
-			t.UserID = id
+			if w != nil {
+				handleInternalServerError(w, err)
+			}
+			return nil, nil
 		}
 		return &User{
-			Username:  username,
-			Password:  password,
-			Email:     email,
-			ID:        id,
-			Verified:  verified,
-			CreatedAt: userCreatedAt,
-		}
+				Username:  username,
+				Password:  password,
+				Email:     email,
+				ID:        id,
+				Verified:  verified,
+				CreatedAt: userCreatedAt,
+			}, &Token{
+				CreatedAt: tokenCreatedAt,
+				Token:     token,
+				UserID:    id,
+			}
 	}
 }
 
 func StatusEndpoint(w http.ResponseWriter, r *http.Request) {
-	if user := IsAuthenticated(nil, r, nil); user != nil {
+	if user, _ := IsAuthenticated(nil, r); user != nil {
 		usernameJson, _ := json.Marshal(user.Username)
 		w.Write([]byte("{\"online\":true,\"authenticated\":true,\"username\":" + string(usernameJson) + "}"))
 	} else {
@@ -137,8 +141,8 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutEndpoint(w http.ResponseWriter, r *http.Request) {
-	token := Token{}
-	if IsAuthenticated(w, r, &token) == nil {
+	_, token := IsAuthenticated(w, r)
+	if token == nil {
 		return
 	}
 	result, err := deleteTokenStmt.Exec(token.Token)
