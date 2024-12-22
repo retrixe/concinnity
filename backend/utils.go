@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
@@ -8,8 +9,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/coder/websocket"
 	"golang.org/x/crypto/argon2"
-	"golang.org/x/net/websocket"
 )
 
 func errorJson(err string) string {
@@ -24,12 +25,12 @@ func handleInternalServerError(w http.ResponseWriter, err error) {
 	http.Error(w, errorJson("Internal Server Error!"), http.StatusInternalServerError)
 }
 
-func wsError(ws *websocket.Conn, err string, code int) {
-	if code == 4500 {
+func wsError(ctx context.Context, c *websocket.Conn, err string, code websocket.StatusCode) {
+	if code == websocket.StatusInternalError {
 		log.Println("Internal Server Error!", err)
 	}
-	_ = websocket.JSON.Send(ws, ErrorMessageOutgoing{Error: err})
-	_ = ws.WriteClose(code)
+	_ = c.Write(ctx, websocket.MessageText, []byte(errorJson(err)))
+	_ = c.Close(code, err)
 }
 
 func GetTokenFromHTTP(r *http.Request) string {

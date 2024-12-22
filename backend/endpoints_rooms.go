@@ -1,20 +1,23 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"io"
+	"net"
 	"net/http"
 	"regexp"
 	"sync/atomic"
 	"time"
 
+	"github.com/coder/websocket"
+	"github.com/coder/websocket/wsjson"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	nanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/puzpuzpuz/xsync/v3"
-	"golang.org/x/net/websocket"
 )
 
 type roomEndpointBody struct {
@@ -137,17 +140,8 @@ func UpdateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("{\"success\":true}"))
 }
 
-func JoinRoomEndpointHandshake(config *websocket.Config, req *http.Request) error {
-	config.Protocol = []string{"v0"}
-	return nil
-}
-
 type AuthMessageIncoming struct {
 	Token string `json:"token"`
-}
-
-type ErrorMessageOutgoing struct {
-	Error string `json:"error"`
 }
 
 type GenericMessage struct {
@@ -194,44 +188,51 @@ type ChatMessageOutgoing struct {
 	Data []ChatMessage `json:"data"`
 }
 
-func JoinRoomEndpoint(ws *websocket.Conn) {
+func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Impl note: If target/type change, client should trash currently playing file and reset state.
 
-	// Wait for auth message
-	ws.SetDeadline(time.Now().Add(30 * time.Second))
-	var data AuthMessageIncoming
-	if err := websocket.JSON.Receive(ws, &data); err != nil {
-		wsError(ws, "Unable to read message!", 4400)
+	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{Subprotocols: []string{"v0"}})
+	if err != nil {
+		http.Error(w, "Unable to upgrade connection!", http.StatusBadRequest)
 		return
 	}
-	user, _, err := IsAuthenticated(data.Token)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+
+	// Wait for auth message
+	var authMessage AuthMessageIncoming
+	if err := wsjson.Read(ctx, c, &authMessage); err != nil {
+		wsError(ctx, c, "Unable to read authentication message!", websocket.StatusProtocolError)
+		return
+	}
+	user, _, err := IsAuthenticated(authMessage.Token)
 	if errors.Is(err, ErrNotAuthenticated) {
-		wsError(ws, "You are not authenticated to access this resource!", 4401)
+		wsError(ctx, c, "You are not authenticated to access this resource!", 4401)
 		return
 	} else if err != nil {
-		wsError(ws, "Internal Server Error!", 4500)
+		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
 		return
 	} else if rooms, ok := userRooms.Load(user.ID); ok && rooms.Load() >= 3 {
-		wsError(ws, "You are in too many rooms!", 4429)
+		wsError(ctx, c, "You are in too many rooms!", 4429)
 		return
 	}
 
 	// Get room details, if not exists, boohoo
 	room := Room{}
-	err = findRoomStmt.QueryRow(ws.Request().PathValue("id")).Scan(
+	err = findRoomStmt.QueryRow(r.PathValue("id")).Scan(
 		&room.ID, &room.CreatedAt, &room.ModifiedAt,
 		&room.Type, &room.Target, pq.Array(&room.Chat),
 		&room.Paused, &room.Speed, &room.Timestamp, &room.LastAction)
 	if errors.Is(err, sql.ErrNoRows) {
-		wsError(ws, "Room not found!", 4404)
+		wsError(ctx, c, "Room not found!", 4404)
 		return
 	} else if err != nil {
-		wsError(ws, "Internal Server Error!", 4500)
+		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
 		return
 	}
 
 	// Send current room info, state and chat
-	err = websocket.JSON.Send(ws, RoomInfoMessageOutgoing{
+	err = wsjson.Write(ctx, c, RoomInfoMessageOutgoing{
 		Type: "room_info",
 		Data: RoomInfoMessageOutgoingData{
 			ID:         room.ID,
@@ -242,10 +243,10 @@ func JoinRoomEndpoint(ws *websocket.Conn) {
 		},
 	})
 	if err != nil {
-		wsError(ws, "Internal Server Error!", 4500)
+		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
 		return
 	}
-	err = websocket.JSON.Send(ws, PlayerStateMessageOutgoing{
+	err = wsjson.Write(ctx, c, PlayerStateMessageOutgoing{
 		Type: "player_state",
 		Data: PlayerStateMessageData{
 			Paused:     room.Paused,
@@ -255,15 +256,12 @@ func JoinRoomEndpoint(ws *websocket.Conn) {
 		},
 	})
 	if err != nil {
-		wsError(ws, "Internal Server Error!", 4500)
+		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
 		return
 	}
-	err = websocket.JSON.Send(ws, ChatMessageOutgoing{
-		Type: "chat",
-		Data: room.Chat,
-	})
+	err = wsjson.Write(ctx, c, ChatMessageOutgoing{Type: "chat", Data: room.Chat})
 	if err != nil {
-		wsError(ws, "Internal Server Error!", 4500)
+		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
 		return
 	}
 
@@ -284,10 +282,12 @@ func JoinRoomEndpoint(ws *websocket.Conn) {
 	// Create write thread
 	go (func() {
 		for msg, ok := <-writeChannel; ok; {
-			err := websocket.JSON.Send(ws, msg)
-			if err != nil {
+			err := wsjson.Write(ctx, c, msg)
+			if errors.Is(err, net.ErrClosed) {
+				return
+			} else if err != nil {
 				unregisterUser()
-				wsError(ws, "Internal Server Error!", 4500)
+				wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
 				return
 			}
 		}
@@ -302,11 +302,11 @@ func JoinRoomEndpoint(ws *websocket.Conn) {
 	result, err := insertChatMessageRoomStmt.Exec(room.ID, chatMsg)
 	if err != nil {
 		unregisterUser()
-		wsError(ws, "Internal Server Error!", 4500)
+		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
 		return
 	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
 		unregisterUser()
-		wsError(ws, "Internal Server Error!", 4500)
+		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
 		return
 	}
 	members.Range(func(key uuid.UUID, value chan interface{}) bool {

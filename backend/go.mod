@@ -3,6 +3,7 @@ module github.com/retrixe/concinnity
 go 1.22
 
 require (
+	github.com/coder/websocket v1.8.12
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/lib/pq v1.10.9
@@ -13,6 +14,5 @@ require (
 
 require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 )
