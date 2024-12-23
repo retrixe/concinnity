@@ -9,9 +9,9 @@ import (
 	"github.com/puzpuzpuz/xsync/v3"
 )
 
-var roomMembers *xsync.MapOf[string, *xsync.MapOf[uuid.UUID, chan interface{}]] = xsync.NewMapOf[
+var roomMembers *xsync.MapOf[string, *xsync.MapOf[uuid.UUID, chan<- interface{}]] = xsync.NewMapOf[
 	string,
-	*xsync.MapOf[uuid.UUID, chan interface{}],
+	*xsync.MapOf[uuid.UUID, chan<- interface{}],
 ]()
 
 var userRooms *xsync.MapOf[uuid.UUID, atomic.Int32] = xsync.NewMapOf[uuid.UUID, atomic.Int32]()

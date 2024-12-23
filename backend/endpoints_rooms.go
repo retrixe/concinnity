@@ -123,7 +123,7 @@ func UpdateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Send message to all room members about the change
 	members, ok := roomMembers.Load(id)
 	if ok {
-		members.Range(func(key uuid.UUID, value chan interface{}) bool {
+		members.Range(func(key uuid.UUID, value chan<- interface{}) bool {
 			value <- RoomInfoMessageOutgoing{
 				Type: "room_info",
 				Data: RoomInfoMessageOutgoingData{
@@ -243,7 +243,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 	if err != nil {
-		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+		wsError(ctx, c, "Failed to write data!", websocket.StatusProtocolError)
 		return
 	}
 	err = wsjson.Write(ctx, c, PlayerStateMessageOutgoing{
@@ -256,38 +256,37 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 	if err != nil {
-		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+		wsError(ctx, c, "Failed to write data!", websocket.StatusProtocolError)
 		return
 	}
 	err = wsjson.Write(ctx, c, ChatMessageOutgoing{Type: "chat", Data: room.Chat})
 	if err != nil {
-		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+		wsError(ctx, c, "Failed to write data!", websocket.StatusProtocolError)
 		return
 	}
 
 	writeChannel := make(chan interface{}, 16)
 	// Register user to room
-	members, _ := roomMembers.LoadOrStore(room.ID, xsync.NewMapOf[uuid.UUID, chan interface{}]())
+	members, _ := roomMembers.LoadOrStore(room.ID, xsync.NewMapOf[uuid.UUID, chan<- interface{}]())
 	members.Store(user.ID, writeChannel)
 	roomCounter, _ := userRooms.LoadOrStore(user.ID, atomic.Int32{})
 	roomCounter.Add(1)
-	unregisterUser := func() {
-		members.Delete(user.ID)
-		val := roomCounter.Add(-1)
-		if val == 0 {
-			userRooms.Delete(user.ID)
-		}
-	}
 
 	// Create write thread
 	go (func() {
+		defer close(writeChannel)
+		defer members.Delete(user.ID)
+		defer (func() {
+			if val := roomCounter.Add(-1); val == 0 {
+				userRooms.Delete(user.ID)
+			}
+		})()
 		for msg, ok := <-writeChannel; ok; {
 			err := wsjson.Write(ctx, c, msg)
-			if errors.Is(err, net.ErrClosed) {
+			if errors.Is(err, net.ErrClosed) || errors.Is(err, context.Canceled) { // TODO correct?
 				return
 			} else if err != nil {
-				unregisterUser()
-				wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+				wsError(ctx, c, "Failed to write data!", websocket.StatusProtocolError)
 				return
 			}
 		}
@@ -301,15 +300,13 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	result, err := insertChatMessageRoomStmt.Exec(room.ID, chatMsg)
 	if err != nil {
-		unregisterUser()
 		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
 		return
 	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
-		unregisterUser()
 		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
 		return
 	}
-	members.Range(func(key uuid.UUID, value chan interface{}) bool {
+	members.Range(func(key uuid.UUID, value chan<- interface{}) bool {
 		value <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
 		return true
 	})
