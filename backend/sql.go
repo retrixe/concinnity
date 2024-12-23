@@ -17,8 +17,9 @@ var deleteTokenStmt *sql.Stmt
 var insertRoomStmt *sql.Stmt
 var findRoomStmt *sql.Stmt
 var findInactiveRoomsStmt *sql.Stmt
-var insertChatMessageRoomStmt *sql.Stmt
 var updateRoomStmt *sql.Stmt
+var insertChatMessageRoomStmt *sql.Stmt
+var updateRoomStateStmt *sql.Stmt
 var deleteRoomStmt *sql.Stmt
 
 const findUserByTokenQuery = "SELECT username, password, email, id, users.createdAt " +
@@ -40,8 +41,10 @@ const insertRoomQuery = "INSERT INTO rooms (id, type, target) " +
 const findRoomQuery = "SELECT (id, createdAt, modifiedAt, type, target, chat, " +
 	"paused, speed, timestamp, lastAction) FROM rooms WHERE id = $1;"
 const findInactiveRoomsQuery = "SELECT id FROM rooms WHERE modifiedAt < NOW() - INTERVAL '10 minutes';"
-const insertChatMessageRoomQuery = "UPDATE rooms SET chat = chat || $2, modifiedAt = NOW() WHERE id = $1;"
 const updateRoomQuery = "UPDATE rooms SET type = $2, target = $3, modifiedAt = NOW() WHERE id = $1;"
+const insertChatMessageRoomQuery = "UPDATE rooms SET chat = chat || $2, modifiedAt = NOW() WHERE id = $1;"
+const updateRoomStateQuery = "UPDATE rooms SET " +
+	"paused = $2, speed = $3, timestamp = $4, lastAction = $5, modifiedAt = NOW() WHERE id = $1;"
 const deleteRoomQuery = "DELETE FROM rooms WHERE id = $1;"
 
 const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
@@ -127,13 +130,17 @@ func PrepareSqlStatements() {
 	if err != nil {
 		log.Panicln("Failed to prepare query to find inactive rooms!", err)
 	}
+	updateRoomStmt, err = db.Prepare(updateRoomQuery)
+	if err != nil {
+		log.Panicln("Failed to prepare query to update room!", err)
+	}
 	insertChatMessageRoomStmt, err = db.Prepare(insertChatMessageRoomQuery)
 	if err != nil {
 		log.Panicln("Failed to prepare query to insert chat message in room!", err)
 	}
-	updateRoomStmt, err = db.Prepare(updateRoomQuery)
+	updateRoomStateStmt, err = db.Prepare(updateRoomStateQuery)
 	if err != nil {
-		log.Panicln("Failed to prepare query to update room!", err)
+		log.Panicln("Failed to prepare query to update room state!", err)
 	}
 	deleteRoomStmt, err = db.Prepare(deleteRoomQuery)
 	if err != nil {

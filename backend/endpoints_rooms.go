@@ -317,7 +317,113 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		return true
 	})
 
-	// FIXME - User sends chat messages and state
-	// FIXME - User receives chat messages, state changes and room info changes
-	// FIXME - Add chat message on disconnect: user disconnected (abruptly)
+	// Read all messages
+	var closeStatus websocket.StatusCode = -1
+	for {
+		_, data, err := c.Read(ctx)
+		closeStatus = websocket.CloseStatus(err)
+		// TODO: Is this correct? What are the possible errors :/
+		if closeStatus != -1 ||
+			errors.Is(err, io.EOF) ||
+			errors.Is(err, net.ErrClosed) ||
+			errors.Is(err, context.Canceled) {
+			break
+		} else if err != nil {
+			wsError(ctx, c, "Failed to read message!", websocket.StatusProtocolError)
+			continue
+		}
+
+		// Parse message
+		var msgData GenericMessage
+		err = json.Unmarshal(data, &msgData)
+		if err != nil {
+			wsError(ctx, c, "Invalid message!", websocket.StatusUnsupportedData)
+		} else if msgData.Type == "chat" {
+			var chatData ChatMessageIncoming
+			err = json.Unmarshal(data, &chatData)
+			if err != nil {
+				wsError(ctx, c, "Invalid chat message!", websocket.StatusUnsupportedData)
+				continue
+			}
+
+			// Update state in db and broadcast
+			result, err = insertChatMessageRoomStmt.Exec(room.ID, ChatMessage{
+				UserID:    user.ID,
+				Message:   chatData.Data,
+				Timestamp: time.Now(),
+			})
+			if err != nil {
+				wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+				return
+			} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
+				wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+				return
+			}
+			members.Range(func(key uuid.UUID, value chan<- interface{}) bool {
+				if key == user.ID {
+					return true // Skip current user
+				}
+				value <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
+				return true
+			})
+		} else if msgData.Type == "player_state" {
+			var playerStateData PlayerStateMessageBi
+			err = json.Unmarshal(data, &playerStateData)
+			if err != nil {
+				wsError(ctx, c, "Invalid player state message!", websocket.StatusUnsupportedData)
+				continue
+			}
+
+			// Update state in db and broadcast
+			result, err = updateRoomStateStmt.Exec(room.ID,
+				playerStateData.Data.Paused, playerStateData.Data.Speed,
+				playerStateData.Data.Timestamp, playerStateData.Data.LastAction)
+			if err != nil {
+				wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+				return
+			} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
+				wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+				return
+			}
+			members.Range(func(key uuid.UUID, value chan<- interface{}) bool {
+				if key == user.ID {
+					return true // Skip current user
+				}
+				value <- playerStateData
+				return true
+			})
+		} else if msgData.Type == "ping" {
+			var pingData PingPongMessageBi
+			err = json.Unmarshal(data, &pingData)
+			if err != nil {
+				wsError(ctx, c, "Invalid ping message!", websocket.StatusUnsupportedData)
+				continue
+			}
+			err = wsjson.Write(ctx, c, PingPongMessageBi{Type: "pong", Timestamp: pingData.Timestamp})
+			if err != nil {
+				wsError(ctx, c, "Failed to write data!", websocket.StatusProtocolError)
+			}
+		} else {
+			wsError(ctx, c, "Invalid message!", websocket.StatusUnsupportedData)
+		}
+	}
+
+	// Notify other clients of the disconnect
+	chatMsg = ChatMessage{
+		UserID:    uuid.Nil,
+		Message:   user.ID.String() + " disconnected",
+		Timestamp: time.Now(),
+	}
+	result, err = insertChatMessageRoomStmt.Exec(room.ID, chatMsg)
+	if err != nil {
+		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+		return
+	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
+		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+		return
+	}
+	members.Range(func(key uuid.UUID, value chan<- interface{}) bool {
+		value <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
+		return true
+	})
 }
