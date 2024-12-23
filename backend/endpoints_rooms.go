@@ -141,7 +141,8 @@ func UpdateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 type AuthMessageIncoming struct {
-	Token string `json:"token"`
+	Token     string `json:"token"`
+	Reconnect bool   `json:"reconnect"` // If this is a reconnect
 }
 
 type GenericMessage struct {
@@ -153,12 +154,12 @@ type ChatMessageIncoming struct {
 	Data string `json:"data"`
 }
 
-type PlayerStateMessageIncoming struct {
-	Type string                 `json:"type"` // player_state
-	Data PlayerStateMessageData `json:"data"`
+type PingPongMessageBi struct {
+	Type      string `json:"type"` // ping if incoming, pong if outgoing
+	Timestamp int    `json:"timestamp"`
 }
 
-type PlayerStateMessageOutgoing struct {
+type PlayerStateMessageBi struct {
 	Type string                 `json:"type"` // player_state
 	Data PlayerStateMessageData `json:"data"`
 }
@@ -246,7 +247,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		wsError(ctx, c, "Failed to write data!", websocket.StatusProtocolError)
 		return
 	}
-	err = wsjson.Write(ctx, c, PlayerStateMessageOutgoing{
+	err = wsjson.Write(ctx, c, PlayerStateMessageBi{
 		Type: "player_state",
 		Data: PlayerStateMessageData{
 			Paused:     room.Paused,
@@ -292,11 +293,16 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 	})()
 
-	// Send chat message: user connected
+	// Send chat message: user joined/reconnected
 	chatMsg := ChatMessage{
 		UserID:    uuid.Nil,
-		Message:   user.ID.String() + " connected",
+		Message:   user.ID.String() + " ",
 		Timestamp: time.Now(),
+	}
+	if authMessage.Reconnect {
+		chatMsg.Message += "reconnected"
+	} else {
+		chatMsg.Message += "joined"
 	}
 	result, err := insertChatMessageRoomStmt.Exec(room.ID, chatMsg)
 	if err != nil {
