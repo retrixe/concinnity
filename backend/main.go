@@ -27,9 +27,10 @@ Rooms are deleted after 10 minutes of no members.
 */
 
 var db *sql.DB
-var config Config
+var config Config = Config{BasePath: "/"}
 
 type Config struct {
+	BasePath      string `json:"basePath"`
 	SecureCookies bool   `json:"secureCookies"`
 	DatabaseURL   string `json:"databaseUrl"`
 }

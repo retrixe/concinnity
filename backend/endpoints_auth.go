@@ -115,6 +115,7 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 		Secure:   config.SecureCookies,
 		MaxAge:   3600 * 24 * 31,
 		SameSite: http.SameSiteStrictMode,
+		Path:     config.BasePath,
 	})
 	json.NewEncoder(w).Encode(struct {
 		Token    string `json:"token"`
