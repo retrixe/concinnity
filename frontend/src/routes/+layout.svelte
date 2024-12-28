@@ -19,9 +19,11 @@
 </svelte:head>
 
 <div class="top-bar">
-  <h1>concinnity</h1>
+  <h1>
+    <a class="unstyled-link" href="/">concinnity</a>
+  </h1>
   <!-- FIXME: Improve the design of this -->
-  <a href="/login">Login</a>
+  <a href="/login">Sign In</a>
 </div>
 
 <div style:margin-top="4rem"></div>
@@ -34,10 +36,14 @@
       margin: 0;
     }
 
+    :root {
+      --primary-color: #8f00ff;
+    }
+
     @media (prefers-color-scheme: dark) {
       :root {
         color-scheme: dark;
-        --link-color: #8f00ff;
+        --link-color: #df73ff;
         --background-color: #111;
         --color: #ffffff;
         --divider-color: #666;
@@ -83,7 +89,13 @@
       font-size: 1.5rem;
     }
     a {
+      font-weight: bold;
       text-decoration: none;
     }
+  }
+
+  .unstyled-link {
+    color: inherit;
+    text-decoration: none;
   }
 </style>

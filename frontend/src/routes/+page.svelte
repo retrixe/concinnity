@@ -1,16 +1,49 @@
+<script lang="ts">
+  import Button from '$lib/components/Button.svelte'
+</script>
+
 <div class="container">
-  <h1>Welcome to SvelteKit</h1>
-  <p>
-    Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation
-  </p>
+  <div class="content">
+    <h1>Get started</h1>
+    <br />
+    <p>
+      Watch videos with your friends together using concinnity, a FOSS, lightweight and easy to use
+      website built by a developer looking for something better.
+    </p>
+    <br />
+    <a href="/login">
+      <Button>Login / Register</Button>
+    </a>
+  </div>
+  <!-- FIXME -->
+  <img
+    class="content"
+    alt="A screenshot of the concinnity website"
+    src="https://media.discordapp.net/attachments/588340346841464835/1321795849571008572/image.png?ex=67708410&is=676f3290&hm=7d04e84e556d48740664a0b5368009b0c21e73a4037b896a7920bbbb6cc7a0bf&=&format=webp&quality=lossless&width=1536&height=844"
+  />
 </div>
 
 <style lang="scss">
+  .content {
+    padding: 1rem;
+    @media screen and (min-width: 768px) {
+      width: 40%;
+      max-width: 640px;
+    }
+    p {
+      font-size: 1.2rem;
+    }
+  }
+
   .container {
-    display: flex;
-    padding: 4rem;
-    justify-content: space-evenly;
-    align-items: center;
     flex-grow: 1;
+    display: flex;
+    @media screen and (width < 768px) {
+      flex-direction: column;
+    }
+    @media screen and (width >= 768px) {
+      justify-content: center;
+      align-items: center;
+    }
   }
 </style>
