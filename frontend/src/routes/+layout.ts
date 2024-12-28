@@ -6,18 +6,16 @@ export const load: LayoutLoad = async event => {
   event.depends('app:auth')
 
   if (typeof localStorage !== 'object') return {}
-  const token = localStorage.getItem('concinnity:token')
+  const token = localStorage.getItem('concinnity:token') ?? ''
 
   // Ignore errors trying to check for authentication state
   try {
-    const req = await fetch(PUBLIC_CONCINNITY_URL, {
-      headers: token ? { authorization: token } : {},
-    })
-    const data = (await req.json()) as { username?: string }
+    const req = await fetch(PUBLIC_CONCINNITY_URL, { headers: { authorization: token } })
+    const data = (await req.json()) as { username?: string; error?: string }
     if (req.ok) {
       return { username: data.username }
     }
-    console.error(data)
+    console.error('Failed to check for auth!', data.error ?? req.statusText)
   } catch (e) {
     console.error(e)
   }

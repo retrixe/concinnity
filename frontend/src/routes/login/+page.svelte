@@ -45,7 +45,7 @@
       })
       const res = (await req.json()) as { token: string; username: string; error?: string }
       if (!req.ok) {
-        throw new Error(res.error ?? `Failed to ${keyword}!`)
+        throw new Error(res.error ?? `Failed to ${keyword}! Error: ${req.statusText}`)
       }
       if (keyword === 'login') {
         localStorage.setItem('concinnity:token', res.token)
@@ -78,6 +78,7 @@
         error={!!loginError}
         disabled={progress !== 'none'}
         type="password"
+        onkeypress={e => e.key === 'Enter' && onLogin() /* eslint-disable-line */}
       />
       <br />
       {#if loginError === false}
@@ -117,6 +118,7 @@
         error={!!registerError}
         disabled={progress !== 'none'}
         type="password"
+        onkeypress={e => e.key === 'Enter' && onRegister() /* eslint-disable-line */}
       />
       <br />
       {#if registerError === false}

@@ -1,5 +1,8 @@
 <script lang="ts">
+  import { page } from '$app/state'
   import Button from '$lib/components/Button.svelte'
+
+  const { username } = $derived(page.data)
 </script>
 
 <div class="container">
@@ -11,11 +14,16 @@
       website built by a developer looking for something better.
     </p>
     <br />
-    <a href="/login">
-      <Button>Login / Sign Up</Button>
-    </a>
+    <!-- FIXME: Create room -->
+    {#if username}
+      <Button>Create a new room</Button>
+    {:else}
+      <a href="/login">
+        <Button>Login / Sign Up</Button>
+      </a>
+    {/if}
   </div>
-  <!-- FIXME -->
+  <!-- FIXME: Image -->
   <img
     class="content"
     alt="A screenshot of the concinnity website"

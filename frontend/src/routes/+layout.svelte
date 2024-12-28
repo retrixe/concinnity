@@ -3,6 +3,8 @@
   import { page } from '$app/state'
   import type { Snippet } from 'svelte'
   import type { LayoutData, PageData } from './$types'
+  import { invalidate } from '$app/navigation'
+  import { PUBLIC_CONCINNITY_URL } from '$env/static/public'
 
   const { data, children }: { data: LayoutData; children: Snippet } = $props()
   const { username } = $derived(data)
@@ -10,6 +12,24 @@
     title?: string
     image?: string
     noIndex?: boolean
+  }
+
+  async function logout(event: Event) {
+    event.preventDefault()
+    try {
+      const req = await fetch(`${PUBLIC_CONCINNITY_URL}/api/logout`, {
+        method: 'POST',
+        headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
+      })
+      if (!req.ok) {
+        const error = (await req.json()) as { error?: string }
+        throw new Error(error.error ?? req.statusText)
+      }
+      localStorage.removeItem('concinnity:token')
+      invalidate('app:auth').catch(console.error)
+    } catch (error) {
+      console.error('Failed to logout!', error)
+    }
   }
 </script>
 
@@ -33,8 +53,7 @@
   {#if username}
     <span>{username}</span>
     <div class="divider"></div>
-    <!-- FIXME -->
-    <a href="/" class="unstyled-link">Sign Out</a>
+    <a href="/" class="unstyled-link" onclick={logout}>Sign Out</a>
   {:else if page.url.pathname !== '/login'}
     <a href="/login" class="unstyled-link">Login</a>
     <div class="divider"></div>
