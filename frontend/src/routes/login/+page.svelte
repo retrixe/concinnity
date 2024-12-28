@@ -59,6 +59,7 @@
 
 <div class="container">
   <Box>
+    <!-- TODO: Improve the design? -->
     <div>
       <h2>Login</h2>
       <br />

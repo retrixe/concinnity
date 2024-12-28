@@ -1,8 +1,32 @@
 <script lang="ts">
+  import { goto } from '$app/navigation'
   import { page } from '$app/state'
+  import { PUBLIC_CONCINNITY_URL } from '$env/static/public'
   import Button from '$lib/components/Button.svelte'
 
   const { username } = $derived(page.data)
+
+  let status: string | null = $state(null)
+
+  // TODO: Convert the button to a text field for custom IDs
+  async function handleCreateRoom() {
+    status = ''
+    try {
+      const req = await fetch(`${PUBLIC_CONCINNITY_URL}/api/room`, {
+        method: 'POST',
+        headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
+        body: JSON.stringify({}),
+      })
+      const data = (await req.json()) as { error?: string; id: string }
+      if (!req.ok) {
+        throw new Error(data.error ?? req.statusText)
+      }
+      goto(`/room/${data.id}`).catch(console.error)
+      status = null
+    } catch (e) {
+      status = e instanceof Error ? e.message : typeof e === 'string' ? e : 'Failed to create room!'
+    }
+  }
 </script>
 
 <div class="container">
@@ -14,13 +38,15 @@
       website built by a developer looking for something better.
     </p>
     <br />
-    <!-- FIXME: Create room -->
     {#if username}
-      <Button>Create a new room</Button>
+      <Button onclick={handleCreateRoom} disabled={status === ''}>Create a new room</Button>
     {:else}
       <a href="/login">
         <Button>Login / Sign Up</Button>
       </a>
+    {/if}
+    {#if !!status}
+      <h4 style:color="var(--error-color)">{status}</h4>
     {/if}
   </div>
   <!-- FIXME: Image -->
@@ -43,6 +69,9 @@
     }
     :global(button) {
       font-size: 1rem;
+    }
+    h4 {
+      padding-top: 1rem;
     }
   }
 
