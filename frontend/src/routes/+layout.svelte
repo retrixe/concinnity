@@ -3,7 +3,7 @@
   import { page } from '$app/state'
   import type { Snippet } from 'svelte'
 
-  const { title, description, image, noIndex } = page.data
+  const { title, description, image, noIndex, navPages } = $derived(page.data)
   const { children }: { children: Snippet } = $props()
 </script>
 
@@ -24,8 +24,9 @@
   <h1>
     <a class="unstyled-link" href="/">concinnity</a>
   </h1>
-  <!-- FIXME: Improve the design of this -->
-  <a href="/login">Sign In</a>
+  {#each navPages as { name, path } (path)}
+    <a href={path}>{name}</a>
+  {/each}
 </div>
 
 <div style:margin-top="4rem"></div>
@@ -47,6 +48,7 @@
         color-scheme: dark;
         --link-color: #df73ff;
         --background-color: #111;
+        --surface-color: #343434; /* Jet */
         --color: #ffffff;
         --divider-color: #666;
       }
@@ -55,7 +57,8 @@
     @media (prefers-color-scheme: light) {
       :root {
         --link-color: #8f00ff;
-        --background-color: #eee;
+        --background-color: #f5f5f5; /* White smoke */
+        --surface-color: #f4f5fa; /* White solid */
         --color: #000000;
         --divider-color: #bbb;
       }

@@ -16,7 +16,7 @@
     border: none;
     border-radius: 0.5rem;
     cursor: pointer;
-    font-size: 1rem;
+    font-weight: bold;
     transition: filter 0.2s ease-in-out;
     &:hover {
       filter: brightness(1.2);

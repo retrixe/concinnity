@@ -33,6 +33,9 @@
     p {
       font-size: 1.2rem;
     }
+    :global(button) {
+      font-size: 1rem;
+    }
   }
 
   .container {
