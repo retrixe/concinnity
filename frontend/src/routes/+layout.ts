@@ -1,9 +1,12 @@
 import { PUBLIC_CONCINNITY_URL } from '$env/static/public'
 import type { LayoutLoad } from './$types'
 
-export const load: LayoutLoad = async ({ fetch }) => {
+export const load: LayoutLoad = async event => {
+  const { fetch } = event
+  event.depends('app:auth')
+
   if (typeof localStorage !== 'object') return {}
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('concinnity:token')
 
   // Ignore errors trying to check for authentication state
   try {
