@@ -1,8 +1,9 @@
 <script lang="ts">
+  import { assets } from '$app/paths'
   import { page } from '$app/state'
   import type { Snippet } from 'svelte'
 
-  const { title, description, noIndex } = page.data
+  const { title, description, image, noIndex } = page.data
   const { children }: { children: Snippet } = $props()
 </script>
 
@@ -11,6 +12,7 @@
   <meta property="og:type" content="website" />
   <meta property="og:title" content={title} />
   <meta property="og:url" content={page.url.origin + page.url.pathname} />
+  <meta property="og:image" content={image ?? assets + '/favicon.png'} />
   <meta property="og:description" content={description} />
   <meta name="Description" content={description} />
   {#if noIndex}
