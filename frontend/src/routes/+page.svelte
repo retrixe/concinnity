@@ -12,7 +12,7 @@
     </p>
     <br />
     <a href="/login">
-      <Button>Login / Register</Button>
+      <Button>Login / Sign Up</Button>
     </a>
   </div>
   <!-- FIXME -->

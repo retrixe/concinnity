@@ -2,9 +2,15 @@
   import { assets } from '$app/paths'
   import { page } from '$app/state'
   import type { Snippet } from 'svelte'
+  import type { LayoutData, PageData } from './$types'
 
-  const { title, description, image, noIndex, navPages } = $derived(page.data)
-  const { children }: { children: Snippet } = $props()
+  const { data, children }: { data: LayoutData; children: Snippet } = $props()
+  const { username } = $derived(data)
+  const { title, description, image, noIndex } = $derived(page.data) as Omit<PageData, 'image'> & {
+    title?: string
+    image?: string
+    noIndex?: boolean
+  }
 </script>
 
 <svelte:head>
@@ -24,9 +30,18 @@
   <h1>
     <a class="unstyled-link" href="/">concinnity</a>
   </h1>
-  {#each navPages as { name, path } (path)}
-    <a href={path}>{name}</a>
-  {/each}
+  {#if username}
+    <span>{username}</span>
+    <div class="divider"></div>
+    <!-- FIXME -->
+    <a href="/" class="unstyled-link">Sign Out</a>
+  {:else if page.url.pathname !== '/login'}
+    <a href="/login" class="unstyled-link">Login</a>
+    <div class="divider"></div>
+    <a href="/login" class="unstyled-link">Sign Up</a>
+  {:else}
+    <a href="/" class="unstyled-link">Home</a>
+  {/if}
 </div>
 
 <div style:margin-top="4rem"></div>
@@ -48,7 +63,7 @@
         color-scheme: dark;
         --link-color: #df73ff;
         --background-color: #111;
-        --surface-color: #343434; /* Jet */
+        --surface-color: #0e0e10; /* Jet black */
         --color: #ffffff;
         --divider-color: #666;
       }
@@ -92,6 +107,11 @@
     border-bottom: 1px solid var(--divider-color);
     h1 {
       font-size: 1.5rem;
+      flex: 1;
+    }
+    span {
+      font-weight: bold;
+      color: var(--link-color);
     }
     a {
       font-weight: bold;
@@ -102,5 +122,11 @@
   .unstyled-link {
     color: inherit;
     text-decoration: none;
+  }
+
+  .divider {
+    border-left: 1px solid var(--divider-color);
+    height: 28px;
+    margin: 0px 0.8rem;
   }
 </style>
