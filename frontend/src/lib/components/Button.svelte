@@ -18,11 +18,17 @@
     cursor: pointer;
     font-weight: bold;
     transition: filter 0.2s ease-in-out;
-    &:hover {
-      filter: brightness(1.2);
+    &:enabled {
+      &:hover {
+        filter: brightness(1.2);
+      }
+      &:active {
+        filter: brightness(0.8);
+      }
     }
-    &:active {
-      filter: brightness(0.8);
+    &:disabled {
+      background-color: var(--divider-color);
+      cursor: not-allowed;
     }
   }
 </style>

@@ -3,11 +3,12 @@
 
   interface Props extends HTMLInputAttributes {
     value?: string
+    error?: boolean
   }
-  let { value = $bindable(''), ...rest }: Props = $props()
+  let { value = $bindable(''), error, ...rest }: Props = $props()
 </script>
 
-<input bind:value {...rest} />
+<input bind:value class:error {...rest} />
 
 <style lang="scss">
   input {
@@ -21,5 +22,9 @@
     &:focus {
       border: 1px solid var(--primary-color);
     }
+  }
+
+  input.error {
+    border: 1px solid var(--error-color);
   }
 </style>

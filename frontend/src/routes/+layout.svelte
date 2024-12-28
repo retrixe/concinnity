@@ -56,6 +56,7 @@
 
     :root {
       --primary-color: #8f00ff;
+      --error-color: #ff0042;
     }
 
     @media (prefers-color-scheme: dark) {
