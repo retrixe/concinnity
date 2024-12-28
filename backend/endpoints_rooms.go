@@ -34,9 +34,9 @@ func readRoomEndpointBody(r *http.Request, data *roomEndpointBody) string {
 	err = json.Unmarshal(body, data)
 	if err != nil {
 		return errorJson("Unable to read body!")
-	} else if data.Type != "localFile" && data.Type != "remoteFile" {
+	} else if data.Type != "" && data.Type != "localFile" && data.Type != "remoteFile" {
 		return errorJson("Invalid room type!")
-	} else if data.Target == "" {
+	} else if data.Type != "" && data.Target == "" {
 		return errorJson("Target cannot be empty with room type '" + data.Type + "'!")
 	}
 	return ""
