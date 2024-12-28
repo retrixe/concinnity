@@ -34,7 +34,7 @@ func wsError(ctx context.Context, c *websocket.Conn, err string, code websocket.
 }
 
 func GetTokenFromHTTP(r *http.Request) string {
-	token := r.Header.Get("Authentication")
+	token := r.Header.Get("Authorization")
 	if cookie, err := r.Cookie("token"); err == nil {
 		token = cookie.Value
 	}

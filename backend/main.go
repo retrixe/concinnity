@@ -80,7 +80,7 @@ func main() {
 	log.SetOutput(os.Stderr)
 	log.Fatalln(http.ListenAndServe(":"+port, handlers.CORS(
 		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PATCH", "DELETE", "OPTIONS"}),
-		handlers.AllowedHeaders([]string{"Content-Type", "Authentication"}),
+		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
 		handlers.AllowedOrigins([]string{"*"}), // Breaks credentialed auth
 		handlers.AllowCredentials(),
 	)(http.DefaultServeMux)))
