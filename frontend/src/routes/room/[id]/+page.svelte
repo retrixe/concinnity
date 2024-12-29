@@ -1,5 +1,11 @@
 <script>
   import Button from '$lib/components/Button.svelte'
+  import Chat from './Chat.svelte'
+
+  const mockMessages = [
+    { userId: 'sanguineous', message: 'Hello', timestamp: '2018-11-05T00:54:15.000005125Z' },
+    { userId: 'aelia', message: 'Hi :3', timestamp: '2024-12-30T04:43:53.156212954+05:30' },
+  ]
   // FIXME: Implement connectivity to WebSocket
   // - onMount, connect to WebSocket
   // - if error, full-screen error
@@ -23,7 +29,12 @@
       <Button>Select local file</Button>
     </div>
   </div>
-  <div class="chat"></div>
+  <Chat
+    messages={mockMessages}
+    onSendMessage={message => {
+      console.log(message)
+    }}
+  />
 </div>
 
 <style lang="scss">
@@ -53,14 +64,5 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-  }
-
-  .chat {
-    @media screen and (width < 768px) {
-      flex: 1;
-    }
-    @media screen and (min-width: 768px) {
-      width: 280px;
-    }
   }
 </style>
