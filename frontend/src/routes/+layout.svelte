@@ -116,6 +116,7 @@
   }
 
   .top-bar {
+    height: 4rem;
     position: fixed;
     display: flex;
     width: 100%;
