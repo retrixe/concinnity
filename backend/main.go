@@ -17,6 +17,7 @@ Endpoints:
 - POST /api/login
 - POST /api/logout
 - POST /api/register
+- GET /api/usernames?id=:id - Get usernames by ID, can accept multiple `id` query parameters
 - POST /api/room - Create a new room
 - GET /api/room/:id - Get the room's info
 - PATCH /api/room/:id - Update the room's info
@@ -66,6 +67,7 @@ func main() {
 	http.HandleFunc("POST /api/login", LoginEndpoint)
 	http.HandleFunc("POST /api/logout", LogoutEndpoint)
 	http.HandleFunc("POST /api/register", RegisterEndpoint)
+	http.HandleFunc("GET /api/usernames", GetUsernamesEndpoint)
 	http.HandleFunc("POST /api/room", CreateRoomEndpoint)
 	http.HandleFunc("GET /api/room/{id}", GetRoomEndpoint)
 	http.HandleFunc("PATCH /api/room/{id}", UpdateRoomEndpoint)

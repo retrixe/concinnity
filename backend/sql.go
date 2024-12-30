@@ -9,6 +9,7 @@ var findUserByTokenStmt *sql.Stmt
 var findUserByNameOrEmailStmt *sql.Stmt
 var findUserByUsernameStmt *sql.Stmt
 var findUserByEmailStmt *sql.Stmt
+var findUsernamesByIdStmt *sql.Stmt
 var createUserStmt *sql.Stmt
 
 var insertTokenStmt *sql.Stmt
@@ -31,6 +32,7 @@ const findUserByUsernameQuery = "SELECT username, password, email, id, createdAt
 	"WHERE username = $1 LIMIT 1;"
 const findUserByEmailQuery = "SELECT username, password, email, id, createdAt, verified FROM users " +
 	"WHERE email = $1 LIMIT 1;"
+const findUsernamesByIdQuery = "SELECT id, username FROM users WHERE id = ANY($1);"
 const createUserQuery = "INSERT INTO users (username, password, email, id) VALUES ($1, $2, $3, $4);"
 
 const insertTokenQuery = "INSERT INTO tokens (token, createdAt, userId) VALUES ($1, $2, $3);"
@@ -48,7 +50,7 @@ const updateRoomStateQuery = "UPDATE rooms SET " +
 const deleteRoomQuery = "DELETE FROM rooms WHERE id = $1;"
 
 const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
-	username VARCHAR(16),
+	username VARCHAR(16) UNIQUE,
 	password VARCHAR(100),
 	email VARCHAR(319) UNIQUE,
 	id UUID PRIMARY KEY,
@@ -103,6 +105,10 @@ func PrepareSqlStatements() {
 	findUserByEmailStmt, err = db.Prepare(findUserByEmailQuery)
 	if err != nil {
 		log.Panicln("Failed to prepare query to find user by email!", err)
+	}
+	findUsernamesByIdStmt, err = db.Prepare(findUsernamesByIdQuery)
+	if err != nil {
+		log.Panicln("Failed to prepare query to find usernames by ID!", err)
 	}
 	createUserStmt, err = db.Prepare(createUserQuery)
 	if err != nil {

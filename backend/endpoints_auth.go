@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 var ErrNotAuthenticated = errors.New("request not authenticated")
@@ -60,8 +61,52 @@ func StatusEndpoint(w http.ResponseWriter, r *http.Request) {
 		handleInternalServerError(w, err)
 	} else {
 		usernameJson, _ := json.Marshal(user.Username)
-		w.Write([]byte("{\"online\":true,\"authenticated\":true,\"username\":" + string(usernameJson) + "}"))
+		userIdJson, _ := json.Marshal(user.ID)
+		w.Write([]byte("{\"online\":true,\"authenticated\":true," +
+			"\"username\":" + string(usernameJson) + ",\"userId\":" + string(userIdJson) + "}"))
 	}
+}
+
+func GetUsernamesEndpoint(w http.ResponseWriter, r *http.Request) {
+	_, token := IsAuthenticatedHTTP(w, r)
+	if token == nil {
+		return
+	}
+	requestedIds := r.URL.Query()["id"]
+	if len(requestedIds) == 0 {
+		http.Error(w, errorJson("No user IDs provided!"), http.StatusBadRequest)
+		return
+	}
+	ids := make([]uuid.UUID, len(requestedIds))
+	var err error
+	for i, id := range requestedIds {
+		ids[i], err = uuid.Parse(id)
+		if err != nil {
+			http.Error(w, errorJson("Invalid user ID(s) provided!"), http.StatusBadRequest)
+			return
+		}
+	}
+
+	rows, err := findUsernamesByIdStmt.Query(pq.Array(requestedIds))
+	if err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
+
+	defer rows.Close()
+	usernames := make(map[string]string)
+	for rows.Next() {
+		var id uuid.UUID
+		var username string
+		err = rows.Scan(&id, &username)
+		if err != nil {
+			handleInternalServerError(w, err)
+			return
+		}
+		usernames[id.String()] = username
+	}
+
+	json.NewEncoder(w).Encode(usernames)
 }
 
 func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
