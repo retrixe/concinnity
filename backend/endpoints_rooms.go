@@ -354,11 +354,12 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Update state in db and broadcast
-			result, err = insertChatMessageRoomStmt.Exec(room.ID, ChatMessage{
+			chatMsg := ChatMessage{
 				UserID:    user.ID,
 				Message:   chatData.Data,
 				Timestamp: time.Now(),
-			})
+			}
+			result, err = insertChatMessageRoomStmt.Exec(room.ID, chatMsg)
 			if err != nil {
 				wsInternalError(c, err)
 				return
@@ -367,9 +368,6 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
-				if userId == user.ID {
-					return true // Skip current user
-				}
 				write <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
 				return true
 			})
