@@ -1,5 +1,11 @@
 import { PUBLIC_CONCINNITY_URL } from '$env/static/public'
 
+export enum RoomType {
+  None = '',
+  LocalFile = 'localFile',
+  RemoteFile = 'remoteFile',
+}
+
 interface Handlers {
   onClose: (this: WebSocket, ev: CloseEvent) => void
   onError: (this: WebSocket, ev: Event) => void
