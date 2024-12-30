@@ -25,10 +25,13 @@ func handleInternalServerError(w http.ResponseWriter, err error) {
 	http.Error(w, errorJson("Internal Server Error!"), http.StatusInternalServerError)
 }
 
+func wsInternalError(ctx context.Context, c *websocket.Conn, err error) {
+	log.Println("Internal Server Error!", err)
+	_ = c.Write(ctx, websocket.MessageText, []byte(errorJson("Internal Server Error!")))
+	_ = c.Close(websocket.StatusInternalError, "Internal Server Error!")
+}
+
 func wsError(ctx context.Context, c *websocket.Conn, err string, code websocket.StatusCode) {
-	if code == websocket.StatusInternalError {
-		log.Println("Internal Server Error!", err)
-	}
 	_ = c.Write(ctx, websocket.MessageText, []byte(errorJson(err)))
 	_ = c.Close(code, err)
 }

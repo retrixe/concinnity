@@ -45,7 +45,7 @@ type ChatMessage struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
-func (c ChatMessage) Scan(src interface{}) error {
+func (c *ChatMessage) Scan(src interface{}) error {
 	data, ok := src.([]byte)
 	dataStr, okStr := src.(string)
 	if !ok && !okStr {
@@ -53,7 +53,7 @@ func (c ChatMessage) Scan(src interface{}) error {
 	} else if okStr {
 		data = []byte(dataStr)
 	}
-	return json.Unmarshal(data, &c)
+	return json.Unmarshal(data, c)
 }
 
 func (c ChatMessage) Value() (driver.Value, error) {

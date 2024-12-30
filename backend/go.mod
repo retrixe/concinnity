@@ -3,7 +3,7 @@ module github.com/retrixe/concinnity
 go 1.22
 
 require (
-	github.com/coder/websocket v1.8.12
+	github.com/coder/websocket v1.8.13-0.20241204191143-11bda985bf5f
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/lib/pq v1.10.9

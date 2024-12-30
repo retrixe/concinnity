@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"regexp"
@@ -192,9 +193,10 @@ type ChatMessageOutgoing struct {
 func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Impl note: If target/type change, client should trash currently playing file and reset state.
 
-	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{Subprotocols: []string{"v0"}})
+	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+		Subprotocols:       []string{"v0"},
+		InsecureSkipVerify: true})
 	if err != nil {
-		http.Error(w, "Unable to upgrade connection!", http.StatusBadRequest)
 		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
@@ -211,7 +213,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		wsError(ctx, c, "You are not authenticated to access this resource!", 4401)
 		return
 	} else if err != nil {
-		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+		wsInternalError(ctx, c, err)
 		return
 	} else if rooms, ok := userRooms.Load(user.ID); ok && rooms.Load() >= 3 {
 		wsError(ctx, c, "You are in too many rooms!", 4429)
@@ -228,7 +230,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		wsError(ctx, c, "Room not found!", 4404)
 		return
 	} else if err != nil {
-		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+		wsInternalError(ctx, c, err)
 		return
 	}
 
@@ -282,7 +284,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 				userRooms.Delete(user.ID)
 			}
 		})()
-		for msg, ok := <-writeChannel; ok; {
+		for msg := range writeChannel {
 			err := wsjson.Write(ctx, c, msg)
 			if errors.Is(err, net.ErrClosed) || errors.Is(err, context.Canceled) { // TODO correct?
 				return
@@ -306,10 +308,10 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	result, err := insertChatMessageRoomStmt.Exec(room.ID, chatMsg)
 	if err != nil {
-		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+		wsInternalError(ctx, c, err)
 		return
 	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
-		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+		wsInternalError(ctx, c, err)
 		return
 	}
 	members.Range(func(key uuid.UUID, value chan<- interface{}) bool {
@@ -353,10 +355,10 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 				Timestamp: time.Now(),
 			})
 			if err != nil {
-				wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+				wsInternalError(ctx, c, err)
 				return
 			} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
-				wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+				wsInternalError(ctx, c, err)
 				return
 			}
 			members.Range(func(key uuid.UUID, value chan<- interface{}) bool {
@@ -379,10 +381,10 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 				playerStateData.Data.Paused, playerStateData.Data.Speed,
 				playerStateData.Data.Timestamp, playerStateData.Data.LastAction)
 			if err != nil {
-				wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+				wsInternalError(ctx, c, err)
 				return
 			} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
-				wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+				wsInternalError(ctx, c, err)
 				return
 			}
 			members.Range(func(key uuid.UUID, value chan<- interface{}) bool {
@@ -419,10 +421,10 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	result, err = insertChatMessageRoomStmt.Exec(room.ID, chatMsg)
 	if err != nil {
-		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+		log.Println("Internal Server Error!", err)
 		return
 	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
-		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
+		log.Println("Internal Server Error!", err)
 		return
 	}
 	members.Range(func(key uuid.UUID, value chan<- interface{}) bool {

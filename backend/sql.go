@@ -40,11 +40,11 @@ const deleteTokenQuery = "DELETE FROM tokens WHERE token = $1;"
 
 const insertRoomQuery = "INSERT INTO rooms (id, type, target) " +
 	"VALUES ($1, $2, $3);"
-const findRoomQuery = "SELECT (id, createdAt, modifiedAt, type, target, chat, " +
-	"paused, speed, timestamp, lastAction) FROM rooms WHERE id = $1;"
+const findRoomQuery = "SELECT id, createdAt, modifiedAt, type, target, chat, " +
+	"paused, speed, timestamp, lastAction FROM rooms WHERE id = $1;"
 const findInactiveRoomsQuery = "SELECT id FROM rooms WHERE modifiedAt < NOW() - INTERVAL '10 minutes';"
 const updateRoomQuery = "UPDATE rooms SET type = $2, target = $3, modifiedAt = NOW() WHERE id = $1;"
-const insertChatMessageRoomQuery = "UPDATE rooms SET chat = chat || $2, modifiedAt = NOW() WHERE id = $1;"
+const insertChatMessageRoomQuery = "UPDATE rooms SET chat = chat || $2::jsonb, modifiedAt = NOW() WHERE id = $1;"
 const updateRoomStateQuery = "UPDATE rooms SET " +
 	"paused = $2, speed = $3, timestamp = $4, lastAction = $5, modifiedAt = NOW() WHERE id = $1;"
 const deleteRoomQuery = "DELETE FROM rooms WHERE id = $1;"
