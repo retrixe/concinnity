@@ -4,23 +4,18 @@
   import Chat from '$lib/components/room/Chat.svelte'
   import RoomLanding from '$lib/components/room/RoomLanding.svelte'
   import LocalFilePlayer from '$lib/components/room/LocalFilePlayer.svelte'
-  import { connect, RoomType } from '$lib/api/room'
+  import {
+    connect,
+    isIncomingChatMessage,
+    MessageType,
+    RoomType,
+    type ChatMessage,
+    type GenericMessage,
+  } from '$lib/api/room'
 
   const id = page.params.id
-  const messages = $state([
-    {
-      userId: '20e08df5-948a-4f5d-b8b4-aae20c0ff54b',
-      message: 'Hello',
-      timestamp: '2018-11-05T00:54:15.000005125Z',
-    },
-    {
-      userId: 'e96626e7-0513-470a-af74-a47aed8ca7a8',
-      message: 'Hi :3',
-      timestamp: '2024-12-30T04:43:53.156212954+05:30',
-    },
-  ])
+  const messages: ChatMessage[] = $state([])
 
-  // FIXME: Implement chat
   // FIXME: Implement room info/player state handling
   // - Implement a way to select a video when no video is playing
   // - Implement a way to select a video when a video is already requested to play in room info
@@ -42,8 +37,12 @@
       onMessage: message => {
         try {
           if (typeof message.data !== 'string') throw new Error('Invalid message data type!')
-          // FIXME
-          JSON.parse(message.data)
+          const data = JSON.parse(message.data) as GenericMessage
+          if (isIncomingChatMessage(data)) {
+            messages.push(...data.data)
+          } else if (data.type !== MessageType.Pong) {
+            console.warn('Unhandled message type!', data)
+          }
         } catch (e) {
           console.error('Failed to parse backend message!', message, e)
         }
@@ -64,7 +63,7 @@
     const interval = setInterval(() => {
       if (ws?.readyState === WebSocket.OPEN)
         ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }))
-    }, 30000)
+    }, 10000)
     return () => {
       clearInterval(interval)
       ws?.close()
@@ -83,15 +82,15 @@
   <Chat
     disabled={wsError !== null || ws === null}
     {messages}
-    onSendMessage={message => {
-      // FIXME
-      console.log(message)
+    onSendMessage={(message: string) => {
+      ws?.send(JSON.stringify({ type: 'chat', data: message }))
     }}
   />
 </div>
 
 <style lang="scss">
   .container {
+    max-height: calc(100vh - 4rem); // FIXME (low): Chat overflows on mobile...
     flex: 1;
     display: flex;
     flex-direction: column;

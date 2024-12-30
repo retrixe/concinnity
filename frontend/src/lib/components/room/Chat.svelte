@@ -15,8 +15,6 @@
 
   // TODO: Optimise this by batching requests and fetching usernames ahead of time
   const getUsername = (userId: string) => {
-    // FIXME: Once done mocking, remove this
-    if (typeof localStorage === 'undefined') return userId.split('-')[0] // UUID
     const value = usernameCache.get(userId)
     // Fire a fetch request if not seen before
     if (value === undefined) {
@@ -36,6 +34,9 @@
     onSendMessage(message)
     message = ''
   }
+
+  // FIXME (low): Scroll to the bottom
+  // FIXME (low): Handle system messages
 </script>
 
 <div class="chat">
@@ -63,6 +64,10 @@
     padding: 1rem;
     display: flex;
     flex-direction: column;
+    :global(input) {
+      width: 100%;
+      box-sizing: border-box;
+    }
     @media screen and (width < 768px) {
       flex: 1;
     }
@@ -73,10 +78,7 @@
 
   .messages {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: end;
-    overflow-y: auto;
+    overflow-y: scroll;
     margin-bottom: 1rem;
     h4 {
       margin-top: 0.5rem;

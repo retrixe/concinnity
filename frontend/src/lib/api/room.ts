@@ -48,3 +48,21 @@ export function connect(id: string, handlers: Handlers, reconnect = false): Prom
     }
   })
 }
+
+export enum MessageType {
+  Chat = 'chat',
+  PlayerState = 'player_state',
+  Pong = 'pong',
+}
+
+export interface GenericMessage {
+  type: MessageType
+}
+
+export interface IncomingChatMessage extends GenericMessage {
+  type: MessageType.Chat
+  data: ChatMessage[]
+}
+
+export const isIncomingChatMessage = (message: GenericMessage): message is IncomingChatMessage =>
+  message.type === MessageType.Chat && Array.isArray((message as IncomingChatMessage).data)
