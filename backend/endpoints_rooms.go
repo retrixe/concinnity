@@ -414,6 +414,9 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		Message:   user.ID.String() + " disconnected",
 		Timestamp: time.Now(),
 	}
+	if closeStatus != websocket.StatusNormalClosure && closeStatus != websocket.StatusGoingAway {
+		chatMsg.Message += " unexpectedly"
+	}
 	result, err = insertChatMessageRoomStmt.Exec(room.ID, chatMsg)
 	if err != nil {
 		wsError(ctx, c, "Internal Server Error!", websocket.StatusInternalError)
