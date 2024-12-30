@@ -124,8 +124,8 @@ func UpdateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Send message to all room members about the change
 	members, ok := roomMembers.Load(id)
 	if ok {
-		members.Range(func(key uuid.UUID, value chan<- interface{}) bool {
-			value <- RoomInfoMessageOutgoing{
+		members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
+			write <- RoomInfoMessageOutgoing{
 				Type: "room_info",
 				Data: RoomInfoMessageOutgoingData{
 					ID:         id,
@@ -273,17 +273,17 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	writeChannel := make(chan interface{}, 16)
 	defer close(writeChannel)
 	// Register user to room
-	// FIXME: What if user is already joined? This causes a leak...
-	members, _ := roomMembers.LoadOrStore(room.ID, xsync.NewMapOf[uuid.UUID, chan<- interface{}]())
-	members.Store(user.ID, writeChannel)
-	defer members.Delete(user.ID)
-	roomCounter, _ := userRooms.LoadOrStore(user.ID, atomic.Int32{})
+	members, _ := roomMembers.LoadOrStore(room.ID, xsync.NewMapOf[chan<- interface{}, uuid.UUID]())
+	members.Store(writeChannel, user.ID)
+	defer members.Delete(writeChannel)
+	roomCounter, _ := userRooms.LoadOrStore(user.ID, &atomic.Int32{})
 	roomCounter.Add(1)
-	defer (func() {
-		if val := roomCounter.Add(-1); val == 0 {
-			userRooms.Delete(user.ID)
+	defer userRooms.Compute(user.ID, func(value *atomic.Int32, loaded bool) (*atomic.Int32, bool) {
+		if val := value.Add(-1); val == 0 {
+			return value, true
 		}
-	})()
+		return value, false
+	})
 
 	// Create write thread
 	go (func() {
@@ -317,8 +317,8 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		wsInternalError(c, err)
 		return
 	}
-	members.Range(func(key uuid.UUID, value chan<- interface{}) bool {
-		value <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
+	members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
+		write <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
 		return true
 	})
 
@@ -366,11 +366,11 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 				wsInternalError(c, err)
 				return
 			}
-			members.Range(func(key uuid.UUID, value chan<- interface{}) bool {
-				if key == user.ID {
+			members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
+				if userId == user.ID {
 					return true // Skip current user
 				}
-				value <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
+				write <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
 				return true
 			})
 		} else if msgData.Type == "player_state" {
@@ -392,11 +392,11 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 				wsInternalError(c, err)
 				return
 			}
-			members.Range(func(key uuid.UUID, value chan<- interface{}) bool {
-				if key == user.ID {
+			members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
+				if userId == user.ID {
 					return true // Skip current user
 				}
-				value <- playerStateData
+				write <- playerStateData
 				return true
 			})
 		} else if msgData.Type == "ping" {
@@ -429,8 +429,8 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		log.Println("Internal Server Error!", err)
 		return
 	}
-	members.Range(func(key uuid.UUID, value chan<- interface{}) bool {
-		value <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
+	members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
+		write <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
 		return true
 	})
 }

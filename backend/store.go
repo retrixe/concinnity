@@ -9,12 +9,11 @@ import (
 	"github.com/puzpuzpuz/xsync/v3"
 )
 
-var roomMembers *xsync.MapOf[string, *xsync.MapOf[uuid.UUID, chan<- interface{}]] = xsync.NewMapOf[
-	string,
-	*xsync.MapOf[uuid.UUID, chan<- interface{}],
-]()
+type RoomMembers = *xsync.MapOf[chan<- interface{}, uuid.UUID]
 
-var userRooms *xsync.MapOf[uuid.UUID, atomic.Int32] = xsync.NewMapOf[uuid.UUID, atomic.Int32]()
+var roomMembers *xsync.MapOf[string, RoomMembers] = xsync.NewMapOf[string, RoomMembers]()
+
+var userRooms *xsync.MapOf[uuid.UUID, *atomic.Int32] = xsync.NewMapOf[uuid.UUID, *atomic.Int32]()
 
 func CleanInactiveRoomsTask() {
 	for {
@@ -44,6 +43,8 @@ func CleanInactiveRooms() {
 				log.Println("Failed to delete inactive room!", err)
 			} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
 				log.Println("Failed to delete inactive room!", err)
+			} else {
+				roomMembers.Delete(id)
 			}
 		}
 	}
