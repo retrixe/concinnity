@@ -25,7 +25,6 @@
   // TODO: Support watching remote files
   // TODO: Implement UI controls
 
-  // FIXME: If error, warning at the bottom of the video
   let ws: WebSocket | null = $state(null)
   let wsError: string | null = $state(null)
   const wsConnecting = $derived(!wsError && ws === null)
@@ -90,7 +89,7 @@
 
 <style lang="scss">
   .container {
-    max-height: calc(100vh - 4rem); // FIXME (low): Chat overflows on mobile...
+    max-height: calc(100vh - 4rem); // FIXME: Chat overflows on mobile...
     flex: 1;
     display: flex;
     flex-direction: column;

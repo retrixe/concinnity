@@ -35,19 +35,41 @@
     message = ''
   }
 
-  // FIXME (low): Scroll to the bottom
-  // FIXME (low): Handle system messages
+  // Scroll to the bottom when messages are added
+  let messagesContainer: HTMLDivElement | null = null
+  let isScrolledToBottom = $state(true)
+  $effect.pre(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- false positive
+    if (messages.length && messagesContainer)
+      isScrolledToBottom =
+        messagesContainer.scrollHeight - messagesContainer.clientHeight <=
+        (messagesContainer.scrollTop as number) + 1
+  })
+  $effect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- false positive
+    if (messages.length && messagesContainer && isScrolledToBottom)
+      messagesContainer.scrollTop = messagesContainer.scrollHeight - messagesContainer.clientHeight
+  })
 </script>
 
 <div class="chat">
-  <div class="messages">
+  <div class="messages" bind:this={messagesContainer}>
     {#each messages as message, i}
-      <div>
-        {#if i === 0 || messages[i - 1].userId !== message.userId}
-          <h4>{getUsername(message.userId)} — {parseTimestamp(message.timestamp)}</h4>
-        {/if}
-        <p>{message.message}</p>
-      </div>
+      {#if message.userId === '00000000-0000-0000-0000-000000000000'}
+        <h5 style:text-align="center">
+          {message.message.replace(
+            message.message.split(' ')[0],
+            getUsername(message.message.split(' ')[0]),
+          )} — {parseTimestamp(message.timestamp)}
+        </h5>
+      {:else}
+        <div>
+          {#if i === 0 || messages[i - 1].userId !== message.userId}
+            <h4>{getUsername(message.userId)} — {parseTimestamp(message.timestamp)}</h4>
+          {/if}
+          <p>{message.message}</p>
+        </div>
+      {/if}
     {/each}
   </div>
   <!-- prettier-ignore -->
@@ -80,7 +102,8 @@
     flex: 1;
     overflow-y: scroll;
     margin-bottom: 1rem;
-    h4 {
+    h4,
+    h5 {
       margin-top: 0.5rem;
     }
     p {
