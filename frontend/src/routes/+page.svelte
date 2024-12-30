@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
-  import { PUBLIC_CONCINNITY_URL } from '$env/static/public'
+  import { PUBLIC_BACKEND_URL } from '$env/static/public'
   import Button from '$lib/components/Button.svelte'
 
   const { username } = $derived(page.data)
@@ -12,7 +12,7 @@
   async function handleCreateRoom() {
     status = ''
     try {
-      const req = await fetch(`${PUBLIC_CONCINNITY_URL}/api/room`, {
+      const req = await fetch(`${PUBLIC_BACKEND_URL}/api/room`, {
         method: 'POST',
         headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
         body: JSON.stringify({}),

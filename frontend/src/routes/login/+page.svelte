@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto, invalidate } from '$app/navigation'
   import { page } from '$app/state'
-  import { PUBLIC_CONCINNITY_URL } from '$env/static/public'
+  import { PUBLIC_BACKEND_URL } from '$env/static/public'
   import Box from '$lib/components/Box.svelte'
   import Button from '$lib/components/Button.svelte'
   import TextInput from '$lib/components/TextInput.svelte'
@@ -36,7 +36,7 @@
 
   async function handleLoginRegister(keyword: 'login' | 'register'): Promise<string> {
     try {
-      const req = await fetch(`${PUBLIC_CONCINNITY_URL}/api/${keyword}`, {
+      const req = await fetch(`${PUBLIC_BACKEND_URL}/api/${keyword}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

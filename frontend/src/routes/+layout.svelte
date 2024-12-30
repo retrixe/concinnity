@@ -4,7 +4,7 @@
   import type { Snippet } from 'svelte'
   import type { LayoutData, PageData } from './$types'
   import { invalidate } from '$app/navigation'
-  import { PUBLIC_CONCINNITY_URL } from '$env/static/public'
+  import { PUBLIC_BACKEND_URL } from '$env/static/public'
 
   const { data, children }: { data: LayoutData; children: Snippet } = $props()
   const { username } = $derived(data)
@@ -17,7 +17,7 @@
   async function logout(event: Event) {
     event.preventDefault()
     try {
-      const req = await fetch(`${PUBLIC_CONCINNITY_URL}/api/logout`, {
+      const req = await fetch(`${PUBLIC_BACKEND_URL}/api/logout`, {
         method: 'POST',
         headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
       })

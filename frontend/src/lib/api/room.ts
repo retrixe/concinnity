@@ -1,4 +1,4 @@
-import { PUBLIC_CONCINNITY_URL } from '$env/static/public'
+import { PUBLIC_BACKEND_URL } from '$env/static/public'
 
 export enum RoomType {
   None = '',
@@ -14,7 +14,7 @@ interface Handlers {
 
 export function connect(id: string, handlers: Handlers, reconnect = false): Promise<WebSocket> {
   return new Promise((resolve, reject) => {
-    const ws = new WebSocket(`${PUBLIC_CONCINNITY_URL.replace('http', 'ws')}/api/room/${id}`)
+    const ws = new WebSocket(`${PUBLIC_BACKEND_URL.replace('http', 'ws')}/api/room/${id}`)
 
     ws.onopen = () => {
       console.log('Connecting to room')

@@ -1,4 +1,4 @@
-import { PUBLIC_CONCINNITY_URL } from '$env/static/public'
+import { PUBLIC_BACKEND_URL } from '$env/static/public'
 import type { LayoutLoad } from './$types'
 
 export const load: LayoutLoad = async event => {
@@ -10,7 +10,7 @@ export const load: LayoutLoad = async event => {
 
   // Ignore errors trying to check for authentication state
   try {
-    const req = await fetch(PUBLIC_CONCINNITY_URL, { headers: { authorization: token } })
+    const req = await fetch(PUBLIC_BACKEND_URL, { headers: { authorization: token } })
     const data = (await req.json()) as { username?: string; error?: string }
     if (req.ok) {
       return { username: data.username }
