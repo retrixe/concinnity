@@ -1,4 +1,5 @@
 import { PUBLIC_BACKEND_URL } from '$env/static/public'
+import usernameCache from '$lib/state/usernameCache.svelte'
 import type { LayoutLoad } from './$types'
 
 export const load: LayoutLoad = async event => {
@@ -11,9 +12,10 @@ export const load: LayoutLoad = async event => {
   // Ignore errors trying to check for authentication state
   try {
     const req = await fetch(PUBLIC_BACKEND_URL, { headers: { authorization: token } })
-    const data = (await req.json()) as { username?: string; error?: string }
+    const data = (await req.json()) as { username?: string; userId?: string; error?: string }
     if (req.ok) {
-      return { username: data.username }
+      if (data.userId && data.username) usernameCache.set(data.userId, data.username)
+      return { username: data.username, userId: data.userId }
     }
     console.error('Failed to check for auth!', data.error ?? req.statusText)
   } catch (e) {

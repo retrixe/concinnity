@@ -1,15 +1,23 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import Chat from '../../../lib/components/room/Chat.svelte'
   import { page } from '$app/state'
+  import Chat from '$lib/components/room/Chat.svelte'
   import RoomLanding from '$lib/components/room/RoomLanding.svelte'
   import LocalFilePlayer from '$lib/components/room/LocalFilePlayer.svelte'
   import { connect, RoomType } from '$lib/api/room'
 
   const id = page.params.id
   const mockMessages = [
-    { userId: 'sanguineous', message: 'Hello', timestamp: '2018-11-05T00:54:15.000005125Z' },
-    { userId: 'aelia', message: 'Hi :3', timestamp: '2024-12-30T04:43:53.156212954+05:30' },
+    {
+      userId: '20e08df5-948a-4f5d-b8b4-aae20c0ff54b',
+      message: 'Hello',
+      timestamp: '2018-11-05T00:54:15.000005125Z',
+    },
+    {
+      userId: 'e96626e7-0513-470a-af74-a47aed8ca7a8',
+      message: 'Hi :3',
+      timestamp: '2024-12-30T04:43:53.156212954+05:30',
+    },
   ]
 
   // FIXME: Implement chat

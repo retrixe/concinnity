@@ -1,8 +1,9 @@
 <script lang="ts">
+  import { PUBLIC_BACKEND_URL } from '$env/static/public'
   import TextInput from '$lib/components/TextInput.svelte'
+  import usernameCache from '$lib/state/usernameCache.svelte'
 
   // TODO: Timestamp design needs improvement to account for latest messages
-  // FIXME: User IDs need to be replaced with usernames fetched from the server
   interface Props {
     disabled?: boolean
     messages: { userId: string; message: string; timestamp: string }[]
@@ -11,6 +12,21 @@
 
   const { messages, onSendMessage, disabled }: Props = $props()
 
+  // TODO: Optimise this by batching requests and fetching usernames ahead of time
+  const getUsername = (userId: string) => {
+    // FIXME: Once done mocking, remove this
+    if (typeof localStorage === 'undefined') return userId.split('-')[0] // UUID
+    const value = usernameCache.get(userId)
+    // Fire a fetch request if not seen before
+    if (value === undefined) {
+      const authorization = localStorage.getItem('concinnity:token') ?? ''
+      fetch(`${PUBLIC_BACKEND_URL}/api/usernames?id=${userId}`, { headers: { authorization } })
+        .then(res => res.json())
+        .then((data: Record<string, string>) => usernameCache.set(userId, data[userId] ?? null))
+        .catch((e: unknown) => console.error('Failed to retrieve username for ID!', userId, e))
+    }
+    return value ?? userId.split('-')[0] // UUID
+  }
   const parseTimestamp = (timestamp: string) =>
     new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
@@ -26,7 +42,7 @@
     {#each messages as message, i}
       <div>
         {#if i === 0 || messages[i - 1].userId !== message.userId}
-          <h4>{message.userId} — {parseTimestamp(message.timestamp)}</h4>
+          <h4>{getUsername(message.userId)} — {parseTimestamp(message.timestamp)}</h4>
         {/if}
         <p>{message.message}</p>
       </div>
