@@ -1,7 +1,7 @@
 <script lang="ts">
   import TextInput from '$lib/components/TextInput.svelte'
 
-  // FIXME: Parse and display timestamps
+  // TODO: Timestamp design needs improvement to account for latest messages
   // FIXME: User IDs need to be replaced with usernames fetched from the server
   interface Props {
     disabled?: boolean
@@ -10,8 +10,11 @@
   }
 
   const { messages, onSendMessage, disabled }: Props = $props()
-  let message = $state('')
 
+  const parseTimestamp = (timestamp: string) =>
+    new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+  let message = $state('')
   const handleSendMessage = () => {
     onSendMessage(message)
     message = ''
@@ -23,7 +26,7 @@
     {#each messages as message, i}
       <div>
         {#if i === 0 || messages[i - 1].userId !== message.userId}
-          <h4>{message.userId}</h4>
+          <h4>{message.userId} — {parseTimestamp(message.timestamp)}</h4>
         {/if}
         <p>{message.message}</p>
       </div>

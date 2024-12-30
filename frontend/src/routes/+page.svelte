@@ -49,7 +49,7 @@
       <h4 style:color="var(--error-color)">{status}</h4>
     {/if}
   </div>
-  <!-- FIXME: Image -->
+  <!-- TODO: Metadata -->
   <img
     class="content"
     alt="A screenshot of the concinnity website"
