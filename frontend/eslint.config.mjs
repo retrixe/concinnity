@@ -15,7 +15,7 @@ export default tseslint.config(
       '.pnp.cjs',
       '.pnp.loader.mjs',
       '.yarn',
-      '.astro',
+      '.svelte-kit',
       '.prettierrc.cjs',
       '*.config.{mjs,js}',
     ],
@@ -46,7 +46,7 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
       globals: {
-        ...globals.browser
+        ...globals.browser,
       },
     },
     rules: {

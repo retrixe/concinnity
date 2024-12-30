@@ -29,6 +29,7 @@
       </div>
     {/each}
   </div>
+  <!-- prettier-ignore -->
   <TextInput
     {disabled}
     placeholder="Type message here..."

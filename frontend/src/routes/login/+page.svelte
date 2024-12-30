@@ -73,6 +73,7 @@
         placeholder="e.g. aelia@retrixe.xyz"
       />
       <label for="login-password">Password</label>
+      <!-- prettier-ignore -->
       <TextInput
         id="login-password"
         bind:value={login.password}
@@ -113,6 +114,7 @@
         placeholder="e.g. aelia@retrixe.xyz"
       />
       <label for="register-password">Password</label>
+      <!-- prettier-ignore -->
       <TextInput
         id="register-password"
         bind:value={register.password}
