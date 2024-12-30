@@ -4,11 +4,12 @@
   // FIXME: Parse and display timestamps
   // FIXME: User IDs need to be replaced with usernames fetched from the server
   interface Props {
+    disabled?: boolean
     messages: { userId: string; message: string; timestamp: string }[]
     onSendMessage: (message: string) => void
   }
 
-  const { messages, onSendMessage }: Props = $props()
+  const { messages, onSendMessage, disabled }: Props = $props()
   let message = $state('')
 
   const handleSendMessage = () => {
@@ -29,6 +30,7 @@
     {/each}
   </div>
   <TextInput
+    {disabled}
     placeholder="Type message here..."
     bind:value={message}
     onkeypress={e => e.key === 'Enter' && handleSendMessage() /* eslint-disable-line */}
