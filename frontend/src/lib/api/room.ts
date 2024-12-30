@@ -2,8 +2,8 @@ import { PUBLIC_BACKEND_URL } from '$env/static/public'
 
 export enum RoomType {
   None = '',
-  LocalFile = 'localFile',
-  RemoteFile = 'remoteFile',
+  LocalFile = 'local_file',
+  RemoteFile = 'remote_file',
 }
 
 interface Handlers {

@@ -62,7 +62,7 @@ const createRoomsTableQuery = `CREATE TABLE IF NOT EXISTS rooms (
 	id VARCHAR(24) PRIMARY KEY,
 	createdAt TIMESTAMPTZ DEFAULT NOW(),
 	modifiedAt TIMESTAMPTZ DEFAULT NOW(),
-	type VARCHAR(24), /* localFile, remoteFile */
+	type VARCHAR(24), /* local_file, remote_file */
 	target VARCHAR(200), /* carries information like file name, YouTube ID, etc */
 	chat JSONB[] DEFAULT '{}',
 	paused BOOLEAN DEFAULT TRUE,
