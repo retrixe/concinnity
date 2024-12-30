@@ -6,6 +6,7 @@
   }
 
   const { error }: Props = $props()
+  // FIXME: Warning below the video if error or connecting
 </script>
 
 <!-- FIXME: This entire UI and props need changing up -->

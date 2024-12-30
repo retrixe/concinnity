@@ -1,12 +1,13 @@
 <script lang="ts">
   import { PUBLIC_BACKEND_URL } from '$env/static/public'
+  import type { ChatMessage } from '$lib/api/room'
   import TextInput from '$lib/components/TextInput.svelte'
   import usernameCache from '$lib/state/usernameCache.svelte'
 
   // TODO: Timestamp design needs improvement to account for latest messages
   interface Props {
     disabled?: boolean
-    messages: { userId: string; message: string; timestamp: string }[]
+    messages: ChatMessage[]
     onSendMessage: (message: string) => void
   }
 

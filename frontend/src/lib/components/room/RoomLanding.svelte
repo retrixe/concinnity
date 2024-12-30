@@ -3,10 +3,10 @@
 
   interface Props {
     error: string | null
-    loading: boolean
+    connecting: boolean
   }
 
-  let { error, loading }: Props = $props()
+  let { error, connecting }: Props = $props()
 
   // FIXME: Button logic
 </script>
@@ -16,7 +16,7 @@
     {#if error}
       <h1>Error encountered!</h1>
       <h2>{error}</h2>
-    {:else if loading}
+    {:else if connecting}
       <!-- TODO: Loading spinner? -->
       <h1>Connecting to room...</h1>
     {:else}

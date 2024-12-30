@@ -7,7 +7,7 @@
   import { connect, RoomType } from '$lib/api/room'
 
   const id = page.params.id
-  const mockMessages = [
+  const messages = $state([
     {
       userId: '20e08df5-948a-4f5d-b8b4-aae20c0ff54b',
       message: 'Hello',
@@ -18,7 +18,7 @@
       message: 'Hi :3',
       timestamp: '2024-12-30T04:43:53.156212954+05:30',
     },
-  ]
+  ])
 
   // FIXME: Implement chat
   // FIXME: Implement room info/player state handling
@@ -33,22 +33,26 @@
   // FIXME: If error, warning at the bottom of the video
   let ws: WebSocket | null = $state(null)
   let wsError: string | null = $state(null)
-  let roomType: RoomType = $state(RoomType.None)
+  const wsConnecting = $derived(!wsError && ws === null)
 
-  let initialError = $derived(wsError && ws === null ? wsError : null)
-  let initialLoading = $derived(!wsError && ws === null)
+  let roomType: RoomType = $state(RoomType.None)
 
   onMount(() => {
     connect(id, {
-      // FIXME
       onMessage: message => {
-        console.log(message)
+        try {
+          if (typeof message.data !== 'string') throw new Error('Invalid message data type!')
+          // FIXME
+          JSON.parse(message.data)
+        } catch (e) {
+          console.error('Failed to parse backend message!', message, e)
+        }
       },
-      onClose: () => {
-        console.log('Disconnected')
+      onClose: event => {
+        wsError = event.reason || `WebSocket closed with code: ${event.code}`
       },
-      onError: e => {
-        console.error(e)
+      onError: () => {
+        /* no-op */
       },
     })
       .then(socket => {
@@ -57,22 +61,30 @@
       .catch((e: unknown) => {
         if (e instanceof Error) wsError = e.message
       })
-    return () => ws?.close()
+    const interval = setInterval(() => {
+      if (ws?.readyState === WebSocket.OPEN)
+        ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }))
+    }, 30000)
+    return () => {
+      clearInterval(interval)
+      ws?.close()
+    }
   })
 </script>
 
 <div class="container">
   {#if roomType === RoomType.None}
-    <RoomLanding error={initialError} loading={initialLoading} />
+    <RoomLanding error={wsError} connecting={wsConnecting} />
   {:else if roomType === RoomType.LocalFile}
     <LocalFilePlayer error={wsError} />
   {:else}
-    <RoomLanding error="Invalid room type!" loading={false} />
+    <RoomLanding error="Invalid room type!" connecting={false} />
   {/if}
   <Chat
     disabled={wsError !== null || ws === null}
-    messages={mockMessages}
+    {messages}
     onSendMessage={message => {
+      // FIXME
       console.log(message)
     }}
   />

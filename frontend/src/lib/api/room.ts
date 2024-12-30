@@ -6,6 +6,12 @@ export enum RoomType {
   RemoteFile = 'remote_file',
 }
 
+export interface ChatMessage {
+  userId: string
+  message: string
+  timestamp: string
+}
+
 interface Handlers {
   onClose: (this: WebSocket, ev: CloseEvent) => void
   onError: (this: WebSocket, ev: Event) => void
@@ -14,7 +20,10 @@ interface Handlers {
 
 export function connect(id: string, handlers: Handlers, reconnect = false): Promise<WebSocket> {
   return new Promise((resolve, reject) => {
-    const ws = new WebSocket(`${PUBLIC_BACKEND_URL.replace('http', 'ws')}/api/room/${id}`)
+    const ws = new WebSocket(
+      `${PUBLIC_BACKEND_URL.replace('http', 'ws')}/api/room/${id}/join`,
+      'v0',
+    )
 
     ws.onopen = () => {
       console.log('Connecting to room')
