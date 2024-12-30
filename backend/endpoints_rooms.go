@@ -199,24 +199,25 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
-	defer cancel()
 
 	// Wait for auth message
 	var authMessage AuthMessageIncoming
-	if err := wsjson.Read(ctx, c, &authMessage); err != nil {
-		wsError(ctx, c, "Unable to read authentication message!", websocket.StatusProtocolError)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	err = wsjson.Read(ctx, c, &authMessage)
+	cancel()
+	if err != nil {
+		wsError(c, "Unable to read authentication message!", websocket.StatusProtocolError)
 		return
 	}
 	user, _, err := IsAuthenticated(authMessage.Token)
 	if errors.Is(err, ErrNotAuthenticated) {
-		wsError(ctx, c, "You are not authenticated to access this resource!", 4401)
+		wsError(c, "You are not authenticated to access this resource!", 4401)
 		return
 	} else if err != nil {
-		wsInternalError(ctx, c, err)
+		wsInternalError(c, err)
 		return
 	} else if rooms, ok := userRooms.Load(user.ID); ok && rooms.Load() >= 3 {
-		wsError(ctx, c, "You are in too many rooms!", 4429)
+		wsError(c, "You are in too many rooms!", 4429)
 		return
 	}
 
@@ -227,15 +228,15 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		&room.Type, &room.Target, pq.Array(&room.Chat),
 		&room.Paused, &room.Speed, &room.Timestamp, &room.LastAction)
 	if errors.Is(err, sql.ErrNoRows) {
-		wsError(ctx, c, "Room not found!", 4404)
+		wsError(c, "Room not found!", 4404)
 		return
 	} else if err != nil {
-		wsInternalError(ctx, c, err)
+		wsInternalError(c, err)
 		return
 	}
 
 	// Send current room info, state and chat
-	err = wsjson.Write(ctx, c, RoomInfoMessageOutgoing{
+	err = wsjsonWriteWithTimeout(context.Background(), c, RoomInfoMessageOutgoing{
 		Type: "room_info",
 		Data: RoomInfoMessageOutgoingData{
 			ID:         room.ID,
@@ -246,10 +247,10 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 	if err != nil {
-		wsError(ctx, c, "Failed to write data!", websocket.StatusProtocolError)
+		wsError(c, "Failed to write data!", websocket.StatusProtocolError)
 		return
 	}
-	err = wsjson.Write(ctx, c, PlayerStateMessageBi{
+	err = wsjsonWriteWithTimeout(context.Background(), c, PlayerStateMessageBi{
 		Type: "player_state",
 		Data: PlayerStateMessageData{
 			Paused:     room.Paused,
@@ -259,37 +260,39 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 	if err != nil {
-		wsError(ctx, c, "Failed to write data!", websocket.StatusProtocolError)
+		wsError(c, "Failed to write data!", websocket.StatusProtocolError)
 		return
 	}
-	err = wsjson.Write(ctx, c, ChatMessageOutgoing{Type: "chat", Data: room.Chat})
+	err = wsjsonWriteWithTimeout(context.Background(), c, ChatMessageOutgoing{
+		Type: "chat", Data: room.Chat})
 	if err != nil {
-		wsError(ctx, c, "Failed to write data!", websocket.StatusProtocolError)
+		wsError(c, "Failed to write data!", websocket.StatusProtocolError)
 		return
 	}
 
 	writeChannel := make(chan interface{}, 16)
+	defer close(writeChannel)
 	// Register user to room
+	// FIXME: What if user is already joined? This causes a leak...
 	members, _ := roomMembers.LoadOrStore(room.ID, xsync.NewMapOf[uuid.UUID, chan<- interface{}]())
 	members.Store(user.ID, writeChannel)
+	defer members.Delete(user.ID)
 	roomCounter, _ := userRooms.LoadOrStore(user.ID, atomic.Int32{})
 	roomCounter.Add(1)
+	defer (func() {
+		if val := roomCounter.Add(-1); val == 0 {
+			userRooms.Delete(user.ID)
+		}
+	})()
 
 	// Create write thread
 	go (func() {
-		defer close(writeChannel)
-		defer members.Delete(user.ID)
-		defer (func() {
-			if val := roomCounter.Add(-1); val == 0 {
-				userRooms.Delete(user.ID)
-			}
-		})()
 		for msg := range writeChannel {
-			err := wsjson.Write(ctx, c, msg)
+			err := wsjsonWriteWithTimeout(context.Background(), c, msg)
 			if errors.Is(err, net.ErrClosed) || errors.Is(err, context.Canceled) { // TODO correct?
 				return
 			} else if err != nil {
-				wsError(ctx, c, "Failed to write data!", websocket.StatusProtocolError)
+				wsError(c, "Failed to write data!", websocket.StatusProtocolError)
 				return
 			}
 		}
@@ -308,10 +311,10 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	result, err := insertChatMessageRoomStmt.Exec(room.ID, chatMsg)
 	if err != nil {
-		wsInternalError(ctx, c, err)
+		wsInternalError(c, err)
 		return
 	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
-		wsInternalError(ctx, c, err)
+		wsInternalError(c, err)
 		return
 	}
 	members.Range(func(key uuid.UUID, value chan<- interface{}) bool {
@@ -322,7 +325,9 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Read all messages
 	var closeStatus websocket.StatusCode = -1
 	for {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		_, data, err := c.Read(ctx)
+		cancel()
 		closeStatus = websocket.CloseStatus(err)
 		// TODO: Is this correct? What are the possible errors :/
 		if closeStatus != -1 ||
@@ -331,7 +336,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 			errors.Is(err, context.Canceled) {
 			break
 		} else if err != nil {
-			wsError(ctx, c, "Failed to read message!", websocket.StatusProtocolError)
+			wsError(c, "Failed to read message!", websocket.StatusProtocolError)
 			continue
 		}
 
@@ -339,12 +344,12 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		var msgData GenericMessage
 		err = json.Unmarshal(data, &msgData)
 		if err != nil {
-			wsError(ctx, c, "Invalid message!", websocket.StatusUnsupportedData)
+			wsError(c, "Invalid message!", websocket.StatusUnsupportedData)
 		} else if msgData.Type == "chat" {
 			var chatData ChatMessageIncoming
 			err = json.Unmarshal(data, &chatData)
 			if err != nil {
-				wsError(ctx, c, "Invalid chat message!", websocket.StatusUnsupportedData)
+				wsError(c, "Invalid chat message!", websocket.StatusUnsupportedData)
 				continue
 			}
 
@@ -355,10 +360,10 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 				Timestamp: time.Now(),
 			})
 			if err != nil {
-				wsInternalError(ctx, c, err)
+				wsInternalError(c, err)
 				return
 			} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
-				wsInternalError(ctx, c, err)
+				wsInternalError(c, err)
 				return
 			}
 			members.Range(func(key uuid.UUID, value chan<- interface{}) bool {
@@ -372,7 +377,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 			var playerStateData PlayerStateMessageBi
 			err = json.Unmarshal(data, &playerStateData)
 			if err != nil {
-				wsError(ctx, c, "Invalid player state message!", websocket.StatusUnsupportedData)
+				wsError(c, "Invalid player state message!", websocket.StatusUnsupportedData)
 				continue
 			}
 
@@ -381,10 +386,10 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 				playerStateData.Data.Paused, playerStateData.Data.Speed,
 				playerStateData.Data.Timestamp, playerStateData.Data.LastAction)
 			if err != nil {
-				wsInternalError(ctx, c, err)
+				wsInternalError(c, err)
 				return
 			} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
-				wsInternalError(ctx, c, err)
+				wsInternalError(c, err)
 				return
 			}
 			members.Range(func(key uuid.UUID, value chan<- interface{}) bool {
@@ -398,15 +403,12 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 			var pingData PingPongMessageBi
 			err = json.Unmarshal(data, &pingData)
 			if err != nil {
-				wsError(ctx, c, "Invalid ping message!", websocket.StatusUnsupportedData)
+				wsError(c, "Invalid ping message!", websocket.StatusUnsupportedData)
 				continue
 			}
-			err = wsjson.Write(ctx, c, PingPongMessageBi{Type: "pong", Timestamp: pingData.Timestamp})
-			if err != nil {
-				wsError(ctx, c, "Failed to write data!", websocket.StatusProtocolError)
-			}
+			writeChannel <- PingPongMessageBi{Type: "pong", Timestamp: pingData.Timestamp}
 		} else {
-			wsError(ctx, c, "Invalid message!", websocket.StatusUnsupportedData)
+			wsError(c, "Invalid message!", websocket.StatusUnsupportedData)
 		}
 	}
 
@@ -431,4 +433,10 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		value <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
 		return true
 	})
+}
+
+func wsjsonWriteWithTimeout(ctx context.Context, c *websocket.Conn, v interface{}) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Second*30)
+	defer cancel()
+	return wsjson.Write(ctx, c, v)
 }

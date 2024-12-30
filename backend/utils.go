@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/coder/websocket"
 	"golang.org/x/crypto/argon2"
@@ -25,13 +26,17 @@ func handleInternalServerError(w http.ResponseWriter, err error) {
 	http.Error(w, errorJson("Internal Server Error!"), http.StatusInternalServerError)
 }
 
-func wsInternalError(ctx context.Context, c *websocket.Conn, err error) {
+func wsInternalError(c *websocket.Conn, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
 	log.Println("Internal Server Error!", err)
 	_ = c.Write(ctx, websocket.MessageText, []byte(errorJson("Internal Server Error!")))
 	_ = c.Close(websocket.StatusInternalError, "Internal Server Error!")
 }
 
-func wsError(ctx context.Context, c *websocket.Conn, err string, code websocket.StatusCode) {
+func wsError(c *websocket.Conn, err string, code websocket.StatusCode) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
 	_ = c.Write(ctx, websocket.MessageText, []byte(errorJson(err)))
 	_ = c.Close(code, err)
 }
