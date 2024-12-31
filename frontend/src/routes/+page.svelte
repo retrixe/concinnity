@@ -34,7 +34,7 @@
     <h1>Get started</h1>
     <br />
     <p>
-      Watch videos with your friends together using concinnity, a FOSS, lightweight and easy to use
+      Watch videos together with your friends using concinnity, a FOSS, lightweight and easy to use
       website built by a developer looking for something better.
     </p>
     <br />
@@ -49,7 +49,7 @@
       <h4 style:color="var(--error-color)">{status}</h4>
     {/if}
   </div>
-  <!-- TODO: Metadata -->
+  <!-- TODO: Replace this image everywhere -->
   <img
     class="content"
     alt="A screenshot of the concinnity website"

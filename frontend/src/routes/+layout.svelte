@@ -9,7 +9,6 @@
   const { data, children }: { data: LayoutData; children: Snippet } = $props()
   const { username } = $derived(data)
   const { title, description, image, noIndex } = $derived(page.data) as Omit<PageData, 'image'> & {
-    title?: string
     image?: string
     noIndex?: boolean
   }
@@ -34,7 +33,7 @@
 </script>
 
 <svelte:head>
-  <title>{title ?? 'concinnity'}</title>
+  <title>{title}</title>
   <meta property="og:type" content="website" />
   <meta property="og:title" content={title} />
   <meta property="og:url" content={page.url.origin + page.url.pathname} />
