@@ -6,47 +6,56 @@
   import LocalFilePlayer from '$lib/components/room/LocalFilePlayer.svelte'
   import {
     connect,
+    initialPlayerState,
     isIncomingChatMessage,
+    isIncomingPlayerStateMessage,
+    isIncomingRoomInfoMessage,
     MessageType,
     RoomType,
     type ChatMessage,
     type GenericMessage,
+    type RoomInfo,
   } from '$lib/api/room'
 
   const id = page.params.id
   const messages: ChatMessage[] = $state([])
 
-  // FIXME: Implement room info/player state handling
-  // - Implement a way to select a video when no video is playing
-  // - Implement a way to select a video when a video is already requested to play in room info
-  // - Autoplay may not work on browsers, so a manual play button may be needed
-  // FIXME: Implement video controls in chat via commands
-  // FIXME: Implement no file and local file watching
   // TODO: Support watching remote files
-  // TODO: Implement UI controls
+
+  let playerState = $state(initialPlayerState)
+  let roomInfo: RoomInfo | null = $state(null)
+  let transientVideo: File | null = $state(null)
 
   let ws: WebSocket | null = $state(null)
   let wsError: string | null = $state(null)
-  const wsConnecting = $derived(!wsError && ws === null)
-
-  let roomType: RoomType = $state(RoomType.None)
+  const wsConnecting = $derived((ws === null && !wsError) || roomInfo === null)
 
   onMount(() => {
     connect(id, {
-      onMessage: message => {
+      onMessage: event => {
         try {
-          if (typeof message.data !== 'string') throw new Error('Invalid message data type!')
-          const data = JSON.parse(message.data) as GenericMessage
-          if (isIncomingChatMessage(data)) {
-            messages.push(...data.data)
-          } else if (data.type !== MessageType.Pong) {
-            console.warn('Unhandled message type!', data)
+          if (typeof event.data !== 'string') throw new Error('Invalid message data type!')
+          const message = JSON.parse(event.data) as GenericMessage
+          if (isIncomingChatMessage(message)) {
+            messages.push(...message.data)
+          } else if (isIncomingRoomInfoMessage(message)) {
+            if (roomInfo === null) {
+              roomInfo = message.data
+              playerState = initialPlayerState
+            } else {
+              Object.assign(roomInfo, message.data)
+            }
+          } else if (isIncomingPlayerStateMessage(message)) {
+            playerState = message.data
+          } else if (message.type !== MessageType.Pong) {
+            console.warn('Unhandled message type!', message)
           }
         } catch (e) {
-          console.error('Failed to parse backend message!', message, e)
+          console.error('Failed to parse backend message!', event, e)
         }
       },
       onClose: event => {
+        // FIXME: Implement reconnects!
         wsError = event.reason || `WebSocket closed with code: ${event.code}`
       },
       onError: () => {
@@ -71,12 +80,12 @@
 </script>
 
 <div class="container">
-  {#if roomType === RoomType.None}
-    <RoomLanding error={wsError} connecting={wsConnecting} />
-  {:else if roomType === RoomType.LocalFile}
-    <LocalFilePlayer error={wsError} />
+  {#if !roomInfo || roomInfo.type === RoomType.None}
+    <RoomLanding bind:transientVideo error={wsError} connecting={wsConnecting} />
+  {:else if roomInfo.type === RoomType.LocalFile}
+    <LocalFilePlayer bind:transientVideo {roomInfo} {playerState} error={wsError} />
   {:else}
-    <RoomLanding error="Invalid room type!" connecting={false} />
+    <RoomLanding bind:transientVideo error="Invalid room type!" connecting={false} />
   {/if}
   <Chat
     disabled={wsError !== null || ws === null}

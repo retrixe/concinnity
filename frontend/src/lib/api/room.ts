@@ -12,6 +12,29 @@ export interface ChatMessage {
   timestamp: string
 }
 
+export interface RoomInfo {
+  id: string
+  createdAt?: string
+  // TODO: API doesn't return this over the WebSocket, we might as well not use it, but not ideal
+  // modifiedAt?: string
+  type: RoomType
+  target: string
+}
+
+export interface PlayerState {
+  paused: boolean
+  speed: number
+  timestamp: number
+  lastAction: string
+}
+
+export const initialPlayerState: PlayerState = {
+  paused: true,
+  timestamp: 0,
+  speed: 1,
+  lastAction: new Date(0).toISOString(),
+}
+
 interface Handlers {
   onClose: (this: WebSocket, ev: CloseEvent) => void
   onError: (this: WebSocket, ev: Event) => void
@@ -51,6 +74,7 @@ export function connect(id: string, handlers: Handlers, reconnect = false): Prom
 
 export enum MessageType {
   Chat = 'chat',
+  RoomInfo = 'room_info',
   PlayerState = 'player_state',
   Pong = 'pong',
 }
@@ -64,5 +88,23 @@ export interface IncomingChatMessage extends GenericMessage {
   data: ChatMessage[]
 }
 
+export interface IncomingPlayerStateMessage extends GenericMessage {
+  type: MessageType.PlayerState
+  data: PlayerState
+}
+
+export interface IncomingRoomInfoMessage extends GenericMessage {
+  type: MessageType.RoomInfo
+  data: RoomInfo
+}
+
 export const isIncomingChatMessage = (message: GenericMessage): message is IncomingChatMessage =>
   message.type === MessageType.Chat && Array.isArray((message as IncomingChatMessage).data)
+
+export const isIncomingPlayerStateMessage = (
+  message: GenericMessage,
+): message is IncomingPlayerStateMessage => message.type === MessageType.PlayerState
+
+export const isIncomingRoomInfoMessage = (
+  message: GenericMessage,
+): message is IncomingRoomInfoMessage => message.type === MessageType.RoomInfo

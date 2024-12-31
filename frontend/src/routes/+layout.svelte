@@ -71,6 +71,7 @@
   :global {
     * {
       margin: 0;
+      // TODO: box-sizing: border-box;
     }
 
     :root {
