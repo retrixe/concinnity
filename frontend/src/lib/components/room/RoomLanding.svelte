@@ -65,7 +65,6 @@
     min-height: 280px;
     text-align: center;
     padding: 1rem;
-    box-sizing: border-box;
 
     background-color: #000000;
     width: 100%;

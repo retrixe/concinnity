@@ -88,13 +88,12 @@
     flex-direction: column;
     :global(input) {
       width: 100%;
-      box-sizing: border-box;
     }
     @media screen and (width < 768px) {
       flex: 1;
     }
     @media screen and (min-width: 768px) {
-      width: 280px;
+      width: 320px;
     }
   }
 

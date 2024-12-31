@@ -71,7 +71,7 @@
   :global {
     * {
       margin: 0;
-      // TODO: box-sizing: border-box;
+      box-sizing: border-box;
     }
 
     :root {
@@ -121,7 +121,6 @@
     position: fixed;
     display: flex;
     width: 100%;
-    box-sizing: border-box;
     justify-content: space-between;
     align-items: center;
     padding: 1rem;

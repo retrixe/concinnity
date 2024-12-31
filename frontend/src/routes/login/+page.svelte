@@ -137,8 +137,13 @@
 
 <style lang="scss">
   .result {
-    max-width: 250px;
+    max-width: 280px;
   }
+
+  :global(input) {
+    max-width: 280px;
+  }
+
   .error {
     color: var(--error-color);
   }

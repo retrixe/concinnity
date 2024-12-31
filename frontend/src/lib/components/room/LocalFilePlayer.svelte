@@ -26,7 +26,7 @@
 </script>
 
 <!-- FIXME: This entire UI and props need changing up -->
-<div class="video" class:height={video === null || error} class:error>
+<div class="video" class:contents={video === null || error} class:error>
   {#if error}
     <h1>Error encountered!</h1>
     <h2>{error}</h2>
@@ -38,11 +38,10 @@
 </div>
 
 <style lang="scss">
-  .height {
+  .contents {
     min-height: 280px;
     text-align: center;
     padding: 1rem;
-    box-sizing: border-box;
   }
 
   .error {

@@ -61,7 +61,7 @@
   .content {
     padding: 1rem;
     @media screen and (min-width: 768px) {
-      width: 40%;
+      width: 45%;
       max-width: 640px;
     }
     p {
