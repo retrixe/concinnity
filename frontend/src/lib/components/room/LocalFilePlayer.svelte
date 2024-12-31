@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PlayerState, RoomInfo } from '$lib/api/room'
+  import { openFileOrFiles } from '$lib/utils/openFile'
   import Button from '../Button.svelte'
 
   interface Props {
@@ -10,7 +11,8 @@
   }
 
   let { error, roomInfo, playerState, transientVideo = $bindable(null) }: Props = $props()
-  // FIXME: Implement VideoPlayer with controls (video + go back to landing + sync up)
+  // FIXME: Implement VideoPlayer with synced video controls and a way to go back to landing state
+  // FIXME: Autoplay may not work on browsers, so a manual play button may be needed
   $inspect(playerState)
 
   // FIXME: Clear this if room_info changes (how do we know? modifiedAt + target change? we don't get modifiedAt right now)
@@ -22,9 +24,13 @@
       transientVideo = null
     }
   })
-
-  // FIXME: Implement a way to select a video when a video is already requested to play in room info
-  // FIXME: Autoplay may not work on browsers, so a manual play button may be needed
+  const handleSelectVideo = async () => {
+    try {
+      video = (await openFileOrFiles()) ?? null
+    } catch (e: unknown) {
+      console.error('Failed to select local file!', e)
+    }
+  }
 </script>
 
 <div class="video-container">
@@ -32,7 +38,7 @@
     <div class="video-select">
       <h1>Select {roomInfo.target} to start playing</h1>
       <br />
-      <Button>Select local file</Button>
+      <Button onclick={handleSelectVideo}>Select local file</Button>
     </div>
   {:else}
     <h1 style:flex-grow="1">Video: {video.name}</h1>
