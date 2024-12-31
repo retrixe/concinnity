@@ -63,6 +63,8 @@
 
   .video {
     min-height: 280px;
+    justify-content: center;
+    align-items: center;
     text-align: center;
     padding: 1rem;
 
@@ -70,8 +72,6 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
     color: white;
     @media screen and (min-width: 768px) {
       flex: 1;

@@ -23,48 +23,49 @@
     }
   })
 
-  // FIXME: Warning below the video if error
   // FIXME: Implement a way to select a video when a video is already requested to play in room info
   // FIXME: Autoplay may not work on browsers, so a manual play button may be needed
 </script>
 
-<div class="video" class:contents={video === null || error} class:error>
-  {#if error && video === null}
-    <h1>Error encountered! Reconnecting in 10s...</h1>
-    <h2>{error}</h2>
-  {:else if video === null}
-    <h1>Select {roomInfo.target} to start playing</h1>
-    <br />
-    <Button>Select local file</Button>
+<div class="video-container">
+  {#if video === null}
+    <div class="video-select">
+      <h1>Select {roomInfo.target} to start playing</h1>
+      <br />
+      <Button>Select local file</Button>
+    </div>
   {:else}
-    <h1>Video: {video.name}</h1>
+    <h1 style:flex-grow="1">Video: {video.name}</h1>
+  {/if}
+  {#if error}
+    <h3 class="error-banner">Error: {error}<br />Reconnecting in 10s...</h3>
   {/if}
 </div>
 
 <style lang="scss">
-  .contents {
+  .video-select {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+
     min-height: 280px;
+    justify-content: center;
+    align-items: center;
     text-align: center;
     padding: 1rem;
   }
 
-  .error {
-    gap: 0.5rem;
-    h1 {
-      color: var(--error-color);
-    }
-    h2 {
-      font-weight: 300;
-    }
+  .error-banner {
+    padding: 1rem;
+    text-align: center;
+    background-color: var(--error-color);
   }
 
-  .video {
+  .video-container {
     background-color: #000000;
     width: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
     color: white;
     @media screen and (min-width: 768px) {
       flex: 1;
