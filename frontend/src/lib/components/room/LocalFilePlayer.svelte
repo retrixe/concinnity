@@ -10,8 +10,10 @@
   }
 
   let { error, roomInfo, playerState, transientVideo = $bindable(null) }: Props = $props()
-  $inspect(playerState) // FIXME: Implement VideoPlayer with controls
+  // FIXME: Implement VideoPlayer with controls (video + go back to landing + sync up)
+  $inspect(playerState)
 
+  // FIXME: Clear this if room_info changes (how do we know? modifiedAt + target change? we don't get modifiedAt right now)
   let video = $state<File | null>(null)
   // If transientVideo matches up with the target, play it, else discard it
   $effect(() => {
@@ -20,20 +22,22 @@
       transientVideo = null
     }
   })
-  // FIXME: Warning below the video if error or connecting
+
+  // FIXME: Warning below the video if error
   // FIXME: Implement a way to select a video when a video is already requested to play in room info
   // FIXME: Autoplay may not work on browsers, so a manual play button may be needed
 </script>
 
-<!-- FIXME: This entire UI and props need changing up -->
 <div class="video" class:contents={video === null || error} class:error>
-  {#if error}
-    <h1>Error encountered!</h1>
+  {#if error && video === null}
+    <h1>Error encountered! Reconnecting in 10s...</h1>
     <h2>{error}</h2>
-  {:else}
-    <h1>{video?.name ?? 'No video picked for this thing man'}</h1>
+  {:else if video === null}
+    <h1>Select {roomInfo.target} to start playing</h1>
     <br />
     <Button>Select local file</Button>
+  {:else}
+    <h1>Video: {video.name}</h1>
   {/if}
 </div>
 

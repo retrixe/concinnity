@@ -38,7 +38,7 @@
 
 <div class="video" class:error>
   {#if error}
-    <h1>Error encountered!</h1>
+    <h1>Error encountered! Reconnecting in 10s...</h1>
     <h2>{error}</h2>
   {:else if connecting}
     <!-- TODO: Loading spinner? -->

@@ -36,9 +36,9 @@ export const initialPlayerState: PlayerState = {
 }
 
 interface Handlers {
-  onClose: (this: WebSocket, ev: CloseEvent) => void
-  onError: (this: WebSocket, ev: Event) => void
-  onMessage: (this: WebSocket, ev: MessageEvent) => void
+  onClose?: (this: WebSocket, ev: CloseEvent) => void
+  onError?: (this: WebSocket, ev: Event) => void
+  onMessage?: (this: WebSocket, ev: MessageEvent) => void
 }
 
 export function connect(id: string, handlers: Handlers, reconnect = false): Promise<WebSocket> {
@@ -57,11 +57,11 @@ export function connect(id: string, handlers: Handlers, reconnect = false): Prom
     ws.onmessage = event => {
       console.log('Connected to room')
       // Set new handlers
-      ws.onclose = handlers.onClose.bind(ws)
-      ws.onerror = handlers.onError.bind(ws)
-      ws.onmessage = handlers.onMessage.bind(ws)
+      if (handlers.onClose) ws.onclose = handlers.onClose.bind(ws)
+      if (handlers.onError) ws.onerror = handlers.onError.bind(ws)
+      if (handlers.onMessage) ws.onmessage = handlers.onMessage.bind(ws)
       // Handle current event
-      ws.onmessage(event)
+      ws.onmessage?.(event)
       // Resolve WebSocket
       resolve(ws)
     }

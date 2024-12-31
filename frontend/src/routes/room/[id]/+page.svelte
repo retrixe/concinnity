@@ -28,40 +28,37 @@
 
   let ws: WebSocket | null = $state(null)
   let wsError: string | null = $state(null)
-  const wsConnecting = $derived((ws === null && !wsError) || roomInfo === null)
+  const wsInitialConnect = $derived((ws === null && !wsError) || roomInfo === null)
+
+  const onMessage = (event: MessageEvent) => {
+    try {
+      if (typeof event.data !== 'string') throw new Error('Invalid message data type!')
+      const message = JSON.parse(event.data) as GenericMessage
+      if (isIncomingChatMessage(message)) {
+        messages.push(...message.data)
+      } else if (isIncomingRoomInfoMessage(message)) {
+        if (roomInfo === null) {
+          roomInfo = message.data
+          playerState = initialPlayerState
+        } else {
+          Object.assign(roomInfo, message.data)
+        }
+      } else if (isIncomingPlayerStateMessage(message)) {
+        playerState = message.data
+      } else if (message.type !== MessageType.Pong) {
+        console.warn('Unhandled message type!', message)
+      }
+    } catch (e) {
+      console.error('Failed to parse backend message!', event, e)
+    }
+  }
+
+  const onClose = (event: CloseEvent) => {
+    wsError = event.reason || `WebSocket closed with code: ${event.code}`
+  }
 
   onMount(() => {
-    connect(id, {
-      onMessage: event => {
-        try {
-          if (typeof event.data !== 'string') throw new Error('Invalid message data type!')
-          const message = JSON.parse(event.data) as GenericMessage
-          if (isIncomingChatMessage(message)) {
-            messages.push(...message.data)
-          } else if (isIncomingRoomInfoMessage(message)) {
-            if (roomInfo === null) {
-              roomInfo = message.data
-              playerState = initialPlayerState
-            } else {
-              Object.assign(roomInfo, message.data)
-            }
-          } else if (isIncomingPlayerStateMessage(message)) {
-            playerState = message.data
-          } else if (message.type !== MessageType.Pong) {
-            console.warn('Unhandled message type!', message)
-          }
-        } catch (e) {
-          console.error('Failed to parse backend message!', event, e)
-        }
-      },
-      onClose: event => {
-        // FIXME: Implement reconnects!
-        wsError = event.reason || `WebSocket closed with code: ${event.code}`
-      },
-      onError: () => {
-        /* no-op */
-      },
-    })
+    connect(id, { onMessage, onClose })
       .then(socket => {
         ws = socket
       })
@@ -77,11 +74,27 @@
       ws?.close()
     }
   })
+
+  // Reconnect if there's an error
+  $effect(() => {
+    if (wsError) {
+      // TODO: Food for thought - What if you reconnect in a time period longer than 10s?
+      const interval = setInterval(async () => {
+        try {
+          ws = await connect(id, { onMessage, onClose })
+          wsError = null
+        } catch (e: unknown) {
+          if (e instanceof Error) wsError = e.message
+        }
+      }, 10000)
+      return () => clearInterval(interval)
+    }
+  })
 </script>
 
 <div class="container">
   {#if !roomInfo || roomInfo.type === RoomType.None}
-    <RoomLanding bind:transientVideo error={wsError} connecting={wsConnecting} />
+    <RoomLanding bind:transientVideo error={wsError} connecting={wsInitialConnect} />
   {:else if roomInfo.type === RoomType.LocalFile}
     <LocalFilePlayer bind:transientVideo {roomInfo} {playerState} error={wsError} />
   {:else}
