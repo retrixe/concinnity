@@ -82,7 +82,7 @@
       // TODO: Replace previous chats with missing messages.
       const interval = setInterval(async () => {
         try {
-          ws = await connect(id, { onMessage, onClose })
+          ws = await connect(id, { onMessage, onClose }, true)
           wsError = null
         } catch (e: unknown) {
           if (e instanceof Error) wsError = e.message
