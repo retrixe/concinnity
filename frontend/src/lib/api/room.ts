@@ -14,9 +14,8 @@ export interface ChatMessage {
 
 export interface RoomInfo {
   id: string
-  createdAt?: string
-  // TODO: API doesn't return this over the WebSocket, we might as well not use it, but not ideal
-  // modifiedAt?: string
+  createdAt: string
+  modifiedAt: string
   type: RoomType
   target: string
 }

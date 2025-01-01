@@ -79,6 +79,7 @@
   $effect(() => {
     if (wsError) {
       // TODO: Food for thought - What if you reconnect in a time period longer than 10s?
+      // TODO: Replace previous chats with missing messages.
       const interval = setInterval(async () => {
         try {
           ws = await connect(id, { onMessage, onClose })

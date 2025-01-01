@@ -44,7 +44,8 @@ const findRoomQuery = "SELECT id, createdAt, modifiedAt, type, target, chat, " +
 	"paused, speed, timestamp, lastAction FROM rooms WHERE id = $1;"
 const findInactiveRoomsQuery = "SELECT id FROM rooms WHERE modifiedAt < NOW() - INTERVAL '10 minutes';"
 const updateRoomQuery = "UPDATE rooms SET type = $2, target = $3, modifiedAt = NOW(), " +
-	"paused = true, speed = 1, timestamp = 0, lastAction = NOW() WHERE id = $1;"
+	"paused = true, speed = 1, timestamp = 0, lastAction = NOW() WHERE id = $1 " +
+	"RETURNING createdAt, modifiedAt;"
 const insertChatMessageRoomQuery = "UPDATE rooms SET chat = chat || $2::jsonb, modifiedAt = NOW() WHERE id = $1;"
 const updateRoomStateQuery = "UPDATE rooms SET " +
 	"paused = $2, speed = $3, timestamp = $4, lastAction = $5, modifiedAt = NOW() WHERE id = $1;"

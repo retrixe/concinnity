@@ -108,17 +108,13 @@ func UpdateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := r.PathValue("id")
-	result, err := updateRoomStmt.Exec(id, body.Type, body.Target)
-	if err != nil {
-		handleInternalServerError(w, err)
-		return
-	}
-	rows, err := result.RowsAffected()
-	if err != nil {
-		handleInternalServerError(w, err)
-		return
-	} else if rows != 1 {
+	var createdAt, modifiedAt time.Time
+	err := updateRoomStmt.QueryRow(id, body.Type, body.Target).Scan(&createdAt, &modifiedAt)
+	if err == sql.ErrNoRows {
 		http.Error(w, errorJson("Room not found!"), http.StatusNotFound)
+		return
+	} else if err != nil {
+		handleInternalServerError(w, err)
 		return
 	}
 	// Send message to all room members about the change
@@ -129,8 +125,8 @@ func UpdateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 				Type: "room_info",
 				Data: RoomInfoMessageOutgoingData{
 					ID:         id,
-					CreatedAt:  nil,
-					ModifiedAt: nil,
+					CreatedAt:  &createdAt,
+					ModifiedAt: &modifiedAt,
 					Type:       body.Type,
 					Target:     body.Target,
 				},
@@ -179,8 +175,8 @@ type RoomInfoMessageOutgoing struct {
 
 type RoomInfoMessageOutgoingData struct {
 	ID         string     `json:"id"`
-	CreatedAt  *time.Time `json:"createdAt,omitempty"`
-	ModifiedAt *time.Time `json:"modifiedAt,omitempty"`
+	CreatedAt  *time.Time `json:"createdAt"`
+	ModifiedAt *time.Time `json:"modifiedAt"`
 	Type       string     `json:"type"`
 	Target     string     `json:"target"`
 }
@@ -192,6 +188,7 @@ type ChatMessageOutgoing struct {
 
 func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Impl note: If target/type change, client should trash currently playing file and reset state.
+	// Impl note: Room info updates are currently only sent on join and when the target/type change.
 
 	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		Subprotocols:       []string{"v0"},
