@@ -21,7 +21,7 @@
     try {
       const req = await fetch(`${PUBLIC_BACKEND_URL}/api/room/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ type: RoomType.LocalFile, target: file.name }),
+        body: JSON.stringify({ type: RoomType.LocalFile, target: `${Date.now()}:${file.name}` }),
         headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
       })
       if (!req.ok) {

@@ -11,16 +11,16 @@
   }
 
   let { error, roomInfo, playerState, transientVideo = $bindable(null) }: Props = $props()
+  const targetName = $derived(roomInfo.target.substring(roomInfo.target.indexOf(':') + 1))
   // FIXME: Implement VideoPlayer with synced video controls and a way to go back to landing state
   // FIXME: Autoplay may not work on browsers, so a manual play button may be needed
   $inspect(playerState)
 
-  // FIXME: Clear this if room_info changes (how do we know? modifiedAt + target change? we don't get modifiedAt right now)
   let video = $state<File | null>(null)
   // If transientVideo matches up with the target, play it, else discard it
   $effect(() => {
     if (transientVideo !== null) {
-      if (video === null && roomInfo.target === transientVideo.name) video = transientVideo
+      if (video === null && targetName === transientVideo.name) video = transientVideo
       transientVideo = null
     }
   })
@@ -36,7 +36,7 @@
 <div class="video-container">
   {#if video === null}
     <div class="video-select">
-      <h1>Select {roomInfo.target} to start playing</h1>
+      <h1>Select {targetName} to start playing</h1>
       <br />
       <Button onclick={handleSelectVideo}>Select local file</Button>
     </div>

@@ -97,7 +97,9 @@
   {#if !roomInfo || roomInfo.type === RoomType.None}
     <RoomLanding bind:transientVideo error={wsError} connecting={wsInitialConnect} />
   {:else if roomInfo.type === RoomType.LocalFile}
-    <LocalFilePlayer bind:transientVideo {roomInfo} {playerState} error={wsError} />
+    {#key roomInfo.target}
+      <LocalFilePlayer bind:transientVideo {roomInfo} {playerState} error={wsError} />
+    {/key}
   {:else}
     <RoomLanding bind:transientVideo error="Invalid room type!" connecting={false} />
   {/if}
