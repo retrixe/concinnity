@@ -2,6 +2,7 @@
   import type { PlayerState, RoomInfo } from '$lib/api/room'
   import { openFileOrFiles } from '$lib/utils/openFile'
   import Button from '../Button.svelte'
+  import VideoPlayer from './VideoPlayer.svelte'
 
   interface Props {
     error: string | null
@@ -12,9 +13,6 @@
 
   let { error, roomInfo, playerState, transientVideo = $bindable(null) }: Props = $props()
   const targetName = $derived(roomInfo.target.substring(roomInfo.target.indexOf(':') + 1))
-  // FIXME: Implement VideoPlayer with synced video controls and a way to go back to landing state
-  // FIXME: Autoplay may not work on browsers, so a manual play button may be needed
-  $inspect(playerState)
 
   let video = $state<File | null>(null)
   // If transientVideo matches up with the target, play it, else discard it
@@ -41,7 +39,7 @@
       <Button onclick={handleSelectVideo}>Select local file</Button>
     </div>
   {:else}
-    <h1 style:flex-grow="1">Video: {video.name}</h1>
+    <VideoPlayer {video} {playerState} />
   {/if}
   {#if error}
     <h3 class="error-banner">Error: {error}<br />Reconnecting in 10s...</h3>
@@ -68,6 +66,8 @@
   }
 
   .video-container {
+    justify-content: center;
+
     background-color: #000000;
     width: 100%;
     display: flex;
