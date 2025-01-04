@@ -37,7 +37,7 @@
       const message = JSON.parse(event.data) as GenericMessage
       if (isIncomingChatMessage(message)) {
         if (message.data.length === 1) messages.push(message.data[0])
-        else messages = message.data
+        else messages = message.data // TODO (low): Have IDs on messages to just push new messages
       } else if (isIncomingRoomInfoMessage(message)) {
         if (roomInfo === null) {
           roomInfo = message.data
@@ -77,20 +77,20 @@
     }
   })
 
-  // Reconnect immediately if there's an error and the page is visible
-  const reconnect = () => {
-    connect(id, { onMessage, onClose }, true)
-      .then(socket => {
-        ws = socket
-        wsError = null
-      })
-      .catch((e: unknown) => {
-        if (e instanceof Error) wsError = e.message
-        setTimeout(reconnect, 10000) // Retry every 10s
-      })
-  }
+  // Reconnect if there's an error and the page is visible
+  // TODO: Get rid of the 10s delay on first reconnect after page is visible
   $effect(() => {
-    if (wsError && visibilityState === 'visible') reconnect()
+    if (wsError && visibilityState === 'visible') {
+      const interval = setInterval(async () => {
+        try {
+          ws = await connect(id, { onMessage, onClose }, true)
+          wsError = null
+        } catch (e: unknown) {
+          if (e instanceof Error) wsError = e.message
+        }
+      }, 10000)
+      return () => clearInterval(interval)
+    }
   })
 </script>
 
