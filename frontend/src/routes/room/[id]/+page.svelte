@@ -93,7 +93,7 @@
   })
 </script>
 
-<div class="container">
+<div class="container room">
   {#if !roomInfo || roomInfo.type === RoomType.None}
     <RoomLanding bind:transientVideo error={wsError} connecting={wsInitialConnect} />
   {:else if roomInfo.type === RoomType.LocalFile}
@@ -121,5 +121,10 @@
     @media screen and (min-width: 768px) {
       flex-direction: row;
     }
+  }
+
+  .room:fullscreen,
+  .room::backdrop {
+    background-color: var(--background-color);
   }
 </style>
