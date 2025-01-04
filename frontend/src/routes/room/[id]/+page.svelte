@@ -114,7 +114,7 @@
 
 <style lang="scss">
   .container {
-    max-height: calc(100vh - 4rem); // FIXME: Chat overflows on mobile...
+    max-height: calc(100vh - 4rem);
     flex: 1;
     display: flex;
     flex-direction: column;

@@ -83,6 +83,7 @@
 
 <style lang="scss">
   .chat {
+    min-height: 0; // Fixes chat overflowing out of parent
     padding: 1rem;
     display: flex;
     flex-direction: column;

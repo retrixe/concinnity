@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PlayerState } from '$lib/api/room'
   import { fade } from 'svelte/transition'
+  import Play from 'phosphor-svelte/lib/Play'
 
   const { video, playerState }: { video: File; playerState: PlayerState } = $props()
   $inspect(playerState) // FIXME: Implement syncing with playerState
@@ -27,14 +28,16 @@
     controlsVisible = true
   }}
   onmouseleave={() => {
-    controlsVisible = false
+    controlsVisible = true
   }}
 >
   <!-- svelte-ignore a11y_media_has_caption -->
   <video class="video" {src} playsinline></video>
   {#if controlsVisible}
     <div class="controls" transition:fade>
-      <button>Play/Pause</button>
+      <button>
+        <Play weight="bold" size="16px" />
+      </button>
       <button>Rewind 10s</button>
       <button>Forward 10s</button>
     </div>
@@ -43,17 +46,52 @@
 
 <style lang="scss">
   .player-container {
+    max-width: 100%;
+    max-height: 100%;
     position: relative;
   }
 
   .video {
     display: block;
     width: 100%;
+    height: 100%;
     object-fit: contain;
   }
 
   .controls {
+    background-color: rgba(0, 0, 0, 0.5);
+    width: 100%;
     position: absolute;
     bottom: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  // TODO: DRY with Button.svelte
+  button {
+    margin: 8px;
+    padding: 8px;
+    color: white;
+    background-color: transparent;
+    border: none;
+    border-radius: 0.5rem;
+    transition:
+      background-color 0.2s ease-in-out,
+      filter 0.2s ease-in-out;
+    &:enabled {
+      &:hover {
+        background-color: var(--primary-color);
+      }
+      &:active {
+        filter: brightness(0.8);
+      }
+    }
+    &:disabled {
+      background-color: var(--divider-color);
+      cursor: not-allowed;
+    }
+    :global(svg) {
+      display: block;
+    }
   }
 </style>
