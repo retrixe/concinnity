@@ -21,7 +21,8 @@
   const id = page.params.id
 
   let containerEl = $state(null) as Element | null
-  const messages: ChatMessage[] = $state([])
+  let visibilityState = $state('visible') as DocumentVisibilityState
+  let messages: ChatMessage[] = $state([])
   let playerState = $state(initialPlayerState)
   let roomInfo: RoomInfo | null = $state(null)
   let transientVideo: File | null = $state(null)
@@ -35,7 +36,8 @@
       if (typeof event.data !== 'string') throw new Error('Invalid message data type!')
       const message = JSON.parse(event.data) as GenericMessage
       if (isIncomingChatMessage(message)) {
-        messages.push(...message.data)
+        if (message.data.length === 1) messages.push(message.data[0])
+        else messages = message.data
       } else if (isIncomingRoomInfoMessage(message)) {
         if (roomInfo === null) {
           roomInfo = message.data
@@ -75,24 +77,24 @@
     }
   })
 
-  // Reconnect if there's an error
+  // Reconnect immediately if there's an error and the page is visible
+  const reconnect = () => {
+    connect(id, { onMessage, onClose }, true)
+      .then(socket => {
+        ws = socket
+        wsError = null
+      })
+      .catch((e: unknown) => {
+        if (e instanceof Error) wsError = e.message
+        setTimeout(reconnect, 10000) // Retry every 10s
+      })
+  }
   $effect(() => {
-    if (wsError) {
-      // TODO: Food for thought - What if you reconnect in a time period longer than 10s?
-      // TODO: Replace previous chats with missing messages.
-      const interval = setInterval(async () => {
-        try {
-          ws = await connect(id, { onMessage, onClose }, true)
-          wsError = null
-        } catch (e: unknown) {
-          if (e instanceof Error) wsError = e.message
-        }
-      }, 10000)
-      return () => clearInterval(interval)
-    }
+    if (wsError && visibilityState === 'visible') reconnect()
   })
 </script>
 
+<svelte:document bind:visibilityState />
 <div class="container room" bind:this={containerEl}>
   {#if !roomInfo || roomInfo.type === RoomType.None}
     <RoomLanding bind:transientVideo error={wsError} connecting={wsInitialConnect} />

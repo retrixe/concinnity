@@ -4,6 +4,7 @@
   import { RoomType } from '$lib/api/room'
   import { openFileOrFiles } from '$lib/utils/openFile'
   import Button from '../Button.svelte'
+  import LinearProgress from '../LinearProgress.svelte'
 
   interface Props {
     error: string | null
@@ -41,8 +42,9 @@
     <h1>Error encountered! Reconnecting in 10s...</h1>
     <h2>{error}</h2>
   {:else if connecting}
-    <!-- TODO: Loading spinner? -->
     <h1>Connecting to room...</h1>
+    <br />
+    <LinearProgress />
   {:else}
     <h1>No video playing</h1>
     <br />
@@ -51,6 +53,11 @@
 </div>
 
 <style lang="scss">
+  // Linear progress
+  :global(.loader) {
+    max-width: 20rem;
+  }
+
   .error {
     gap: 0.5rem;
     h1 {

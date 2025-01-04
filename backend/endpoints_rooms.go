@@ -296,15 +296,11 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	})()
 
 	// Send chat message: user joined/reconnected
-	chatMsg := ChatMessage{
-		UserID:    uuid.Nil,
-		Message:   user.ID.String() + " ",
-		Timestamp: time.Now(),
-	}
+	chatMsg := ChatMessage{UserID: uuid.Nil, Timestamp: time.Now()}
 	if authMessage.Reconnect {
-		chatMsg.Message += "reconnected"
+		chatMsg.Message = user.ID.String() + " reconnected"
 	} else {
-		chatMsg.Message += "joined"
+		chatMsg.Message = user.ID.String() + " joined"
 	}
 	result, err := insertChatMessageRoomStmt.Exec(room.ID, chatMsg)
 	if err != nil {
@@ -408,13 +404,11 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify other clients of the disconnect
-	chatMsg = ChatMessage{
-		UserID:    uuid.Nil,
-		Message:   user.ID.String() + " disconnected",
-		Timestamp: time.Now(),
-	}
-	if closeStatus != websocket.StatusNormalClosure && closeStatus != websocket.StatusGoingAway {
-		chatMsg.Message += " unexpectedly"
+	chatMsg = ChatMessage{UserID: uuid.Nil, Timestamp: time.Now()}
+	if closeStatus == websocket.StatusNormalClosure || closeStatus == websocket.StatusGoingAway {
+		chatMsg.Message = user.ID.String() + " left"
+	} else {
+		chatMsg.Message = user.ID.String() + " was disconnected"
 	}
 	result, err = insertChatMessageRoomStmt.Exec(room.ID, chatMsg)
 	if err != nil {
