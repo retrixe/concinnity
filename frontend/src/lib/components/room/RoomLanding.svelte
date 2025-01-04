@@ -11,8 +11,8 @@
     transientVideo: File | null
   }
 
-  let { error, connecting, transientVideo = $bindable(null) }: Props = $props()
   const id = page.params.id
+  let { error, connecting, transientVideo = $bindable(null) }: Props = $props()
 
   const onclick = async () => {
     const file = await openFileOrFiles()

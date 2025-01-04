@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { PlayerState } from '$lib/api/room'
   import { fade } from 'svelte/transition'
   import {
     ArrowsIn,
@@ -13,11 +12,17 @@
     SpeakerX,
     Stop,
   } from 'phosphor-svelte'
+  import type { PlayerState } from '$lib/api/room'
   import { stringifyDuration } from '$lib/utils/duration'
 
-  const { video, playerState }: { video: File; playerState: PlayerState } = $props()
+  interface Props {
+    video: File
+    playerState: PlayerState
+    fullscreenEl: Element
+    onStop: () => void
+  }
+  const { video, playerState, fullscreenEl, onStop: handleStop }: Props = $props()
   const src = $derived(URL.createObjectURL(video))
-  const roomEl = document.getElementsByClassName('room')[0] // TODO: Use a ref
 
   let controlsVisible = $state(false)
 
@@ -32,20 +37,20 @@
 
   $inspect(playerState) // FIXME: Implement syncing with playerState
 
-  const onPlayPause = () => {
+  const handlePlayPause = () => {
     paused = !paused
   }
 
-  const onDurationToggle = (e: KeyboardEvent | MouseEvent) => {
+  const handleDurationToggle = (e: KeyboardEvent | MouseEvent) => {
     if (e instanceof KeyboardEvent && e.key !== 'Enter') return
     displayCurrentTime = !displayCurrentTime
   }
 
-  const onMuteToggle = () => {
+  const handleMuteToggle = () => {
     muted = !muted
   }
 
-  const onPiPToggle = () => {
+  const handlePiPToggle = () => {
     // TODO: Implement the document picture-in-picture API
     // https://developer.chrome.com/docs/web-platform/document-picture-in-picture
     if (document.pictureInPictureElement === videoEl && videoEl) {
@@ -55,11 +60,11 @@
     }
   }
 
-  const onFullScreenToggle = () => {
-    if (fullscreenElement === roomEl) {
+  const handleFullScreenToggle = () => {
+    if (fullscreenElement === fullscreenEl) {
       document.exitFullscreen().catch(console.error)
     } else {
-      roomEl.requestFullscreen().catch(console.error)
+      fullscreenEl.requestFullscreen().catch(console.error)
     }
   }
 
@@ -70,8 +75,8 @@
   // - Time elapsed/time left (on tap)
   // - Volume control (mute bottom + range)
   // - FIXME: Settings button (menu with speed control)
+  // - Stop playing current video
   // - Picture-in-picture button
-  // - FIXME: Button to stop playing
   // - Fullscreen button
   // - FIXME: Arrow keys to rewind/forward/mute/unmute
   // FIXME: Autoplay may not work on browsers, so a manual play button may be needed at first
@@ -103,7 +108,7 @@
   <!-- TODO: Controls are too wide on mobile in portrait -->
   {#if controlsVisible}
     <div class="controls" transition:fade>
-      <button onclick={onPlayPause}>
+      <button onclick={handlePlayPause}>
         {#if paused}
           <Play weight="bold" size="16px" />
         {:else}
@@ -118,12 +123,17 @@
         bind:value={currentTime}
         style:flex="1"
       />
-      <span role="button" tabindex="0" onkeypress={onDurationToggle} onclick={onDurationToggle}>
+      <span
+        role="button"
+        tabindex="0"
+        onkeypress={handleDurationToggle}
+        onclick={handleDurationToggle}
+      >
         {displayCurrentTime
           ? '-' + stringifyDuration(duration - currentTime)
           : stringifyDuration(currentTime)}
       </span>
-      <button onclick={onMuteToggle}>
+      <button onclick={handleMuteToggle}>
         {#if muted}
           <SpeakerX weight="bold" size="16px" />
         {:else if volume < 0.5}
@@ -144,14 +154,14 @@
       <button>
         <Gear weight="bold" size="16px" />
       </button>
-      <button>
+      <button onclick={handleStop}>
         <Stop weight="bold" size="16px" />
       </button>
-      <button onclick={onPiPToggle}>
+      <button onclick={handlePiPToggle}>
         <PictureInPicture weight="bold" size="16px" />
       </button>
-      <button onclick={onFullScreenToggle}>
-        {#if fullscreenElement === roomEl}
+      <button onclick={handleFullScreenToggle}>
+        {#if fullscreenElement === fullscreenEl}
           <ArrowsOut weight="bold" size="16px" />
         {:else}
           <ArrowsIn weight="bold" size="16px" />

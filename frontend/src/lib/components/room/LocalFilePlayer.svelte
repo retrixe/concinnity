@@ -1,5 +1,7 @@
 <script lang="ts">
-  import type { PlayerState, RoomInfo } from '$lib/api/room'
+  import { page } from '$app/state'
+  import { PUBLIC_BACKEND_URL } from '$env/static/public'
+  import { RoomType, type PlayerState, type RoomInfo } from '$lib/api/room'
   import { openFileOrFiles } from '$lib/utils/openFile'
   import Button from '../Button.svelte'
   import VideoPlayer from './VideoPlayer.svelte'
@@ -9,9 +11,17 @@
     roomInfo: RoomInfo
     playerState: PlayerState
     transientVideo: File | null
+    fullscreenEl: Element
   }
 
-  let { error, roomInfo, playerState, transientVideo = $bindable(null) }: Props = $props()
+  const id = page.params.id
+  let {
+    error,
+    roomInfo,
+    playerState,
+    transientVideo = $bindable(null),
+    fullscreenEl,
+  }: Props = $props()
   const targetName = $derived(roomInfo.target.substring(roomInfo.target.indexOf(':') + 1))
 
   let video = $state<File | null>(null)
@@ -22,11 +32,28 @@
       transientVideo = null
     }
   })
+
   const handleSelectVideo = async () => {
     try {
       video = (await openFileOrFiles()) ?? null
     } catch (e: unknown) {
       console.error('Failed to select local file!', e)
+    }
+  }
+
+  const handleStop = async () => {
+    try {
+      const req = await fetch(`${PUBLIC_BACKEND_URL}/api/room/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ type: RoomType.None, target: '' }),
+        headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
+      })
+      if (!req.ok) {
+        // TODO: Better error handling? Maybe send it as a system message.
+        console.error('Failed to remove video from room!', req)
+      }
+    } catch (e: unknown) {
+      console.error('Failed to remove video from room!', e)
     }
   }
 </script>
@@ -39,7 +66,7 @@
       <Button onclick={handleSelectVideo}>Select local file</Button>
     </div>
   {:else}
-    <VideoPlayer {video} {playerState} />
+    <VideoPlayer {video} {playerState} onStop={handleStop} {fullscreenEl} />
   {/if}
   {#if error}
     <h3 class="error-banner">Error: {error}<br />Reconnecting in 10s...</h3>

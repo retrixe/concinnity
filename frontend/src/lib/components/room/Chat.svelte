@@ -36,24 +36,23 @@
   }
 
   // Scroll to the bottom when messages are added
-  let messagesContainer: HTMLDivElement | null = null
+  let messagesEl: HTMLDivElement | null = null
   let isScrolledToBottom = $state(true)
   $effect.pre(() => {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- false positive
-    if (messages.length && messagesContainer)
+    if (messages.length && messagesEl)
       isScrolledToBottom =
-        messagesContainer.scrollHeight - messagesContainer.clientHeight <=
-        (messagesContainer.scrollTop as number) + 1
+        messagesEl.scrollHeight - messagesEl.clientHeight <= (messagesEl.scrollTop as number) + 1
   })
   $effect(() => {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- false positive
-    if (messages.length && messagesContainer && isScrolledToBottom)
-      messagesContainer.scrollTop = messagesContainer.scrollHeight - messagesContainer.clientHeight
+    if (messages.length && messagesEl && isScrolledToBottom)
+      messagesEl.scrollTop = messagesEl.scrollHeight - messagesEl.clientHeight
   })
 </script>
 
 <div class="chat">
-  <div class="messages" bind:this={messagesContainer}>
+  <div class="messages" bind:this={messagesEl}>
     {#each messages as message, i}
       {#if message.userId === '00000000-0000-0000-0000-000000000000'}
         <h5 style:text-align="center">

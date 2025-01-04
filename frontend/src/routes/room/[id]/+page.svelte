@@ -17,11 +17,11 @@
     type RoomInfo,
   } from '$lib/api/room'
 
-  const id = page.params.id
-  const messages: ChatMessage[] = $state([])
-
   // TODO: Support watching remote files
+  const id = page.params.id
 
+  let containerEl = $state(null) as Element | null
+  const messages: ChatMessage[] = $state([])
   let playerState = $state(initialPlayerState)
   let roomInfo: RoomInfo | null = $state(null)
   let transientVideo: File | null = $state(null)
@@ -93,12 +93,18 @@
   })
 </script>
 
-<div class="container room">
+<div class="container room" bind:this={containerEl}>
   {#if !roomInfo || roomInfo.type === RoomType.None}
     <RoomLanding bind:transientVideo error={wsError} connecting={wsInitialConnect} />
   {:else if roomInfo.type === RoomType.LocalFile}
     {#key roomInfo.target}
-      <LocalFilePlayer bind:transientVideo {roomInfo} {playerState} error={wsError} />
+      <LocalFilePlayer
+        bind:transientVideo
+        {roomInfo}
+        {playerState}
+        error={wsError}
+        fullscreenEl={containerEl}
+      />
     {/key}
   {:else}
     <RoomLanding bind:transientVideo error="Invalid room type!" connecting={false} />
@@ -114,6 +120,10 @@
 
 <style lang="scss">
   .container {
+    &:fullscreen,
+    &::backdrop {
+      background-color: var(--background-color);
+    }
     max-height: calc(100vh - 4rem);
     flex: 1;
     display: flex;
@@ -121,10 +131,5 @@
     @media screen and (min-width: 768px) {
       flex-direction: row;
     }
-  }
-
-  .room:fullscreen,
-  .room::backdrop {
-    background-color: var(--background-color);
   }
 </style>
