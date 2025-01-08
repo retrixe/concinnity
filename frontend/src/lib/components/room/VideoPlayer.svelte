@@ -15,6 +15,7 @@
   } from 'phosphor-svelte'
   import type { PlayerState } from '$lib/api/room'
   import { stringifyDuration } from '$lib/utils/duration'
+  import Button from '../Button.svelte'
 
   interface Props {
     video: File
@@ -71,13 +72,11 @@
 
   // Send player state changes on pause or speed change
   // TODO: This doesn't interact with extensions like Video Speed Controller
-  const handlePlayerStateChange = () =>
-    onPlayerStateChange({
-      paused,
-      speed: playbackRate,
-      timestamp: Math.floor(currentTime), // TODO: Support floats here
-      lastAction: new Date().toISOString(),
-    })
+  const handlePlayerStateChange = () => {
+    const time = new Date().toISOString()
+    const timestamp = Math.floor(currentTime) // TODO: Support floats here
+    onPlayerStateChange({ paused, speed: playbackRate, timestamp, lastAction: time })
+  }
 
   const handlePlayPause = () => {
     paused = !paused
@@ -197,13 +196,13 @@
   <!-- TODO: Controls are too wide on mobile in portrait -->
   {#if controlsVisible || settingsMenu}
     <div class="controls" transition:fade>
-      <button onclick={handlePlayPause}>
+      <Button onclick={handlePlayPause}>
         {#if paused}
           <Play weight="bold" size="16px" />
         {:else}
           <Pause weight="bold" size="16px" />
         {/if}
-      </button>
+      </Button>
       <input
         type="range"
         min="0"
@@ -224,7 +223,7 @@
           ? '-' + stringifyDuration(duration - currentTime)
           : stringifyDuration(currentTime)}
       </span>
-      <button onclick={handleMuteToggle}>
+      <Button onclick={handleMuteToggle}>
         {#if muted}
           <SpeakerX weight="bold" size="16px" />
         {:else if volume < 0.5}
@@ -232,7 +231,7 @@
         {:else}
           <SpeakerHigh weight="bold" size="16px" />
         {/if}
-      </button>
+      </Button>
       <input
         type="range"
         min="0"
@@ -244,40 +243,43 @@
         style:width="80px"
       />
       <div style:position="relative">
-        <button onclick={handleSettingsOpen}>
+        <Button onclick={handleSettingsOpen}>
           <Gear weight="bold" size="16px" />
-        </button>
+        </Button>
         <div class="settings-menu" style:visibility={settingsMenu ? 'visible' : 'hidden'}>
           {#if settingsMenu == 'speed'}
-            <button onclick={handleSettingsNav('options')} class="highlight">
+            <Button onclick={handleSettingsNav('options')} class="highlight">
               <CaretLeft weight="bold" size="16px" /> Back to options
-            </button>
+            </Button>
             {#each [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 4] as rate (rate)}
-              <button class:highlight={playbackRate === rate} onclick={handlePlayRateChange(rate)}>
+              <Button
+                class={playbackRate === rate ? 'highlight' : ''}
+                onclick={handlePlayRateChange(rate)}
+              >
                 {rate}x
-              </button>
+              </Button>
             {/each}
           {:else}
-            <button onclick={handleSettingsNav('speed')}>
+            <Button onclick={handleSettingsNav('speed')}>
               <span>Speed</span>
               <span>{playbackRate}x</span>
-            </button>
+            </Button>
           {/if}
         </div>
       </div>
-      <button onclick={handleStop}>
+      <Button onclick={handleStop}>
         <Stop weight="bold" size="16px" />
-      </button>
-      <button onclick={handlePiPToggle}>
+      </Button>
+      <Button onclick={handlePiPToggle}>
         <PictureInPicture weight="bold" size="16px" />
-      </button>
-      <button onclick={handleFullScreenToggle}>
+      </Button>
+      <Button onclick={handleFullScreenToggle}>
         {#if fullscreenElement === fullscreenEl}
           <ArrowsIn weight="bold" size="16px" />
         {:else}
           <ArrowsOut weight="bold" size="16px" />
         {/if}
-      </button>
+      </Button>
     </div>
   {/if}
 </div>
@@ -319,6 +321,22 @@
     > span {
       margin: 8px;
     }
+    :global(button) {
+      margin: 8px;
+      padding: 8px;
+      background-color: transparent;
+      transition:
+        background-color 0.2s ease-in-out,
+        filter 0.2s ease-in-out;
+      &:enabled {
+        &:hover {
+          background-color: var(--primary-color);
+        }
+      }
+      :global(svg) {
+        display: block;
+      }
+    }
   }
 
   .settings-menu {
@@ -328,45 +346,16 @@
     min-width: 160px;
     max-height: 50vh;
     overflow-y: scroll;
-    button {
+    :global(button) {
       width: calc(100% - 16px);
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      &.highlight {
-        background-color: var(--primary-color);
-      }
       :global(svg) {
         display: inline;
       }
     }
-  }
-
-  // TODO: DRY with Button.svelte
-  button {
-    margin: 8px;
-    padding: 8px;
-    color: white;
-    background-color: transparent;
-    border: none;
-    border-radius: 0.5rem;
-    transition:
-      background-color 0.2s ease-in-out,
-      filter 0.2s ease-in-out;
-    &:enabled {
-      &:hover {
-        background-color: var(--primary-color);
-      }
-      &:active {
-        filter: brightness(0.8);
-      }
-    }
-    &:disabled {
-      background-color: var(--divider-color);
-      cursor: not-allowed;
-    }
-    :global(svg) {
-      display: block;
+    :global(button.highlight) {
+      background-color: var(--primary-color);
     }
   }
 </style>
