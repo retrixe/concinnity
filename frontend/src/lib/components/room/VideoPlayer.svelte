@@ -48,7 +48,6 @@
   let autoplayNotif = $state(false)
 
   // Synchronise to incoming player state changes
-  // TODO: Newcomer loading a video runs 1-2 seconds behind :/
   const synchroniseToPlayerState = () => {
     currentTime =
       playerState.timestamp +
@@ -74,8 +73,7 @@
   // TODO: This doesn't interact with extensions like Video Speed Controller
   const handlePlayerStateChange = () => {
     const time = new Date().toISOString()
-    const timestamp = Math.floor(currentTime) // TODO: Support floats here
-    onPlayerStateChange({ paused, speed: playbackRate, timestamp, lastAction: time })
+    onPlayerStateChange({ paused, speed: playbackRate, timestamp: currentTime, lastAction: time })
   }
 
   const handlePlayPause = () => {

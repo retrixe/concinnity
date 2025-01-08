@@ -51,7 +51,6 @@
         headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
       })
       if (!req.ok) {
-        // TODO: Better error handling? Maybe send it as a system message.
         console.error('Failed to remove video from room!', req)
       }
     } catch (e: unknown) {

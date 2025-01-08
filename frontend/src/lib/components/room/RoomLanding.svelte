@@ -26,7 +26,6 @@
         headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
       })
       if (!req.ok) {
-        // TODO: Better error handling? Maybe send it as a system message.
         console.error('Failed to select local file!', req)
       } else {
         transientVideo = file
