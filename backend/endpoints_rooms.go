@@ -384,8 +384,8 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
-				if userId == user.ID {
-					return true // Skip current user
+				if write == writeChannel {
+					return true // Skip current session
 				}
 				write <- playerStateData
 				return true
