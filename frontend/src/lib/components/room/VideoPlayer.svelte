@@ -119,6 +119,7 @@
     bind:volume
     playsinline
   ></video>
+  <!-- TODO: Width of transiently passed videos are incorrect sometimes -->
   <!-- TODO: Controls are too wide on mobile in portrait -->
   {#if controlsVisible}
     <div class="controls" transition:fade>
@@ -178,9 +179,9 @@
       </button>
       <button onclick={handleFullScreenToggle}>
         {#if fullscreenElement === fullscreenEl}
-          <ArrowsOut weight="bold" size="16px" />
-        {:else}
           <ArrowsIn weight="bold" size="16px" />
+        {:else}
+          <ArrowsOut weight="bold" size="16px" />
         {/if}
       </button>
     </div>

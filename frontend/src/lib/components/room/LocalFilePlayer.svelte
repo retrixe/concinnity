@@ -62,7 +62,6 @@
   {#if video === null}
     <div class="video-select">
       <h1>Select {targetName} to start playing</h1>
-      <br />
       <Button onclick={handleSelectVideo}>Select local file</Button>
     </div>
   {:else}
@@ -84,6 +83,7 @@
     align-items: center;
     text-align: center;
     padding: 1rem;
+    gap: 1rem;
   }
 
   .error-banner {

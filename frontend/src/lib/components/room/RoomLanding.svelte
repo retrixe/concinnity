@@ -43,11 +43,9 @@
     <h2>{error}</h2>
   {:else if connecting}
     <h1>Connecting to room...</h1>
-    <br />
     <LinearProgress />
   {:else}
     <h1>No video playing</h1>
-    <br />
     <Button {onclick}>Select local file</Button>
   {/if}
 </div>
@@ -59,7 +57,6 @@
   }
 
   .error {
-    gap: 0.5rem;
     h1 {
       color: var(--error-color);
     }
@@ -74,6 +71,7 @@
     align-items: center;
     text-align: center;
     padding: 1rem;
+    gap: 1rem;
 
     background-color: #000000;
     width: 100%;
