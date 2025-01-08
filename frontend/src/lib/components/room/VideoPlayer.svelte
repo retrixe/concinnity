@@ -41,13 +41,27 @@
     paused = !paused
   }
 
+  const handleTimeScrub = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault()
+      currentTime += e.key === 'ArrowLeft' ? -5 : 5
+    }
+  }
+
   const handleDurationToggle = (e: KeyboardEvent | MouseEvent) => {
-    if (e instanceof KeyboardEvent && e.key !== 'Enter') return
+    if (e instanceof KeyboardEvent && e.key !== 'Enter' && e.key !== ' ') return
     displayCurrentTime = !displayCurrentTime
   }
 
   const handleMuteToggle = () => {
     muted = !muted
+  }
+
+  const handleVolumeScrub = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault()
+      volume = e.key === 'ArrowLeft' ? Math.max(0, volume - 0.1) : Math.min(1, volume + 0.1)
+    }
   }
 
   const handlePiPToggle = () => {
@@ -69,7 +83,7 @@
   }
 
   // TODO: Implement tooltips
-  // Implement video controls:
+  // Video controls:
   // - Play/Pause
   // - Seek timeline
   // - Time elapsed/time left (on tap)
@@ -78,7 +92,7 @@
   // - Stop playing current video
   // - Picture-in-picture button
   // - Fullscreen button
-  // - FIXME: Arrow keys to rewind/forward/mute/unmute
+  // TODO: Implement kb controls for all when cursor in bounds (except stop, to avoid accidents)
   // FIXME: Autoplay may not work on browsers, so a manual play button may be needed at first
 </script>
 
@@ -121,6 +135,7 @@
         max={isFinite(duration) ? duration : 0}
         step="0.01"
         bind:value={currentTime}
+        onkeydown={handleTimeScrub}
         style:flex="1"
       />
       <span
@@ -147,9 +162,10 @@
         min="0"
         max="1"
         step="0.01"
-        style:width="80px"
-        disabled={muted}
         bind:value={volume}
+        onkeydown={handleVolumeScrub}
+        disabled={muted}
+        style:width="80px"
       />
       <button>
         <Gear weight="bold" size="16px" />
