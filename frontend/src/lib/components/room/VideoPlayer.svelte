@@ -44,10 +44,11 @@
   let playbackRate = $state(1)
   let fullscreenElement = $state(null) as Element | null
   let settingsMenu = $state<null | 'options' | 'speed'>(null)
+  let autoplayNotif = $state(false)
 
   // Synchronise to incoming player state changes
   // TODO: Newcomer loading a video runs 1-2 seconds behind :/
-  $effect(() => {
+  const synchroniseToPlayerState = () => {
     currentTime =
       playerState.timestamp +
       (playerState.timestamp && // If timestamp is non-zero.
@@ -57,12 +58,16 @@
       paused = true
     } else {
       const promise = videoEl?.play()
-      promise?.catch(() => {
-        // FIXME: Autoplay may not work on browsers, so a manual play button may be needed at first
-        console.error('Failed to synchronise')
-      })
+      promise
+        ?.then(() => {
+          autoplayNotif = false
+        })
+        .catch(() => {
+          autoplayNotif = true
+        })
     }
-  })
+  }
+  $effect(synchroniseToPlayerState)
 
   // Send player state changes on pause or speed change
   // TODO: This doesn't interact with extensions like Video Speed Controller
@@ -170,6 +175,11 @@
     controlsVisible = false
   }}
 >
+  {#if autoplayNotif}
+    <div role="presentation" class="autoplay" onclick={synchroniseToPlayerState}>
+      <h1>Autoplay was blocked.<br />Press to begin playing.</h1>
+    </div>
+  {/if}
   <!-- svelte-ignore a11y_media_has_caption -->
   <video
     class="video"
@@ -277,6 +287,19 @@
     max-width: 100%;
     max-height: 100%;
     position: relative;
+  }
+
+  .autoplay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    background-color: rgba(0, 0, 0, 0.5);
   }
 
   .video {
