@@ -35,7 +35,7 @@ type Room struct {
 
 	Paused     bool      `json:"paused"`
 	Speed      int       `json:"speed"`
-	Timestamp  int       `json:"timestamp"`
+	Timestamp  float64   `json:"timestamp"`
 	LastAction time.Time `json:"lastAction"`
 }
 

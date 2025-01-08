@@ -71,7 +71,7 @@ const createRoomsTableQuery = `CREATE TABLE IF NOT EXISTS rooms (
 	chat JSONB[] DEFAULT '{}',
 	paused BOOLEAN DEFAULT TRUE,
 	speed INTEGER DEFAULT 1,
-	timestamp INTEGER DEFAULT 0,
+	timestamp DECIMAL DEFAULT 0,
 	lastAction TIMESTAMPTZ DEFAULT NOW());`
 
 func CreateSqlTables() {
