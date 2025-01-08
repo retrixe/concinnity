@@ -14,6 +14,7 @@
     RoomType,
     type ChatMessage,
     type GenericMessage,
+    type PlayerState,
     type RoomInfo,
   } from '$lib/api/room'
 
@@ -40,10 +41,10 @@
         else messages = message.data // TODO (low): Have IDs on messages to just push new messages
       } else if (isIncomingRoomInfoMessage(message)) {
         if (roomInfo === null) {
-          roomInfo = message.data
-          playerState = initialPlayerState
+          roomInfo = message.data // On first run, we expect player state to come up afterwards
         } else {
           Object.assign(roomInfo, message.data)
+          playerState = initialPlayerState
         }
       } else if (isIncomingPlayerStateMessage(message)) {
         playerState = message.data
@@ -92,6 +93,10 @@
       return () => clearInterval(interval)
     }
   })
+
+  const onPlayerStateChange = (newState: PlayerState) => {
+    ws?.send(JSON.stringify({ type: 'player_state', data: newState }))
+  }
 </script>
 
 <svelte:document bind:visibilityState />
@@ -104,6 +109,7 @@
         bind:transientVideo
         {roomInfo}
         {playerState}
+        {onPlayerStateChange}
         error={wsError}
         fullscreenEl={containerEl}
       />

@@ -10,6 +10,7 @@
     error: string | null
     roomInfo: RoomInfo
     playerState: PlayerState
+    onPlayerStateChange: (newState: PlayerState) => void
     transientVideo: File | null
     fullscreenEl: Element
   }
@@ -19,6 +20,7 @@
     error,
     roomInfo,
     playerState,
+    onPlayerStateChange,
     transientVideo = $bindable(null),
     fullscreenEl,
   }: Props = $props()
@@ -65,7 +67,7 @@
       <Button onclick={handleSelectVideo}>Select local file</Button>
     </div>
   {:else}
-    <VideoPlayer {video} {playerState} onStop={handleStop} {fullscreenEl} />
+    <VideoPlayer {video} {playerState} {onPlayerStateChange} onStop={handleStop} {fullscreenEl} />
   {/if}
   {#if error}
     <h3 class="error-banner">Error: {error}<br />Reconnecting in 10s...</h3>

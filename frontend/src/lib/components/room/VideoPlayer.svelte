@@ -19,10 +19,17 @@
   interface Props {
     video: File
     playerState: PlayerState
+    onPlayerStateChange: (newState: PlayerState) => void
     fullscreenEl: Element
     onStop: () => void
   }
-  const { video, playerState, fullscreenEl, onStop: handleStop }: Props = $props()
+  const {
+    video,
+    playerState,
+    onPlayerStateChange,
+    fullscreenEl,
+    onStop: handleStop,
+  }: Props = $props()
   const src = $derived(URL.createObjectURL(video))
 
   let controlsVisible = $state(false)
@@ -38,16 +45,48 @@
   let fullscreenElement = $state(null) as Element | null
   let settingsMenu = $state<null | 'options' | 'speed'>(null)
 
-  $inspect(playerState) // FIXME: Implement syncing with playerState
+  // Synchronise to incoming player state changes
+  // TODO: Newcomer loading a video runs 1-2 seconds behind :/
+  $effect(() => {
+    currentTime =
+      playerState.timestamp +
+      (playerState.timestamp && // If timestamp is non-zero.
+        Math.max((Date.now() - new Date(playerState.lastAction).getTime()) / 1000, 0))
+    playbackRate = playerState.speed
+    if (playerState.paused) {
+      paused = true
+    } else {
+      const promise = videoEl?.play()
+      promise?.catch(() => {
+        // FIXME: Autoplay may not work on browsers, so a manual play button may be needed at first
+        console.error('Failed to synchronise')
+      })
+    }
+  })
+
+  // Send player state changes on pause or speed change
+  // TODO: This doesn't interact with extensions like Video Speed Controller
+  const handlePlayerStateChange = () =>
+    onPlayerStateChange({
+      paused,
+      speed: playbackRate,
+      timestamp: Math.floor(currentTime), // TODO: Support floats here
+      lastAction: new Date().toISOString(),
+    })
 
   const handlePlayPause = () => {
     paused = !paused
+    handlePlayerStateChange()
   }
 
-  const handleTimeScrub = (e: KeyboardEvent) => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+  const handleTimeScrub = (e: Event) => {
+    if (e instanceof KeyboardEvent && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
       e.preventDefault()
       currentTime += e.key === 'ArrowLeft' ? -5 : 5
+      handlePlayerStateChange()
+    } else if (!(e instanceof KeyboardEvent)) {
+      currentTime = Number((e.target as HTMLInputElement).value)
+      handlePlayerStateChange()
     }
   }
 
@@ -64,6 +103,7 @@
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault()
       volume = e.key === 'ArrowLeft' ? Math.max(0, volume - 0.1) : Math.min(1, volume + 0.1)
+      handlePlayerStateChange()
     }
   }
 
@@ -78,6 +118,7 @@
 
   const handlePlayRateChange = (rate: number) => () => {
     playbackRate = rate
+    handlePlayerStateChange()
   }
 
   const handlePiPToggle = () => {
@@ -115,7 +156,6 @@
   // - Fullscreen button
   // TODO: Implement tooltips
   // TODO: Implement kb controls for all when cursor in bounds (except stop, to avoid accidents)
-  // FIXME: Autoplay may not work on browsers, so a manual play button may be needed at first
 </script>
 
 <svelte:document bind:fullscreenElement />
@@ -159,7 +199,8 @@
         min="0"
         max={isFinite(duration) ? duration : 0}
         step="0.01"
-        bind:value={currentTime}
+        value={currentTime}
+        oninput={handleTimeScrub}
         onkeydown={handleTimeScrub}
         style:flex="1"
       />
