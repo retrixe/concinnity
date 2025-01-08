@@ -3,6 +3,7 @@
   import {
     ArrowsIn,
     ArrowsOut,
+    CaretLeft,
     Gear,
     Pause,
     PictureInPicture,
@@ -33,7 +34,9 @@
   let displayCurrentTime = $state(false)
   let muted = $state(false)
   let volume = $state(1)
+  let playbackRate = $state(1)
   let fullscreenElement = $state(null) as Element | null
+  let settingsMenu = $state<null | 'options' | 'speed'>(null)
 
   $inspect(playerState) // FIXME: Implement syncing with playerState
 
@@ -64,6 +67,19 @@
     }
   }
 
+  const handleSettingsOpen = () => {
+    if (settingsMenu === null) settingsMenu = 'options'
+    else settingsMenu = null
+  }
+
+  const handleSettingsNav = (menu: typeof settingsMenu) => () => {
+    settingsMenu = menu
+  }
+
+  const handlePlayRateChange = (rate: number) => () => {
+    playbackRate = rate
+  }
+
   const handlePiPToggle = () => {
     // TODO: Implement the document picture-in-picture API
     // https://developer.chrome.com/docs/web-platform/document-picture-in-picture
@@ -82,21 +98,28 @@
     }
   }
 
-  // TODO: Implement tooltips
+  const handleWindowClick = (event: MouseEvent) => {
+    const outsideSettingsMenuBounds =
+      event.target instanceof Element && !event.target.closest('.settings-menu')
+    if (settingsMenu && outsideSettingsMenuBounds) settingsMenu = null
+  }
+
   // Video controls:
   // - Play/Pause
   // - Seek timeline
   // - Time elapsed/time left (on tap)
   // - Volume control (mute bottom + range)
-  // - FIXME: Settings button (menu with speed control)
+  // - Settings button (menu with speed control)
   // - Stop playing current video
   // - Picture-in-picture button
   // - Fullscreen button
+  // TODO: Implement tooltips
   // TODO: Implement kb controls for all when cursor in bounds (except stop, to avoid accidents)
   // FIXME: Autoplay may not work on browsers, so a manual play button may be needed at first
 </script>
 
 <svelte:document bind:fullscreenElement />
+<svelte:window onclickcapture={handleWindowClick} />
 <div
   role="presentation"
   class="player-container"
@@ -117,11 +140,12 @@
     bind:paused
     bind:muted
     bind:volume
+    bind:playbackRate
     playsinline
   ></video>
   <!-- TODO: Width of transiently passed videos are incorrect sometimes -->
   <!-- TODO: Controls are too wide on mobile in portrait -->
-  {#if controlsVisible}
+  {#if controlsVisible || settingsMenu}
     <div class="controls" transition:fade>
       <button onclick={handlePlayPause}>
         {#if paused}
@@ -168,9 +192,28 @@
         disabled={muted}
         style:width="80px"
       />
-      <button>
-        <Gear weight="bold" size="16px" />
-      </button>
+      <div style:position="relative">
+        <button onclick={handleSettingsOpen}>
+          <Gear weight="bold" size="16px" />
+        </button>
+        <div class="settings-menu" style:visibility={settingsMenu ? 'visible' : 'hidden'}>
+          {#if settingsMenu == 'speed'}
+            <button onclick={handleSettingsNav('options')} class="highlight">
+              <CaretLeft weight="bold" size="16px" /> Back to options
+            </button>
+            {#each [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 4] as rate (rate)}
+              <button class:highlight={playbackRate === rate} onclick={handlePlayRateChange(rate)}>
+                {rate}x
+              </button>
+            {/each}
+          {:else}
+            <button onclick={handleSettingsNav('speed')}>
+              <span>Speed</span>
+              <span>{playbackRate}x</span>
+            </button>
+          {/if}
+        </div>
+      </div>
       <button onclick={handleStop}>
         <Stop weight="bold" size="16px" />
       </button>
@@ -209,10 +252,30 @@
     bottom: 0;
     display: flex;
     align-items: center;
+    > span {
+      margin: 8px;
+    }
   }
 
-  span {
-    margin: 8px;
+  .settings-menu {
+    position: absolute;
+    bottom: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    min-width: 160px;
+    max-height: 50vh;
+    overflow-y: scroll;
+    button {
+      width: calc(100% - 16px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      &.highlight {
+        background-color: var(--primary-color);
+      }
+      :global(svg) {
+        display: inline;
+      }
+    }
   }
 
   // TODO: DRY with Button.svelte
