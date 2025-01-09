@@ -37,8 +37,9 @@
       if (typeof event.data !== 'string') throw new Error('Invalid message data type!')
       const message = JSON.parse(event.data) as GenericMessage
       if (isIncomingChatMessage(message)) {
+        // TODO (low): Replace messages.length with IDs
         if (message.data.length === 1) messages.push(message.data[0])
-        else messages = message.data // TODO (low): Have IDs on messages to just push new messages
+        else messages.push(...message.data.slice(messages.length))
       } else if (isIncomingRoomInfoMessage(message)) {
         if (roomInfo === null) {
           roomInfo = message.data // On first run, we expect player state to come up afterwards

@@ -1,10 +1,13 @@
 <script lang="ts">
+  import { untrack } from 'svelte'
   import { PUBLIC_BACKEND_URL } from '$env/static/public'
   import type { ChatMessage } from '$lib/api/room'
   import TextInput from '$lib/components/TextInput.svelte'
   import usernameCache from '$lib/state/usernameCache.svelte'
 
-  // TODO: Timestamp design needs improvement to account for latest messages
+  const systemUUID = '00000000-0000-0000-0000-000000000000'
+
+  // TODO (high): Timestamp design needs improvement to account for latest messages
   interface Props {
     disabled?: boolean
     messages: ChatMessage[]
@@ -13,19 +16,33 @@
 
   const { messages, onSendMessage, disabled }: Props = $props()
 
-  // TODO: Optimise this by batching requests and fetching usernames ahead of time
-  const getUsername = (userId: string) => {
-    const value = usernameCache.get(userId)
-    // Fire a fetch request if not seen before
-    if (value === undefined) {
-      const authorization = localStorage.getItem('concinnity:token') ?? ''
-      fetch(`${PUBLIC_BACKEND_URL}/api/usernames?id=${userId}`, { headers: { authorization } })
-        .then(res => res.json())
-        .then((data: Record<string, string>) => usernameCache.set(userId, data[userId] ?? null))
-        .catch((e: unknown) => console.error('Failed to retrieve username for ID!', userId, e))
-    }
-    return value ?? userId.split('-')[0] // UUID
-  }
+  // Fetch usernames for user IDs
+  let prevId = 0
+  $effect(() => {
+    const userIds = messages.slice(prevId).reduce((set, message) => {
+      const userId = message.userId === systemUUID ? message.message.split(' ')[0] : message.userId
+      if (untrack(() => !usernameCache.has(userId)) /* Ignore changes to usernameCache */) {
+        usernameCache.set(userId, null)
+        set.add(userId)
+      }
+      return set
+    }, new Set<string>())
+    prevId = messages.length
+    if (!userIds.size) return
+
+    const authorization = localStorage.getItem('concinnity:token') ?? ''
+    const query = userIds
+      .values()
+      .map(id => `id=${id}`)
+      .reduce((acc, val) => `${acc}&${val}`)
+    fetch(`${PUBLIC_BACKEND_URL}/api/usernames?${query}`, { headers: { authorization } })
+      .then(res => res.json())
+      .then((data: Record<string, string>) => {
+        for (const [userId, username] of Object.entries(data)) usernameCache.set(userId, username)
+      })
+      .catch((e: unknown) => console.error('Failed to retrieve usernames!', e))
+  })
+  const getUsername = (userId: string) => usernameCache.get(userId) ?? userId.split('-')[0] // UUID
   const parseTimestamp = (timestamp: string) =>
     new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
@@ -54,7 +71,7 @@
 <div class="chat">
   <div class="messages" bind:this={messagesEl}>
     {#each messages as message, i}
-      {#if message.userId === '00000000-0000-0000-0000-000000000000'}
+      {#if message.userId === systemUUID}
         <h5 style:text-align="center">
           {message.message.replace(
             message.message.split(' ')[0],
