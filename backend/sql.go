@@ -23,32 +23,32 @@ var insertChatMessageRoomStmt *sql.Stmt
 var updateRoomStateStmt *sql.Stmt
 var deleteRoomStmt *sql.Stmt
 
-const findUserByTokenQuery = "SELECT username, password, email, id, users.createdAt " +
-	"AS userCreatedAt, verified, token, tokens.createdAt AS tokenCreatedAt FROM tokens " +
-	"JOIN users ON tokens.userId = users.id WHERE token = $1;"
-const findUserByNameOrEmailQuery = "SELECT username, password, email, id, createdAt, verified FROM users " +
+const findUserByTokenQuery = "SELECT username, password, email, id, users.created_at " +
+	"AS user_created_at, verified, token, tokens.created_at AS token_created_at FROM tokens " +
+	"JOIN users ON tokens.user_id = users.id WHERE token = $1;"
+const findUserByNameOrEmailQuery = "SELECT username, password, email, id, created_at, verified FROM users " +
 	"WHERE username = $1 OR email = $2 LIMIT 1;"
-const findUserByUsernameQuery = "SELECT username, password, email, id, createdAt, verified FROM users " +
+const findUserByUsernameQuery = "SELECT username, password, email, id, created_at, verified FROM users " +
 	"WHERE username = $1 LIMIT 1;"
-const findUserByEmailQuery = "SELECT username, password, email, id, createdAt, verified FROM users " +
+const findUserByEmailQuery = "SELECT username, password, email, id, created_at, verified FROM users " +
 	"WHERE email = $1 LIMIT 1;"
 const findUsernamesByIdQuery = "SELECT id, username FROM users WHERE id = ANY($1);"
 const createUserQuery = "INSERT INTO users (username, password, email, id) VALUES ($1, $2, $3, $4);"
 
-const insertTokenQuery = "INSERT INTO tokens (token, createdAt, userId) VALUES ($1, $2, $3);"
+const insertTokenQuery = "INSERT INTO tokens (token, created_at, user_id) VALUES ($1, $2, $3);"
 const deleteTokenQuery = "DELETE FROM tokens WHERE token = $1;"
 
 const insertRoomQuery = "INSERT INTO rooms (id, type, target) " +
 	"VALUES ($1, $2, $3);"
-const findRoomQuery = "SELECT id, createdAt, modifiedAt, type, target, chat, " +
-	"paused, speed, timestamp, lastAction FROM rooms WHERE id = $1;"
-const findInactiveRoomsQuery = "SELECT id FROM rooms WHERE modifiedAt < NOW() - INTERVAL '10 minutes';"
-const updateRoomQuery = "UPDATE rooms SET type = $2, target = $3, modifiedAt = NOW(), " +
-	"paused = true, speed = 1, timestamp = 0, lastAction = NOW() WHERE id = $1 " +
-	"RETURNING createdAt, modifiedAt;"
-const insertChatMessageRoomQuery = "UPDATE rooms SET chat = chat || $2::jsonb, modifiedAt = NOW() WHERE id = $1;"
+const findRoomQuery = "SELECT id, created_at, modified_at, type, target, chat, " +
+	"paused, speed, timestamp, last_action FROM rooms WHERE id = $1;"
+const findInactiveRoomsQuery = "SELECT id FROM rooms WHERE modified_at < NOW() - INTERVAL '10 minutes';"
+const updateRoomQuery = "UPDATE rooms SET type = $2, target = $3, modified_at = NOW(), " +
+	"paused = true, speed = 1, timestamp = 0, last_action = NOW() WHERE id = $1 " +
+	"RETURNING created_at, modified_at;"
+const insertChatMessageRoomQuery = "UPDATE rooms SET chat = chat || $2::jsonb, modified_at = NOW() WHERE id = $1;"
 const updateRoomStateQuery = "UPDATE rooms SET " +
-	"paused = $2, speed = $3, timestamp = $4, lastAction = $5, modifiedAt = NOW() WHERE id = $1;"
+	"paused = $2, speed = $3, timestamp = $4, last_action = $5, modified_at = NOW() WHERE id = $1;"
 const deleteRoomQuery = "DELETE FROM rooms WHERE id = $1;"
 
 const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
@@ -56,23 +56,23 @@ const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
 	password VARCHAR(100),
 	email VARCHAR(319) UNIQUE,
 	id UUID PRIMARY KEY,
-	createdAt TIMESTAMPTZ DEFAULT NOW(),
+	created_at TIMESTAMPTZ DEFAULT NOW(),
 	verified BOOLEAN DEFAULT FALSE);`
 const createTokensTableQuery = `CREATE TABLE IF NOT EXISTS tokens (
 	token VARCHAR(128) PRIMARY KEY,
-	createdAt TIMESTAMPTZ DEFAULT NOW(),
-	userId UUID REFERENCES users(id));`
+	created_at TIMESTAMPTZ DEFAULT NOW(),
+	user_id UUID REFERENCES users(id));`
 const createRoomsTableQuery = `CREATE TABLE IF NOT EXISTS rooms (
 	id VARCHAR(24) PRIMARY KEY,
-	createdAt TIMESTAMPTZ DEFAULT NOW(),
-	modifiedAt TIMESTAMPTZ DEFAULT NOW(),
+	created_at TIMESTAMPTZ DEFAULT NOW(),
+	modified_at TIMESTAMPTZ DEFAULT NOW(),
 	type VARCHAR(24), /* local_file, remote_file */
 	target VARCHAR(200), /* carries information like file name, YouTube ID, etc */
 	chat JSONB[] DEFAULT '{}',
 	paused BOOLEAN DEFAULT TRUE,
 	speed INTEGER DEFAULT 1,
 	timestamp DECIMAL DEFAULT 0,
-	lastAction TIMESTAMPTZ DEFAULT NOW());`
+	last_action TIMESTAMPTZ DEFAULT NOW());`
 
 func CreateSqlTables() {
 	_, err := db.Exec(createUsersTableQuery)
