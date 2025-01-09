@@ -7,7 +7,6 @@
 
   const systemUUID = '00000000-0000-0000-0000-000000000000'
 
-  // TODO (high): Timestamp design needs improvement to account for latest messages
   interface Props {
     disabled?: boolean
     messages: ChatMessage[]
@@ -15,6 +14,18 @@
   }
 
   const { messages, onSendMessage, disabled }: Props = $props()
+
+  type ChatMessageGroup = Omit<ChatMessage, 'message'> & { messages: string[] }
+  const messageGroups = $derived(
+    messages.reduce<ChatMessageGroup[]>((acc, { userId, timestamp, message }) => {
+      const lastGroup = acc[acc.length - 1] as ChatMessageGroup | undefined
+      if (lastGroup?.userId === userId && userId !== systemUUID) {
+        lastGroup.timestamp = timestamp
+        lastGroup.messages.push(message)
+      } else acc.push({ userId, timestamp, messages: [message] })
+      return acc
+    }, []),
+  )
 
   // Fetch usernames for user IDs
   let prevId = 0
@@ -43,6 +54,10 @@
       .catch((e: unknown) => console.error('Failed to retrieve usernames!', e))
   })
   const getUsername = (userId: string) => usernameCache.get(userId) ?? userId.split('-')[0] // UUID
+  const replaceLeadingUUID = (message: string) => {
+    const uuid = message.slice(0, message.indexOf(' '))
+    return message.replace(uuid, getUsername(uuid))
+  }
   const parseTimestamp = (timestamp: string) =>
     new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
@@ -70,20 +85,17 @@
 
 <div class="chat">
   <div class="messages" bind:this={messagesEl}>
-    {#each messages as message, i}
-      {#if message.userId === systemUUID}
+    {#each messageGroups as messageGroup}
+      {#if messageGroup.userId === systemUUID}
         <h5 style:text-align="center">
-          {message.message.replace(
-            message.message.split(' ')[0],
-            getUsername(message.message.split(' ')[0]),
-          )} — {parseTimestamp(message.timestamp)}
+          {replaceLeadingUUID(messageGroup.messages[0])} — {parseTimestamp(messageGroup.timestamp)}
         </h5>
       {:else}
         <div>
-          {#if i === 0 || messages[i - 1].userId !== message.userId}
-            <h4>{getUsername(message.userId)} — {parseTimestamp(message.timestamp)}</h4>
-          {/if}
-          <p>{message.message}</p>
+          <h4>{getUsername(messageGroup.userId)} — {parseTimestamp(messageGroup.timestamp)}</h4>
+          {#each messageGroup.messages as message}
+            <p>{message}</p>
+          {/each}
         </div>
       {/if}
     {/each}
