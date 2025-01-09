@@ -1,21 +1,29 @@
 <script lang="ts">
+  import type { FormEventHandler } from 'svelte/elements'
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
   import { PUBLIC_BACKEND_URL } from '$env/static/public'
   import Button from '$lib/components/Button.svelte'
+  import TextInput from '$lib/components/TextInput.svelte'
 
   const { username } = $derived(page.data)
 
   let status: string | null = $state(null)
+  let roomId = $state('')
 
-  // TODO: Convert the button to a text field for custom IDs
+  const onRoomIdChange: FormEventHandler<HTMLInputElement> = e => {
+    const inputEl = e.target as HTMLInputElement
+    if (/^[a-zA-Z0-9_-]{0,24}$/.test(inputEl.value)) roomId = inputEl.value
+    else inputEl.value = roomId
+  }
+
   async function handleCreateRoom() {
     status = ''
     try {
       const req = await fetch(`${PUBLIC_BACKEND_URL}/api/room`, {
         method: 'POST',
         headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
-        body: JSON.stringify({}),
+        body: JSON.stringify(roomId ? { id: roomId } : {}),
       })
       const data = (await req.json()) as { error?: string; id: string }
       if (!req.ok) {
@@ -39,7 +47,14 @@
     </p>
     <br />
     {#if username}
-      <Button onclick={handleCreateRoom} disabled={status === ''}>Create a new room</Button>
+      <TextInput
+        value={roomId}
+        oninput={onRoomIdChange}
+        autocapitalize="off"
+        autocomplete="off"
+        placeholder="Enter custom name (optional)"
+      />
+      <Button onclick={handleCreateRoom} disabled={status === ''}>Create room</Button>
     {:else}
       <a href="/login">
         <Button>Login / Sign Up</Button>

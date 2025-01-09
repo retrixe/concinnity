@@ -57,7 +57,7 @@ func CreateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	id := body.ID
 	if id == "" {
 		id = nanoid.Must(12)
-	} else if res, _ := regexp.MatchString("^[a-zA-Z0-9_-]{24}$", id); !res {
+	} else if res, _ := regexp.MatchString("^[a-zA-Z0-9_-]{0,24}$", id); !res {
 		http.Error(w, errorJson("Invalid room ID!"), http.StatusBadRequest)
 		return
 	}
