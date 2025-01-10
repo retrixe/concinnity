@@ -31,8 +31,7 @@ func CleanInactiveRooms() {
 	defer rows.Close()
 	for rows.Next() {
 		var id string
-		err = rows.Scan(&id)
-		if err != nil {
+		if err = rows.Scan(&id); err != nil {
 			log.Println("Failed to scan inactive room!", err)
 			continue
 		}
@@ -47,5 +46,8 @@ func CleanInactiveRooms() {
 				roomMembers.Delete(id)
 			}
 		}
+	}
+	if rows.Err() != nil {
+		log.Println("Failed to scan inactive room!", err)
 	}
 }

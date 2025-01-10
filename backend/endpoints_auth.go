@@ -98,12 +98,15 @@ func GetUsernamesEndpoint(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var id uuid.UUID
 		var username string
-		err = rows.Scan(&id, &username)
-		if err != nil {
+		if err = rows.Scan(&id, &username); err != nil {
 			handleInternalServerError(w, err)
 			return
 		}
 		usernames[id.String()] = username
+	}
+	if rows.Err() != nil {
+		handleInternalServerError(w, err)
+		return
 	}
 
 	json.NewEncoder(w).Encode(usernames)
