@@ -103,6 +103,7 @@
   <!-- prettier-ignore -->
   <TextInput
     {disabled}
+    maxlength={2000}
     placeholder="Type message here..."
     bind:value={message}
     onkeypress={e => e.key === 'Enter' && handleSendMessage() /* eslint-disable-line */}
@@ -128,6 +129,7 @@
 
   .messages {
     flex: 1;
+    word-wrap: break-word;
     overflow-y: scroll;
     margin-bottom: 1rem;
     h4,

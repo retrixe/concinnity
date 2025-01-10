@@ -49,10 +49,10 @@
 
   // Synchronise to incoming player state changes
   const synchroniseToPlayerState = () => {
-    currentTime =
-      playerState.timestamp +
-      (playerState.timestamp && // If timestamp is non-zero.
-        Math.max((Date.now() - new Date(playerState.lastAction).getTime()) / 1000, 0))
+    const currentTimeDelta = playerState.paused
+      ? 0
+      : Math.max((Date.now() - new Date(playerState.lastAction).getTime()) / 1000, 0)
+    currentTime = playerState.timestamp + currentTimeDelta
     playbackRate = playerState.speed
     if (playerState.paused) {
       paused = true
@@ -298,6 +298,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    user-select: none;
     z-index: 2;
     background-color: rgba(0, 0, 0, 0.5);
   }
