@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"regexp"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -348,13 +349,14 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 			var chatData ChatMessageIncoming
 			err = json.Unmarshal(data, &chatData)
 			// Enforce 2000 char chat message limit
-			if err != nil || len(chatData.Data) > 2000 {
+			msg := strings.TrimSpace(chatData.Data)
+			if err != nil || len(msg) > 2000 {
 				wsError(c, "Invalid chat message!", websocket.StatusUnsupportedData)
 				continue
 			}
 
 			// Update state in db and broadcast
-			chatMsg := ChatMessage{UserID: user.ID, Message: chatData.Data}
+			chatMsg := ChatMessage{UserID: user.ID, Message: msg}
 			err = insertChatMessageStmt.QueryRow(room.ID, user.ID, chatMsg.Message).Scan(
 				&chatMsg.ID, &chatMsg.Timestamp)
 			if err != nil {

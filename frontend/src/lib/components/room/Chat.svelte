@@ -63,7 +63,7 @@
 
   let message = $state('')
   const handleSendMessage = () => {
-    onSendMessage(message)
+    onSendMessage(message.trim())
     message = ''
   }
 
