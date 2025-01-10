@@ -34,7 +34,7 @@ type Room struct {
 	Chat []ChatMessage `json:"chat,omitempty"`
 
 	Paused     bool      `json:"paused"`
-	Speed      int       `json:"speed"`
+	Speed      float64   `json:"speed"`
 	Timestamp  float64   `json:"timestamp"`
 	LastAction time.Time `json:"lastAction"`
 }

@@ -167,7 +167,7 @@ type PlayerStateMessageBi struct {
 
 type PlayerStateMessageData struct {
 	Paused     bool      `json:"paused"`
-	Speed      int       `json:"speed"`
+	Speed      float64   `json:"speed"`
 	Timestamp  float64   `json:"timestamp"`
 	LastAction time.Time `json:"lastAction"`
 }
@@ -347,7 +347,8 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		} else if msgData.Type == "chat" {
 			var chatData ChatMessageIncoming
 			err = json.Unmarshal(data, &chatData)
-			if err != nil {
+			// Enforce 2000 char chat message limit
+			if err != nil || len(chatData.Data) > 2000 {
 				wsError(c, "Invalid chat message!", websocket.StatusUnsupportedData)
 				continue
 			}

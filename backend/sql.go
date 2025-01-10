@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS rooms (
 	type VARCHAR(24) NOT NULL, /* local_file, remote_file */
 	target VARCHAR(200) NOT NULL, /* carries information like file name, YouTube ID, etc */
 	paused BOOLEAN NOT NULL DEFAULT TRUE,
-	speed INTEGER NOT NULL DEFAULT 1,
+	speed DECIMAL NOT NULL DEFAULT 1,
 	timestamp DECIMAL NOT NULL DEFAULT 0,
 	last_action TIMESTAMPTZ NOT NULL DEFAULT NOW());
 
