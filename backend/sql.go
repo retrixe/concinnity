@@ -51,41 +51,39 @@ const updateRoomStateQuery = "UPDATE rooms SET " +
 	"paused = $2, speed = $3, timestamp = $4, last_action = $5, modified_at = NOW() WHERE id = $1;"
 const deleteRoomQuery = "DELETE FROM rooms WHERE id = $1;"
 
-const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
-	username VARCHAR(16) UNIQUE,
-	password VARCHAR(100),
-	email VARCHAR(319) UNIQUE,
-	id UUID PRIMARY KEY,
-	created_at TIMESTAMPTZ DEFAULT NOW(),
-	verified BOOLEAN DEFAULT FALSE);`
-const createTokensTableQuery = `CREATE TABLE IF NOT EXISTS tokens (
-	token VARCHAR(128) PRIMARY KEY,
-	created_at TIMESTAMPTZ DEFAULT NOW(),
-	user_id UUID REFERENCES users(id));`
-const createRoomsTableQuery = `CREATE TABLE IF NOT EXISTS rooms (
-	id VARCHAR(24) PRIMARY KEY,
-	created_at TIMESTAMPTZ DEFAULT NOW(),
-	modified_at TIMESTAMPTZ DEFAULT NOW(),
-	type VARCHAR(24), /* local_file, remote_file */
-	target VARCHAR(200), /* carries information like file name, YouTube ID, etc */
-	chat JSONB[] DEFAULT '{}',
-	paused BOOLEAN DEFAULT TRUE,
-	speed INTEGER DEFAULT 1,
-	timestamp DECIMAL DEFAULT 0,
-	last_action TIMESTAMPTZ DEFAULT NOW());`
+const initialiseDatabaseQuery = `BEGIN;
+
+CREATE TABLE IF NOT EXISTS users (
+	username VARCHAR(16) NOT NULL UNIQUE,
+	password VARCHAR(100) NOT NULL,
+	email VARCHAR(319) NOT NULL UNIQUE,
+	id UUID NOT NULL PRIMARY KEY,
+	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	verified BOOLEAN NOT NULL DEFAULT FALSE);
+
+CREATE TABLE IF NOT EXISTS tokens (
+	token VARCHAR(128) NOT NULL PRIMARY KEY,
+	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	user_id UUID NOT NULL REFERENCES users(id));
+
+CREATE TABLE IF NOT EXISTS rooms (
+	id VARCHAR(24) NOT NULL PRIMARY KEY,
+	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	modified_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	type VARCHAR(24) NOT NULL, /* local_file, remote_file */
+	target VARCHAR(200) NOT NULL, /* carries information like file name, YouTube ID, etc */
+	chat JSONB[] NOT NULL DEFAULT '{}',
+	paused BOOLEAN NOT NULL DEFAULT TRUE,
+	speed INTEGER NOT NULL DEFAULT 1,
+	timestamp DECIMAL NOT NULL DEFAULT 0,
+	last_action TIMESTAMPTZ NOT NULL DEFAULT NOW());
+
+COMMIT;`
 
 func CreateSqlTables() {
-	_, err := db.Exec(createUsersTableQuery)
+	_, err := db.Exec(initialiseDatabaseQuery)
 	if err != nil {
-		log.Panicln("Failed to create users table!", err)
-	}
-	_, err = db.Exec(createTokensTableQuery)
-	if err != nil {
-		log.Panicln("Failed to create tokens table!", err)
-	}
-	_, err = db.Exec(createRoomsTableQuery)
-	if err != nil {
-		log.Panicln("Failed to create rooms table!", err)
+		log.Panicln("Failed to create tables and indexes!", err)
 	}
 }
 
