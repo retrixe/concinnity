@@ -31,7 +31,7 @@ type Room struct {
 	Type       string    `json:"type"`
 	Target     string    `json:"target"`
 
-	Chat []ChatMessage `json:"chat"`
+	Chat []ChatMessage `json:"chat,omitempty"`
 
 	Paused     bool      `json:"paused"`
 	Speed      int       `json:"speed"`
@@ -40,6 +40,8 @@ type Room struct {
 }
 
 type ChatMessage struct {
+	ID        int       `json:"id"`
+	RoomID    string    `json:"roomId,omitempty"`
 	UserID    uuid.UUID `json:"userId"`
 	Message   string    `json:"message"`
 	Timestamp time.Time `json:"timestamp"`

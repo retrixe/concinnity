@@ -19,9 +19,11 @@ var insertRoomStmt *sql.Stmt
 var findRoomStmt *sql.Stmt
 var findInactiveRoomsStmt *sql.Stmt
 var updateRoomStmt *sql.Stmt
-var insertChatMessageRoomStmt *sql.Stmt
 var updateRoomStateStmt *sql.Stmt
 var deleteRoomStmt *sql.Stmt
+
+var findChatMessagesByRoomStmt *sql.Stmt
+var insertChatMessageStmt *sql.Stmt
 
 const findUserByTokenQuery = "SELECT username, password, email, id, users.created_at " +
 	"AS user_created_at, verified, token, tokens.created_at AS token_created_at FROM tokens " +
@@ -40,16 +42,20 @@ const deleteTokenQuery = "DELETE FROM tokens WHERE token = $1;"
 
 const insertRoomQuery = "INSERT INTO rooms (id, type, target) " +
 	"VALUES ($1, $2, $3);"
-const findRoomQuery = "SELECT id, created_at, modified_at, type, target, chat, " +
+const findRoomQuery = "SELECT id, created_at, modified_at, type, target, " +
 	"paused, speed, timestamp, last_action FROM rooms WHERE id = $1;"
 const findInactiveRoomsQuery = "SELECT id FROM rooms WHERE modified_at < NOW() - INTERVAL '10 minutes';"
 const updateRoomQuery = "UPDATE rooms SET type = $2, target = $3, modified_at = NOW(), " +
 	"paused = true, speed = 1, timestamp = 0, last_action = NOW() WHERE id = $1 " +
 	"RETURNING created_at, modified_at;"
-const insertChatMessageRoomQuery = "UPDATE rooms SET chat = chat || $2::jsonb, modified_at = NOW() WHERE id = $1;"
 const updateRoomStateQuery = "UPDATE rooms SET " +
 	"paused = $2, speed = $3, timestamp = $4, last_action = $5, modified_at = NOW() WHERE id = $1;"
 const deleteRoomQuery = "DELETE FROM rooms WHERE id = $1;"
+
+const findChatMessagesByRoomQuery = "SELECT id, user_id, timestamp, message FROM chats WHERE room_id = $1;"
+const insertChatMessageQuery = `WITH rooms AS (
+  UPDATE rooms SET modified_at = NOW() WHERE id = $1
+) INSERT INTO chats (room_id, user_id, message) VALUES ($1, $2, $3) RETURNING id, timestamp;`
 
 const initialiseDatabaseQuery = `BEGIN;
 
@@ -72,11 +78,19 @@ CREATE TABLE IF NOT EXISTS rooms (
 	modified_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 	type VARCHAR(24) NOT NULL, /* local_file, remote_file */
 	target VARCHAR(200) NOT NULL, /* carries information like file name, YouTube ID, etc */
-	chat JSONB[] NOT NULL DEFAULT '{}',
 	paused BOOLEAN NOT NULL DEFAULT TRUE,
 	speed INTEGER NOT NULL DEFAULT 1,
 	timestamp DECIMAL NOT NULL DEFAULT 0,
 	last_action TIMESTAMPTZ NOT NULL DEFAULT NOW());
+
+CREATE TABLE IF NOT EXISTS chats (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+	room_id VARCHAR(24) NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+	user_id UUID REFERENCES users(id) ON DELETE RESTRICT,
+	message TEXT NOT NULL,
+	timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW());
+CREATE INDEX IF NOT EXISTS chats_room_id_idx ON chats (room_id);
+/* CREATE INDEX IF NOT EXISTS chats_timestamp_idx ON chats (timestamp); ORDER BY can't be so slow pfft */
 
 COMMIT;`
 
@@ -140,10 +154,6 @@ func PrepareSqlStatements() {
 	if err != nil {
 		log.Panicln("Failed to prepare query to update room!", err)
 	}
-	insertChatMessageRoomStmt, err = db.Prepare(insertChatMessageRoomQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to insert chat message in room!", err)
-	}
 	updateRoomStateStmt, err = db.Prepare(updateRoomStateQuery)
 	if err != nil {
 		log.Panicln("Failed to prepare query to update room state!", err)
@@ -152,4 +162,33 @@ func PrepareSqlStatements() {
 	if err != nil {
 		log.Panicln("Failed to prepare query to delete room!", err)
 	}
+
+	findChatMessagesByRoomStmt, err = db.Prepare(findChatMessagesByRoomQuery)
+	if err != nil {
+		log.Panicln("Failed to prepare query to find chat messages by room ID!", err)
+	}
+	insertChatMessageStmt, err = db.Prepare(insertChatMessageQuery)
+	if err != nil {
+		log.Panicln("Failed to prepare query to insert chat message!", err)
+	}
+}
+
+func FindChatMessagesByRoom(id string) ([]ChatMessage, error) {
+	chat := make([]ChatMessage, 0)
+	chatRows, err := findChatMessagesByRoomStmt.Query(id)
+	if err != nil {
+		return nil, err
+	}
+	defer chatRows.Close()
+	for chatRows.Next() {
+		msg := ChatMessage{}
+		if err = chatRows.Scan(&msg.ID, &msg.UserID, &msg.Timestamp, &msg.Message); err != nil {
+			return nil, err
+		}
+		chat = append(chat, msg)
+	}
+	if err = chatRows.Err(); err != nil {
+		return nil, err
+	}
+	return chat, nil
 }

@@ -83,13 +83,17 @@ func GetRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	room := Room{}
 	err := findRoomStmt.QueryRow(r.PathValue("id")).Scan(
-		&room.ID, &room.CreatedAt, &room.ModifiedAt,
-		&room.Type, &room.Target, pq.Array(&room.Chat),
+		&room.ID, &room.CreatedAt, &room.ModifiedAt, &room.Type, &room.Target,
 		&room.Paused, &room.Speed, &room.Timestamp, &room.LastAction)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, errorJson("Room not found!"), http.StatusNotFound)
 		return
 	} else if err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
+	room.Chat, err = FindChatMessagesByRoom(room.ID)
+	if err != nil {
 		handleInternalServerError(w, err)
 		return
 	}
@@ -221,13 +225,17 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Get room details, if not exists, boohoo
 	room := Room{}
 	err = findRoomStmt.QueryRow(r.PathValue("id")).Scan(
-		&room.ID, &room.CreatedAt, &room.ModifiedAt,
-		&room.Type, &room.Target, pq.Array(&room.Chat),
+		&room.ID, &room.CreatedAt, &room.ModifiedAt, &room.Type, &room.Target,
 		&room.Paused, &room.Speed, &room.Timestamp, &room.LastAction)
 	if errors.Is(err, sql.ErrNoRows) {
 		wsError(c, "Room not found!", 4404)
 		return
 	} else if err != nil {
+		wsInternalError(c, err)
+		return
+	}
+	chat, err := FindChatMessagesByRoom(room.ID)
+	if err != nil {
 		wsInternalError(c, err)
 		return
 	}
@@ -261,7 +269,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = wsjsonWriteWithTimeout(context.Background(), c, ChatMessageOutgoing{
-		Type: "chat", Data: room.Chat})
+		Type: "chat", Data: chat})
 	if err != nil {
 		wsError(c, "Failed to write data!", websocket.StatusProtocolError)
 		return
@@ -296,17 +304,15 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	})()
 
 	// Send chat message: user joined/reconnected
-	chatMsg := ChatMessage{UserID: uuid.Nil, Timestamp: time.Now()}
+	chatMsg := ChatMessage{UserID: uuid.Nil}
 	if authMessage.Reconnect {
 		chatMsg.Message = user.ID.String() + " reconnected"
 	} else {
 		chatMsg.Message = user.ID.String() + " joined"
 	}
-	result, err := insertChatMessageRoomStmt.Exec(room.ID, chatMsg)
+	err = insertChatMessageStmt.QueryRow(room.ID, nil, chatMsg.Message).Scan(
+		&chatMsg.ID, &chatMsg.Timestamp)
 	if err != nil {
-		wsInternalError(c, err)
-		return
-	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
 		wsInternalError(c, err)
 		return
 	}
@@ -347,16 +353,10 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Update state in db and broadcast
-			chatMsg := ChatMessage{
-				UserID:    user.ID,
-				Message:   chatData.Data,
-				Timestamp: time.Now(),
-			}
-			result, err = insertChatMessageRoomStmt.Exec(room.ID, chatMsg)
+			chatMsg := ChatMessage{UserID: user.ID, Message: chatData.Data}
+			err = insertChatMessageStmt.QueryRow(room.ID, user.ID, chatMsg.Message).Scan(
+				&chatMsg.ID, &chatMsg.Timestamp)
 			if err != nil {
-				wsInternalError(c, err)
-				return
-			} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
 				wsInternalError(c, err)
 				return
 			}
@@ -373,7 +373,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Update state in db and broadcast
-			result, err = updateRoomStateStmt.Exec(room.ID,
+			result, err := updateRoomStateStmt.Exec(room.ID,
 				playerStateData.Data.Paused, playerStateData.Data.Speed,
 				playerStateData.Data.Timestamp, playerStateData.Data.LastAction)
 			if err != nil {
@@ -404,17 +404,15 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify other clients of the disconnect
-	chatMsg = ChatMessage{UserID: uuid.Nil, Timestamp: time.Now()}
+	chatMsg = ChatMessage{UserID: uuid.Nil}
 	if closeStatus == websocket.StatusNormalClosure || closeStatus == websocket.StatusGoingAway {
 		chatMsg.Message = user.ID.String() + " left"
 	} else {
 		chatMsg.Message = user.ID.String() + " was disconnected"
 	}
-	result, err = insertChatMessageRoomStmt.Exec(room.ID, chatMsg)
+	err = insertChatMessageStmt.QueryRow(room.ID, nil, chatMsg.Message).Scan(
+		&chatMsg.ID, &chatMsg.Timestamp)
 	if err != nil {
-		log.Println("Internal Server Error!", err)
-		return
-	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
 		log.Println("Internal Server Error!", err)
 		return
 	}
