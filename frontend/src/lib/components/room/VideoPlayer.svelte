@@ -19,6 +19,7 @@
 
   interface Props {
     video: File
+    name: string
     playerState: PlayerState
     onPlayerStateChange: (newState: PlayerState) => void
     fullscreenEl: Element
@@ -26,6 +27,7 @@
   }
   const {
     video,
+    name,
     playerState,
     onPlayerStateChange,
     fullscreenEl,
@@ -193,7 +195,10 @@
   <!-- TODO: Width of transiently passed videos are incorrect sometimes -->
   <!-- TODO: Controls are too wide on mobile in portrait -->
   {#if controlsVisible || settingsMenu}
-    <div class="controls" transition:fade>
+    <div class="controls top" transition:fade>
+      <span>{name}</span>
+    </div>
+    <div class="controls bottom" transition:fade>
       <Button onclick={handlePlayPause}>
         {#if paused}
           <Play weight="bold" size="16px" />
@@ -211,6 +216,7 @@
         onkeydown={handleTimeScrub}
         style:flex="1"
       />
+      <!-- TODO: The constantly changing width of this thing bugs me -->
       <span
         role="button"
         tabindex="0"
@@ -315,7 +321,6 @@
     background-color: rgba(0, 0, 0, 0.5);
     width: 100%;
     position: absolute;
-    bottom: 0;
     display: flex;
     align-items: center;
     > span {
@@ -337,6 +342,15 @@
         display: block;
       }
     }
+  }
+
+  .bottom {
+    bottom: 0;
+  }
+
+  .top {
+    top: 0;
+    overflow: hidden;
   }
 
   .settings-menu {

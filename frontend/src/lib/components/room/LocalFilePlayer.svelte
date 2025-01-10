@@ -66,7 +66,14 @@
       <Button onclick={handleSelectVideo}>Select local file</Button>
     </div>
   {:else}
-    <VideoPlayer {video} {playerState} {onPlayerStateChange} onStop={handleStop} {fullscreenEl} />
+    <VideoPlayer
+      {video}
+      name={targetName}
+      {playerState}
+      {onPlayerStateChange}
+      onStop={handleStop}
+      {fullscreenEl}
+    />
   {/if}
   {#if error}
     <h3 class="error-banner">Error: {error}<br />Reconnecting in 10s...</h3>
