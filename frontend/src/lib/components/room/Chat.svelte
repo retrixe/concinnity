@@ -2,8 +2,8 @@
   import { untrack } from 'svelte'
   import { PUBLIC_BACKEND_URL } from '$env/static/public'
   import type { ChatMessage } from '$lib/api/room'
-  import TextInput from '$lib/components/TextInput.svelte'
   import usernameCache from '$lib/state/usernameCache.svelte'
+  import Textarea from '../Textarea.svelte'
 
   const systemUUID = '00000000-0000-0000-0000-000000000000'
 
@@ -94,19 +94,24 @@
         <div>
           <h4>{getUsername(messageGroup.userId)} — {parseTimestamp(messageGroup.timestamp)}</h4>
           {#each messageGroup.messages as message}
-            <p>{message}</p>
+            <p>{message.trim()}</p>
           {/each}
         </div>
       {/if}
     {/each}
   </div>
   <!-- prettier-ignore -->
-  <TextInput
+  <Textarea
     {disabled}
     maxlength={2000}
     placeholder="Type message here..."
     bind:value={message}
-    onkeypress={e => e.key === 'Enter' && handleSendMessage() /* eslint-disable-line */}
+    onkeypress={(e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault()
+        handleSendMessage()
+      }
+    }}
   />
 </div>
 
@@ -116,7 +121,9 @@
     padding: 1rem;
     display: flex;
     flex-direction: column;
-    :global(input) {
+    :global(textarea) {
+      font-family: inherit;
+      resize: none;
       width: 100%;
     }
     @media screen and (width < 768px) {
@@ -130,6 +137,7 @@
   .messages {
     flex: 1;
     word-wrap: break-word;
+    white-space: pre-line;
     overflow-y: scroll;
     margin-bottom: 1rem;
     h4,
