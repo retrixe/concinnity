@@ -10,6 +10,7 @@
     isIncomingChatMessage,
     isIncomingPlayerStateMessage,
     isIncomingRoomInfoMessage,
+    isIncomingSubtitleMessage,
     MessageType,
     RoomType,
     type ChatMessage,
@@ -26,6 +27,7 @@
   let messages: ChatMessage[] = $state([])
   let playerState = $state(initialPlayerState)
   let roomInfo: RoomInfo | null = $state(null)
+  let subtitles: Record<string, string | null> = $state({})
   let transientVideo: File | null = $state(null)
 
   let ws: WebSocket | null = $state(null)
@@ -40,6 +42,10 @@
         // TODO (low): Replace messages.length with IDs
         if (message.data.length === 1) messages.push(message.data[0])
         else messages.push(...message.data.slice(messages.length))
+      } else if (isIncomingSubtitleMessage(message)) {
+        message.data.forEach(name => {
+          subtitles[name] = null
+        })
       } else if (isIncomingRoomInfoMessage(message)) {
         if (roomInfo === null) {
           roomInfo = message.data // On first run, we expect player state to come up afterwards
@@ -110,6 +116,7 @@
         bind:transientVideo
         {roomInfo}
         {playerState}
+        {subtitles}
         {onPlayerStateChange}
         error={wsError}
         fullscreenEl={containerEl}

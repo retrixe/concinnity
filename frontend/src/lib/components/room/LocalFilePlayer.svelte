@@ -10,6 +10,7 @@
     error: string | null
     roomInfo: RoomInfo
     playerState: PlayerState
+    subtitles: Record<string, string | null>
     onPlayerStateChange: (newState: PlayerState) => void
     transientVideo: File | null
     fullscreenEl: Element
@@ -20,6 +21,7 @@
     error,
     roomInfo,
     playerState,
+    subtitles,
     onPlayerStateChange,
     transientVideo = $bindable(null),
     fullscreenEl,
@@ -71,6 +73,7 @@
       name={targetName}
       {playerState}
       {onPlayerStateChange}
+      {subtitles}
       onStop={handleStop}
       {fullscreenEl}
     />

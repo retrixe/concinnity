@@ -76,6 +76,7 @@ export enum MessageType {
   Chat = 'chat',
   RoomInfo = 'room_info',
   PlayerState = 'player_state',
+  Subtitle = 'subtitle',
   Pong = 'pong',
 }
 
@@ -98,6 +99,11 @@ export interface IncomingRoomInfoMessage extends GenericMessage {
   data: RoomInfo
 }
 
+export interface IncomingSubtitleMessage extends GenericMessage {
+  type: MessageType.Subtitle
+  data: string[]
+}
+
 export const isIncomingChatMessage = (message: GenericMessage): message is IncomingChatMessage =>
   message.type === MessageType.Chat && Array.isArray((message as IncomingChatMessage).data)
 
@@ -108,3 +114,7 @@ export const isIncomingPlayerStateMessage = (
 export const isIncomingRoomInfoMessage = (
   message: GenericMessage,
 ): message is IncomingRoomInfoMessage => message.type === MessageType.RoomInfo
+
+export const isIncomingSubtitleMessage = (
+  message: GenericMessage,
+): message is IncomingSubtitleMessage => message.type === MessageType.Subtitle

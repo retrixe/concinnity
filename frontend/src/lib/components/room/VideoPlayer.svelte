@@ -22,6 +22,7 @@
     name: string
     playerState: PlayerState
     onPlayerStateChange: (newState: PlayerState) => void
+    subtitles: Record<string, string | null>
     fullscreenEl: Element
     onStop: () => void
   }
@@ -30,6 +31,7 @@
     name,
     playerState,
     onPlayerStateChange,
+    subtitles,
     fullscreenEl,
     onStop: handleStop,
   }: Props = $props()
@@ -46,8 +48,9 @@
   let muted = $state(false)
   let volume = $state(1)
   let playbackRate = $state(1)
+  let subtitle = $state<null | string>(null)
   let fullscreenElement = $state(null) as Element | null
-  let settingsMenu = $state<null | 'options' | 'speed'>(null)
+  let settingsMenu = $state<null | 'options' | 'speed' | 'subtitles'>(null)
   let autoplayNotif = $state(false)
 
   // Synchronise to incoming player state changes
@@ -101,9 +104,7 @@
     displayCurrentTime = !displayCurrentTime
   }
 
-  const handleMuteToggle = () => {
-    muted = !muted
-  }
+  const handleMuteToggle = () => (muted = !muted)
 
   const handleVolumeScrub = (e: KeyboardEvent) => {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
@@ -113,14 +114,9 @@
     }
   }
 
-  const handleSettingsOpen = () => {
-    if (settingsMenu === null) settingsMenu = 'options'
-    else settingsMenu = null
-  }
+  const handleSettingsOpen = () => (settingsMenu = settingsMenu === null ? 'options' : null)
 
-  const handleSettingsNav = (menu: typeof settingsMenu) => () => {
-    settingsMenu = menu
-  }
+  const handleSettingsNav = (menu: typeof settingsMenu) => () => (settingsMenu = menu)
 
   const handlePlayRateChange = (rate: number) => () => {
     playbackRate = rate
@@ -169,12 +165,8 @@
 <div
   role="presentation"
   class="player-container"
-  onmouseenter={() => {
-    controlsVisible = true
-  }}
-  onmouseleave={() => {
-    controlsVisible = false
-  }}
+  onmouseenter={() => (controlsVisible = true)}
+  onmouseleave={() => (controlsVisible = false)}
 >
   {#if autoplayNotif}
     <div role="presentation" class="autoplay" onclick={synchroniseToPlayerState}>
@@ -265,6 +257,18 @@
                 {rate}x
               </Button>
             {/each}
+          {:else if settingsMenu == 'subtitles'}
+            <Button onclick={handleSettingsNav('options')} class="highlight">
+              <CaretLeft weight="bold" size="16px" /> Back to options
+            </Button>
+            {#each Object.keys(subtitles) as sub}
+              <Button onclick={() => (subtitle = sub)} class={subtitle === sub ? 'highlight' : ''}>
+                <span>{sub}</span>
+              </Button>
+            {/each}
+            <Button onclick={() => (subtitle = null)} class={subtitle === null ? 'highlight' : ''}>
+              <span>None</span>
+            </Button>
           {:else}
             <Button onclick={synchroniseToPlayerState}>
               <span>Sync to others</span>
@@ -272,6 +276,10 @@
             <Button onclick={handleSettingsNav('speed')}>
               <span>Speed</span>
               <span>{playbackRate}x</span>
+            </Button>
+            <Button onclick={handleSettingsNav('subtitles')}>
+              <span>Subtitles</span>
+              <span>{subtitle ?? 'None'}</span>
             </Button>
           {/if}
         </div>
@@ -360,12 +368,16 @@
 
   .settings-menu {
     position: absolute;
+    right: calc(100% - 48px);
     bottom: 100%;
     background-color: rgba(0, 0, 0, 0.6);
-    min-width: 160px;
-    max-height: 50vh;
+    min-width: 180px;
+    max-width: 50vh;
+    max-height: 50vh; // TODO: Might exceed height of the video container
+    overflow-x: hidden;
     overflow-y: scroll;
     :global(button) {
+      gap: 1rem;
       width: calc(100% - 16px);
       display: flex;
       justify-content: space-between;
