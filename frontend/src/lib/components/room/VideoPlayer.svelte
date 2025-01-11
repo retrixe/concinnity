@@ -36,6 +36,7 @@
   const src = $derived(URL.createObjectURL(video))
 
   let controlsVisible = $state(false)
+  let lastLocalAction: Date | null = null
 
   let videoEl = $state(null) as HTMLVideoElement | null
   let paused = $state(true)
@@ -51,9 +52,9 @@
 
   // Synchronise to incoming player state changes
   const synchroniseToPlayerState = () => {
-    const currentTimeDelta = playerState.paused
-      ? 0
-      : Math.max((Date.now() - new Date(playerState.lastAction).getTime()) / 1000, 0)
+    const lastAction = new Date(playerState.lastAction).getTime()
+    if (lastLocalAction && lastLocalAction.getTime() > lastAction) return // Don't override local changes
+    const currentTimeDelta = playerState.paused ? 0 : Math.max((Date.now() - lastAction) / 1000, 0)
     currentTime = playerState.timestamp + currentTimeDelta
     playbackRate = playerState.speed
     if (playerState.paused) {
@@ -74,7 +75,8 @@
   // Send player state changes on pause or speed change
   // TODO: This doesn't interact with extensions like Video Speed Controller
   const handlePlayerStateChange = () => {
-    const time = new Date().toISOString()
+    lastLocalAction = new Date()
+    const time = lastLocalAction.toISOString()
     onPlayerStateChange({ paused, speed: playbackRate, timestamp: currentTime, lastAction: time })
   }
 
@@ -264,6 +266,9 @@
               </Button>
             {/each}
           {:else}
+            <Button onclick={synchroniseToPlayerState}>
+              <span>Sync to others</span>
+            </Button>
             <Button onclick={handleSettingsNav('speed')}>
               <span>Speed</span>
               <span>{playbackRate}x</span>
