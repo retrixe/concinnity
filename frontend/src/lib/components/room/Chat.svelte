@@ -15,7 +15,7 @@
 
   const { messages, onSendMessage, disabled }: Props = $props()
 
-  type ChatMessageGroup = Omit<ChatMessage, 'message'> & { messages: string[] }
+  type ChatMessageGroup = Omit<Omit<ChatMessage, 'message'>, 'id'> & { messages: string[] }
   const messageGroups = $derived(
     messages.reduce<ChatMessageGroup[]>((acc, { userId, timestamp, message }) => {
       const lastGroup = acc[acc.length - 1] as ChatMessageGroup | undefined
@@ -68,16 +68,15 @@
   }
 
   // Scroll to the bottom when messages are added
-  let messagesEl: HTMLDivElement | null = null
+  // TODO (low): This doesn't interact well with Chrome fullscreen. Maybe use flex column-reverse there?
+  let messagesEl = null as HTMLDivElement | null
   let isScrolledToBottom = $state(true)
   $effect.pre(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- false positive
     if (messages.length && messagesEl)
       isScrolledToBottom =
-        messagesEl.scrollHeight - messagesEl.clientHeight <= (messagesEl.scrollTop as number) + 1
+        messagesEl.scrollHeight - messagesEl.clientHeight <= messagesEl.scrollTop + 16
   })
   $effect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- false positive
     if (messages.length && messagesEl && isScrolledToBottom)
       messagesEl.scrollTop = messagesEl.scrollHeight - messagesEl.clientHeight
   })

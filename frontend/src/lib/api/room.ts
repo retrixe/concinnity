@@ -7,6 +7,7 @@ export enum RoomType {
 }
 
 export interface ChatMessage {
+  id: number
   userId: string
   message: string
   timestamp: string
