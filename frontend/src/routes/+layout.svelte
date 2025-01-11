@@ -2,16 +2,13 @@
   import { assets } from '$app/paths'
   import { page } from '$app/state'
   import type { Snippet } from 'svelte'
-  import type { LayoutData, PageData } from './$types'
+  import type { LayoutData } from './$types'
   import { invalidate } from '$app/navigation'
   import { PUBLIC_BACKEND_URL } from '$env/static/public'
 
   const { data, children }: { data: LayoutData; children: Snippet } = $props()
   const { username } = $derived(data)
-  const { title, description, image, noIndex } = $derived(page.data) as Omit<PageData, 'image'> & {
-    image?: string
-    noIndex?: boolean
-  }
+  const { title, description, image, imageLarge, noIndex } = $derived(page.data)
 
   async function logout(event: Event) {
     event.preventDefault()
@@ -39,6 +36,10 @@
   <meta property="og:url" content={page.url.origin + page.url.pathname} />
   <meta property="og:image" content={image ?? assets + '/favicon.png'} />
   <meta property="og:description" content={description} />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:card" content={imageLarge ? 'summary_large_image' : 'summary'} />
+  <meta name="twitter:image:src" content={image ?? assets + '/favicon.png'} />
+  <meta name="twitter:description" content={description} />
   <meta name="Description" content={description} />
   {#if noIndex}
     <meta name="robots" content="noindex,nofollow" />

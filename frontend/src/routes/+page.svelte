@@ -43,7 +43,7 @@
     <br />
     <p>
       Watch videos together with your friends using concinnity, a FOSS, lightweight and easy to use
-      website built by a developer looking for something better.
+      website.
     </p>
     <br />
     {#if username}
