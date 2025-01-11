@@ -25,6 +25,10 @@ var deleteRoomStmt *sql.Stmt
 var findChatMessagesByRoomStmt *sql.Stmt
 var insertChatMessageStmt *sql.Stmt
 
+var findSubtitlesByRoomStmt *sql.Stmt
+var findSubtitleStmt *sql.Stmt
+var insertSubtitleStmt *sql.Stmt
+
 const findUserByTokenQuery = "SELECT username, password, email, id, users.created_at " +
 	"AS user_created_at, verified, token, tokens.created_at AS token_created_at FROM tokens " +
 	"JOIN users ON tokens.user_id = users.id WHERE token = $1;"
@@ -56,6 +60,11 @@ const findChatMessagesByRoomQuery = "SELECT id, user_id, timestamp, message FROM
 const insertChatMessageQuery = `WITH rooms AS (
   UPDATE rooms SET modified_at = NOW() WHERE id = $1
 ) INSERT INTO chats (room_id, user_id, message) VALUES ($1, $2, $3) RETURNING id, timestamp;`
+
+const findSubtitlesByRoomQuery = "SELECT name FROM subtitles WHERE room_id = $1;"
+const findSubtitleQuery = "SELECT data FROM subtitles WHERE room_id = $1 AND name = $2;"
+const insertSubtitleQuery = `INSERT INTO subtitles (room_id, name, data) VALUES ($1, $2, $3)
+  ON CONFLICT DO UPDATE SET data = $3;`
 
 const initialiseDatabaseQuery = `BEGIN;
 
@@ -91,6 +100,13 @@ CREATE TABLE IF NOT EXISTS chats (
 	timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW());
 CREATE INDEX IF NOT EXISTS chats_room_id_idx ON chats (room_id);
 /* CREATE INDEX IF NOT EXISTS chats_timestamp_idx ON chats (timestamp); ORDER BY can't be so slow pfft */
+
+CREATE TABLE IF NOT EXISTS subtitles (
+  room_id VARCHAR(24) NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+  name VARCHAR(200) NOT NULL,
+	data TEXT NOT NULL,
+	PRIMARY KEY (room_id, name));
+CREATE INDEX IF NOT EXISTS subtitles_room_id_idx ON subtitles (room_id);
 
 COMMIT;`
 
@@ -171,6 +187,19 @@ func PrepareSqlStatements() {
 	if err != nil {
 		log.Panicln("Failed to prepare query to insert chat message!", err)
 	}
+
+	findSubtitlesByRoomStmt, err = db.Prepare(findSubtitlesByRoomQuery)
+	if err != nil {
+		log.Panicln("Failed to prepare query to find subtitles by room ID!", err)
+	}
+	insertSubtitleStmt, err = db.Prepare(insertSubtitleQuery)
+	if err != nil {
+		log.Panicln("Failed to prepare query to insert subtitle!", err)
+	}
+	findSubtitleStmt, err = db.Prepare(findSubtitleQuery)
+	if err != nil {
+		log.Panicln("Failed to prepare query to find subtitle!", err)
+	}
 }
 
 func FindChatMessagesByRoom(id string) ([]ChatMessage, error) {
@@ -191,4 +220,24 @@ func FindChatMessagesByRoom(id string) ([]ChatMessage, error) {
 		return nil, err
 	}
 	return chat, nil
+}
+
+func FindSubtitlesByRoom(roomId string) ([]string, error) {
+	names := make([]string, 0)
+	nameRows, err := findSubtitlesByRoomStmt.Query(roomId)
+	if err != nil {
+		return nil, err
+	}
+	defer nameRows.Close()
+	for nameRows.Next() {
+		var name string
+		if err = nameRows.Scan(&name); err != nil {
+			return nil, err
+		}
+		names = append(names, name)
+	}
+	if err = nameRows.Err(); err != nil {
+		return nil, err
+	}
+	return names, nil
 }

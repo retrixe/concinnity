@@ -98,6 +98,11 @@ func GetRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		handleInternalServerError(w, err)
 		return
 	}
+	room.Subtitles, err = FindSubtitlesByRoom(room.ID)
+	if err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
 	json.NewEncoder(w).Encode(room)
 }
 
@@ -123,8 +128,7 @@ func UpdateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Send message to all room members about the change
-	members, ok := roomMembers.Load(id)
-	if ok {
+	if members, ok := roomMembers.Load(id); ok {
 		members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
 			write <- RoomInfoMessageOutgoing{
 				Type: "room_info",
@@ -139,6 +143,60 @@ func UpdateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 			return true
 		})
 	}
+	w.Write([]byte("{\"success\":true}"))
+}
+
+func GetRoomSubtitleEndpoint(w http.ResponseWriter, r *http.Request) {
+	if user, _ := IsAuthenticatedHTTP(w, r); user == nil {
+		return
+	}
+
+	var subtitle string
+	err := findSubtitleStmt.QueryRow(r.PathValue("id"), r.URL.Query().Get("name")).Scan(&subtitle)
+	if errors.Is(err, sql.ErrNoRows) {
+		http.Error(w, errorJson("Subtitles or room not found!"), http.StatusNotFound)
+		return
+	} else if err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
+	w.Write([]byte(subtitle))
+}
+
+func CreateRoomSubtitleEndpoint(w http.ResponseWriter, r *http.Request) {
+	if user, _ := IsAuthenticatedHTTP(w, r); user == nil {
+		return
+	} else if r.URL.Query().Get("name") == "" {
+		http.Error(w, errorJson("Name cannot be empty!"), http.StatusBadRequest)
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
+		return
+	}
+
+	result, err := insertSubtitleStmt.Exec(r.PathValue("id"), r.URL.Query().Get("name"), body)
+	if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Class() == "23503" {
+		http.Error(w, errorJson("Room does not exist!"), http.StatusConflict)
+		return
+	} else if err != nil {
+		handleInternalServerError(w, err)
+		return
+	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
+		handleInternalServerError(w, err)
+		return
+	}
+
+	// Send message to all room members about the change
+	if members, ok := roomMembers.Load(r.PathValue("id")); ok {
+		members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
+			write <- SubtitleMessageOutgoing{Type: "subtitle", Data: []string{r.URL.Query().Get("name")}}
+			return true
+		})
+	}
+
 	w.Write([]byte("{\"success\":true}"))
 }
 
@@ -191,6 +249,11 @@ type ChatMessageOutgoing struct {
 	Data []ChatMessage `json:"data"`
 }
 
+type SubtitleMessageOutgoing struct {
+	Type string   `json:"type"` // subtitle
+	Data []string `json:"data"`
+}
+
 func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Impl note: If target/type change, client should trash currently playing file and reset state.
 	// Impl note: Room info updates are currently only sent on join and when the target/type change.
@@ -240,8 +303,13 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		wsInternalError(c, err)
 		return
 	}
+	subtitle, err := FindSubtitlesByRoom(room.ID)
+	if err != nil {
+		wsInternalError(c, err)
+		return
+	}
 
-	// Send current room info, state and chat
+	// Send current room info, state, chat and subtitle
 	err = wsjsonWriteWithTimeout(context.Background(), c, RoomInfoMessageOutgoing{
 		Type: "room_info",
 		Data: RoomInfoMessageOutgoingData{
@@ -269,8 +337,14 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		wsError(c, "Failed to write data!", websocket.StatusProtocolError)
 		return
 	}
-	err = wsjsonWriteWithTimeout(context.Background(), c, ChatMessageOutgoing{
-		Type: "chat", Data: chat})
+	err = wsjsonWriteWithTimeout(context.Background(), c,
+		ChatMessageOutgoing{Type: "chat", Data: chat})
+	if err != nil {
+		wsError(c, "Failed to write data!", websocket.StatusProtocolError)
+		return
+	}
+	err = wsjsonWriteWithTimeout(context.Background(), c,
+		SubtitleMessageOutgoing{Type: "subtitle", Data: subtitle})
 	if err != nil {
 		wsError(c, "Failed to write data!", websocket.StatusProtocolError)
 		return

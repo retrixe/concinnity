@@ -22,6 +22,8 @@ Endpoints:
 - GET /api/room/:id - Get the room's info
 - PATCH /api/room/:id - Update the room's info
 - WS /api/room/:id/join - Join an existing room
+- GET /api/room/:id/subtitle - Get a subtitle from the room
+- POST /api/room/:id/subtitle - Add a subtitle to the room
 
 You can be a member of up to 3 rooms at once.
 Rooms are deleted after 10 minutes of no members.
@@ -72,6 +74,8 @@ func main() {
 	http.HandleFunc("GET /api/room/{id}", GetRoomEndpoint)
 	http.HandleFunc("PATCH /api/room/{id}", UpdateRoomEndpoint)
 	http.HandleFunc("GET /api/room/{id}/join", JoinRoomEndpoint)
+	http.HandleFunc("GET /api/room/{id}/subtitle", GetRoomSubtitleEndpoint)
+	http.HandleFunc("POST /api/room/{id}/subtitle", CreateRoomSubtitleEndpoint)
 
 	port := "8000"
 	if os.Getenv("PORT") != "" {

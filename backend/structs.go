@@ -31,7 +31,8 @@ type Room struct {
 	Type       string    `json:"type"`
 	Target     string    `json:"target"`
 
-	Chat []ChatMessage `json:"chat,omitempty"`
+	Chat      []ChatMessage `json:"chat,omitempty"`
+	Subtitles []string      `json:"subtitles,omitempty"`
 
 	Paused     bool      `json:"paused"`
 	Speed      float64   `json:"speed"`
