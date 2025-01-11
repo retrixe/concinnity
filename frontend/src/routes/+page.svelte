@@ -64,17 +64,36 @@
       <h4 style:color="var(--error-color)">{status}</h4>
     {/if}
   </div>
-  <!-- TODO: Replace this image everywhere -->
-  <img
-    class="content"
-    alt="A screenshot of the concinnity website"
-    src="https://media.discordapp.net/attachments/588340346841464835/1321795849571008572/image.png?ex=67708410&is=676f3290&hm=7d04e84e556d48740664a0b5368009b0c21e73a4037b896a7920bbbb6cc7a0bf&=&format=webp&quality=lossless&width=1536&height=844"
-  />
+  <picture>
+    <source
+      type="image/webp"
+      srcset="https://f002.backblazeb2.com/file/mythic-storage-public/demo-dark.webp"
+      media="(prefers-color-scheme: dark)"
+    />
+    <source
+      type="image/webp"
+      srcset="https://f002.backblazeb2.com/file/mythic-storage-public/demo-light.webp"
+    />
+    <img
+      class="content"
+      alt="A screenshot of the concinnity website"
+      src="https://f002.backblazeb2.com/file/mythic-storage-public/demo-dark.webp"
+    />
+  </picture>
 </div>
 
 <style lang="scss">
+  img {
+    border-radius: 0.5rem;
+    filter: drop-shadow(0 0 1rem var(--primary-color));
+  }
+
+  picture {
+    display: contents;
+  }
+
   .content {
-    padding: 1rem;
+    margin: 1rem;
     @media screen and (min-width: 768px) {
       width: 45%;
       max-width: 640px;
