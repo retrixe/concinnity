@@ -149,6 +149,9 @@ func UpdateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 func GetRoomSubtitleEndpoint(w http.ResponseWriter, r *http.Request) {
 	if user, _ := IsAuthenticatedHTTP(w, r); user == nil {
 		return
+	} else if r.URL.Query().Get("name") == "" {
+		http.Error(w, errorJson("Name cannot be empty!"), http.StatusBadRequest)
+		return
 	}
 
 	var subtitle string
@@ -255,7 +258,7 @@ type SubtitleMessageOutgoing struct {
 }
 
 func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
-	// Impl note: If target/type change, client should trash currently playing file and reset state.
+	// Impl note: If target/type change, client should trash currently playing file, subs and reset state.
 	// Impl note: Room info updates are currently only sent on join and when the target/type change.
 
 	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{

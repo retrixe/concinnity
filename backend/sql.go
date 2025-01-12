@@ -49,9 +49,10 @@ const insertRoomQuery = "INSERT INTO rooms (id, type, target) " +
 const findRoomQuery = "SELECT id, created_at, modified_at, type, target, " +
 	"paused, speed, timestamp, last_action FROM rooms WHERE id = $1;"
 const findInactiveRoomsQuery = "SELECT id FROM rooms WHERE modified_at < NOW() - INTERVAL '10 minutes';"
-const updateRoomQuery = "UPDATE rooms SET type = $2, target = $3, modified_at = NOW(), " +
-	"paused = true, speed = 1, timestamp = 0, last_action = NOW() WHERE id = $1 " +
-	"RETURNING created_at, modified_at;"
+const updateRoomQuery = `WITH subs AS (DELETE FROM subtitles WHERE room_id = $1) UPDATE rooms
+  SET type = $2, target = $3, modified_at = NOW(),
+  paused = true, speed = 1, timestamp = 0, last_action = NOW() WHERE id = $1
+	RETURNING created_at, modified_at;`
 const updateRoomStateQuery = "UPDATE rooms SET " +
 	"paused = $2, speed = $3, timestamp = $4, last_action = $5, modified_at = NOW() WHERE id = $1;"
 const deleteRoomQuery = "DELETE FROM rooms WHERE id = $1;"
@@ -64,7 +65,7 @@ const insertChatMessageQuery = `WITH rooms AS (
 const findSubtitlesByRoomQuery = "SELECT name FROM subtitles WHERE room_id = $1;"
 const findSubtitleQuery = "SELECT data FROM subtitles WHERE room_id = $1 AND name = $2;"
 const insertSubtitleQuery = `INSERT INTO subtitles (room_id, name, data) VALUES ($1, $2, $3)
-  ON CONFLICT DO UPDATE SET data = $3;`
+  ON CONFLICT (room_id, name) DO UPDATE SET data = $3;`
 
 const initialiseDatabaseQuery = `BEGIN;
 
