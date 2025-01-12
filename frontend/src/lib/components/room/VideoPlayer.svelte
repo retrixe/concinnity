@@ -8,14 +8,20 @@
     Pause,
     PictureInPicture,
     Play,
+    Plus,
     SpeakerHigh,
     SpeakerLow,
     SpeakerX,
     Stop,
+    Subtitles,
+    SubtitlesSlash,
   } from 'phosphor-svelte'
   import type { PlayerState } from '$lib/api/room'
   import { stringifyDuration } from '$lib/utils/duration'
   import Button from '../Button.svelte'
+  import { PUBLIC_BACKEND_URL } from '$env/static/public'
+  import { page } from '$app/state'
+  import { openFileOrFiles } from '$lib/utils/openFile'
 
   interface Props {
     video: File
@@ -26,12 +32,13 @@
     fullscreenEl: Element
     onStop: () => void
   }
+  const id = page.params.id
   const {
     video,
     name,
     playerState,
     onPlayerStateChange,
-    subtitles,
+    subtitles = $bindable({}), // TODO: Remove the bindables and rework how this data flow works...
     fullscreenEl,
     onStop: handleStop,
   }: Props = $props()
@@ -48,7 +55,7 @@
   let muted = $state(false)
   let volume = $state(1)
   let playbackRate = $state(1)
-  let subtitle = $state<null | string>(null)
+  let subtitle = $state<null | [boolean, string]>(null)
   let fullscreenElement = $state(null) as Element | null
   let settingsMenu = $state<null | 'options' | 'speed' | 'subtitles'>(null)
   let autoplayNotif = $state(false)
@@ -123,6 +130,57 @@
     handlePlayerStateChange()
   }
 
+  const handleSubtitleSelect = (name: string) => () => (subtitle = [true, name])
+
+  const handleSubtitleToggle = () => {
+    subtitle = subtitle ? [!subtitle[0], subtitle[1]] : [true, Object.keys(subtitles)[0]]
+  }
+
+  // In case the subtitles are replaced at the parent component, we use $effect here
+  $effect(() => {
+    if (subtitle?.[0] && subtitles[subtitle[1]]) {
+      const name = subtitle[1]
+      subtitles[name] = ''
+      fetch(`${PUBLIC_BACKEND_URL}/api/room/${id}/subtitle?name=${encodeURIComponent(name)}`, {
+        headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
+      })
+        .then(res => {
+          if (res.ok) return res.text()
+          throw new Error('Failed to retrieve subtitles! ' + res.statusText)
+        })
+        .then(text => (subtitles[name] = text))
+        .catch((e: unknown) => {
+          console.error('Failed to retrieve subtitles!', e)
+          subtitles[name] = null
+        })
+    }
+  })
+
+  const subtitleUrl = $derived.by(() => {
+    if (!subtitle?.[0]) return null
+    const subs = subtitles[subtitle[1]]
+    return subs ? URL.createObjectURL(new Blob([subs], { type: 'text/plain' })) : null
+  })
+  $inspect(subtitleUrl) // FIXME: Display subtitles in video!
+
+  const handleSubtitleUpload = async () => {
+    const file = await openFileOrFiles()
+    if (!file) return
+    const filename = encodeURIComponent(file.name)
+    try {
+      const req = await fetch(`${PUBLIC_BACKEND_URL}/api/room/${id}/subtitle?name=${filename}`, {
+        method: 'POST',
+        body: file,
+        headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
+      })
+      if (!req.ok) {
+        console.error('Failed to upload subtitle!', req)
+      }
+    } catch (e: unknown) {
+      console.error('Failed to upload subtitle!', e)
+    }
+  }
+
   const handlePiPToggle = () => {
     // TODO: Implement the document picture-in-picture API
     // https://developer.chrome.com/docs/web-platform/document-picture-in-picture
@@ -147,15 +205,6 @@
     if (settingsMenu && outsideSettingsMenuBounds) settingsMenu = null
   }
 
-  // Video controls:
-  // - Play/Pause
-  // - Seek timeline
-  // - Time elapsed/time left (on tap)
-  // - Volume control (mute bottom + range)
-  // - Settings button (menu with speed control)
-  // - Stop playing current video
-  // - Picture-in-picture button
-  // - Fullscreen button
   // TODO: Implement tooltips
   // TODO: Implement kb controls for all when cursor in bounds (except stop, to avoid accidents)
 </script>
@@ -262,12 +311,16 @@
               <CaretLeft weight="bold" size="16px" /> Back to options
             </Button>
             {#each Object.keys(subtitles) as sub}
-              <Button onclick={() => (subtitle = sub)} class={subtitle === sub ? 'highlight' : ''}>
+              <Button
+                onclick={handleSubtitleSelect(sub)}
+                class={subtitle?.[0] && subtitle[1] === sub ? 'highlight' : ''}
+              >
                 <span>{sub}</span>
               </Button>
             {/each}
-            <Button onclick={() => (subtitle = null)} class={subtitle === null ? 'highlight' : ''}>
-              <span>None</span>
+            <Button onclick={handleSubtitleUpload}>
+              <span>Upload</span>
+              <Plus weight="bold" size="16px" />
             </Button>
           {:else}
             <Button onclick={synchroniseToPlayerState}>
@@ -279,7 +332,7 @@
             </Button>
             <Button onclick={handleSettingsNav('subtitles')}>
               <span>Subtitles</span>
-              <span>{subtitle ?? 'None'}</span>
+              <span>{subtitle?.[0] ? subtitle[1] : 'None'}</span>
             </Button>
           {/if}
         </div>
@@ -287,6 +340,15 @@
       <Button onclick={handleStop}>
         <Stop weight="bold" size="16px" />
       </Button>
+      {#if Object.keys(subtitles).length}
+        <Button onclick={handleSubtitleToggle}>
+          {#if subtitle?.[0]}
+            <Subtitles weight="bold" size="16px" />
+          {:else}
+            <SubtitlesSlash weight="bold" size="16px" />
+          {/if}
+        </Button>
+      {/if}
       <Button onclick={handlePiPToggle}>
         <PictureInPicture weight="bold" size="16px" />
       </Button>

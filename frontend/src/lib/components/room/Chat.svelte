@@ -47,7 +47,10 @@
       .map(id => `id=${id}`)
       .reduce((acc, val) => `${acc}&${val}`)
     fetch(`${PUBLIC_BACKEND_URL}/api/usernames?${query}`, { headers: { authorization } })
-      .then(res => res.json())
+      .then(res => {
+        if (res.ok) return res.json()
+        throw new Error('Failed to retrieve usernames! ' + res.statusText)
+      })
       .then((data: Record<string, string>) => {
         for (const [userId, username] of Object.entries(data)) usernameCache.set(userId, username)
       })

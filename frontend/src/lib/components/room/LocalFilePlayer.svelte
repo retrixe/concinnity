@@ -21,7 +21,7 @@
     error,
     roomInfo,
     playerState,
-    subtitles,
+    subtitles = $bindable({}),
     onPlayerStateChange,
     transientVideo = $bindable(null),
     fullscreenEl,
@@ -73,7 +73,7 @@
       name={targetName}
       {playerState}
       {onPlayerStateChange}
-      {subtitles}
+      bind:subtitles
       onStop={handleStop}
       {fullscreenEl}
     />

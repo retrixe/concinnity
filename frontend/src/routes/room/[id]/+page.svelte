@@ -52,6 +52,7 @@
         } else {
           Object.assign(roomInfo, message.data)
           playerState = initialPlayerState
+          subtitles = {}
         }
       } else if (isIncomingPlayerStateMessage(message)) {
         playerState = message.data
@@ -111,12 +112,13 @@
   {#if !roomInfo || roomInfo.type === RoomType.None}
     <RoomLanding bind:transientVideo error={wsError} connecting={wsInitialConnect} />
   {:else if roomInfo.type === RoomType.LocalFile}
+    <!-- TODO: What if the target name is the same? Not a case with our frontend, but with others -->
     {#key roomInfo.target}
       <LocalFilePlayer
         bind:transientVideo
         {roomInfo}
         {playerState}
-        {subtitles}
+        bind:subtitles
         {onPlayerStateChange}
         error={wsError}
         fullscreenEl={containerEl}
