@@ -16,12 +16,12 @@
     Subtitles,
     SubtitlesSlash,
   } from 'phosphor-svelte'
+  import ky from '$lib/api/ky'
   import type { PlayerState } from '$lib/api/room'
   import { stringifyDuration } from '$lib/utils/duration'
   import { openFileOrFiles } from '$lib/utils/openFile'
   import { srt2webvtt } from '$lib/utils/srt'
   import Button from '../Button.svelte'
-  import { PUBLIC_BACKEND_URL } from '$env/static/public'
   import { page } from '$app/state'
 
   interface Props {
@@ -142,13 +142,8 @@
     if (subtitle?.[0] && !subtitles[subtitle[1]]) {
       const name = subtitle[1]
       subtitles[name] = ''
-      fetch(`${PUBLIC_BACKEND_URL}/api/room/${id}/subtitle?name=${encodeURIComponent(name)}`, {
-        headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
-      })
-        .then(res => {
-          if (res.ok) return res.text()
-          throw new Error('Failed to retrieve subtitles! ' + res.statusText)
-        })
+      ky(`api/room/${id}/subtitle?name=${encodeURIComponent(name)}`)
+        .text()
         .then(text => (subtitles[name] = text))
         .catch((e: unknown) => {
           console.error('Failed to retrieve subtitles!', e)
@@ -169,15 +164,9 @@
     if (file.size > 1024 * 1024) return alert('Subtitles must be less than 1MB!')
     const filename = encodeURIComponent(file.name)
     try {
-      const req = await fetch(`${PUBLIC_BACKEND_URL}/api/room/${id}/subtitle?name=${filename}`, {
-        method: 'POST',
-        body: file,
-        headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
-      })
-      if (!req.ok) {
-        console.error('Failed to upload subtitle!', req)
-      }
+      await ky.post(`api/room/${id}/subtitle?name=${filename}`, { body: file })
     } catch (e: unknown) {
+      alert('Failed to upload subtitle!')
       console.error('Failed to upload subtitle!', e)
     }
   }

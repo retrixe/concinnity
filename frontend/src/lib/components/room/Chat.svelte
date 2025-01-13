@@ -1,6 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte'
-  import { PUBLIC_BACKEND_URL } from '$env/static/public'
+  import ky from '$lib/api/ky'
   import type { ChatMessage } from '$lib/api/room'
   import usernameCache from '$lib/state/usernameCache.svelte'
   import Textarea from '../Textarea.svelte'
@@ -41,17 +41,13 @@
     prevId = messages.length
     if (!userIds.size) return
 
-    const authorization = localStorage.getItem('concinnity:token') ?? ''
     const query = userIds
       .values()
       .map(id => `id=${id}`)
       .reduce((acc, val) => `${acc}&${val}`)
-    fetch(`${PUBLIC_BACKEND_URL}/api/usernames?${query}`, { headers: { authorization } })
-      .then(res => {
-        if (res.ok) return res.json()
-        throw new Error('Failed to retrieve usernames! ' + res.statusText)
-      })
-      .then((data: Record<string, string>) => {
+    ky(`api/usernames?${query}`)
+      .json<Record<string, string>>()
+      .then(data => {
         for (const [userId, username] of Object.entries(data)) usernameCache.set(userId, username)
       })
       .catch((e: unknown) => console.error('Failed to retrieve usernames!', e))

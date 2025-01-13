@@ -2,7 +2,7 @@
   import type { FormEventHandler } from 'svelte/elements'
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
-  import { PUBLIC_BACKEND_URL } from '$env/static/public'
+  import ky from '$lib/api/ky'
   import Button from '$lib/components/Button.svelte'
   import TextInput from '$lib/components/TextInput.svelte'
 
@@ -20,16 +20,10 @@
   async function handleCreateRoom() {
     status = ''
     try {
-      const req = await fetch(`${PUBLIC_BACKEND_URL}/api/room`, {
-        method: 'POST',
-        headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
-        body: JSON.stringify(roomId ? { id: roomId } : {}),
-      })
-      const data = (await req.json()) as { error?: string; id: string }
-      if (!req.ok) {
-        throw new Error(data.error ?? req.statusText)
-      }
-      goto(`/room/${data.id}`).catch(console.error)
+      const { id } = await ky
+        .post('api/room', { json: roomId ? { id: roomId } : {} })
+        .json<{ id: string }>()
+      goto(`/room/${id}`).catch(console.error)
       status = null
     } catch (e) {
       status = e instanceof Error ? e.message : typeof e === 'string' ? e : 'Failed to create room!'

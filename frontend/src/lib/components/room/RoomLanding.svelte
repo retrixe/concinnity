@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state'
-  import { PUBLIC_BACKEND_URL } from '$env/static/public'
+  import ky from '$lib/api/ky'
   import { RoomType } from '$lib/api/room'
   import { openFileOrFiles } from '$lib/utils/openFile'
   import Button from '../Button.svelte'
@@ -20,16 +20,10 @@
     if (!file) return
 
     try {
-      const req = await fetch(`${PUBLIC_BACKEND_URL}/api/room/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ type: RoomType.LocalFile, target: `${Date.now()}:${file.name}` }),
-        headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
+      await ky.patch(`api/room/${id}`, {
+        json: { type: RoomType.LocalFile, target: `${Date.now()}:${file.name}` },
       })
-      if (!req.ok) {
-        console.error('Failed to select local file!', req)
-      } else {
-        transientVideo = file
-      }
+      transientVideo = file
     } catch (e: unknown) {
       console.error('Failed to select local file!', e)
     }

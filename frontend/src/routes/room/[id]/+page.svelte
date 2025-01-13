@@ -112,7 +112,6 @@
   {#if !roomInfo || roomInfo.type === RoomType.None}
     <RoomLanding bind:transientVideo error={wsError} connecting={wsInitialConnect} />
   {:else if roomInfo.type === RoomType.LocalFile}
-    <!-- TODO: What if the target name is the same? Not a case with our frontend, but with others -->
     {#key roomInfo.target}
       <LocalFilePlayer
         bind:transientVideo
