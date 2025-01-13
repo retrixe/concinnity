@@ -166,6 +166,7 @@
   const handleSubtitleUpload = async () => {
     const file = await openFileOrFiles()
     if (!file) return
+    if (file.size > 1024 * 1024) return alert('Subtitles must be less than 1MB!')
     const filename = encodeURIComponent(file.name)
     try {
       const req = await fetch(`${PUBLIC_BACKEND_URL}/api/room/${id}/subtitle?name=${filename}`, {
