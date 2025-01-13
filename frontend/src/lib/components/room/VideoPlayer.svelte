@@ -18,10 +18,11 @@
   } from 'phosphor-svelte'
   import type { PlayerState } from '$lib/api/room'
   import { stringifyDuration } from '$lib/utils/duration'
+  import { openFileOrFiles } from '$lib/utils/openFile'
+  import { srt2webvtt } from '$lib/utils/srt'
   import Button from '../Button.svelte'
   import { PUBLIC_BACKEND_URL } from '$env/static/public'
   import { page } from '$app/state'
-  import { openFileOrFiles } from '$lib/utils/openFile'
 
   interface Props {
     video: File
@@ -38,7 +39,7 @@
     name,
     playerState,
     onPlayerStateChange,
-    subtitles = $bindable({}), // TODO: Remove the bindables and rework how this data flow works...
+    subtitles = $bindable(), // TODO: Remove the bindables and rework how this data flow works...
     fullscreenEl,
     onStop: handleStop,
   }: Props = $props()
@@ -138,7 +139,7 @@
 
   // In case the subtitles are replaced at the parent component, we use $effect here
   $effect(() => {
-    if (subtitle?.[0] && subtitles[subtitle[1]]) {
+    if (subtitle?.[0] && !subtitles[subtitle[1]]) {
       const name = subtitle[1]
       subtitles[name] = ''
       fetch(`${PUBLIC_BACKEND_URL}/api/room/${id}/subtitle?name=${encodeURIComponent(name)}`, {
@@ -159,9 +160,8 @@
   const subtitleUrl = $derived.by(() => {
     if (!subtitle?.[0]) return null
     const subs = subtitles[subtitle[1]]
-    return subs ? URL.createObjectURL(new Blob([subs], { type: 'text/plain' })) : null
+    return subs ? URL.createObjectURL(new Blob([srt2webvtt(subs)], { type: 'text/plain' })) : null
   })
-  $inspect(subtitleUrl) // FIXME: Display subtitles in video!
 
   const handleSubtitleUpload = async () => {
     const file = await openFileOrFiles()
@@ -235,7 +235,11 @@
     bind:volume
     bind:playbackRate
     playsinline
-  ></video>
+  >
+    {#if subtitleUrl}
+      <track kind="subtitles" src={subtitleUrl} label={subtitle?.[1] ?? 'N/A'} default />
+    {/if}
+  </video>
   <!-- TODO: Width of transiently passed videos are incorrect sometimes -->
   <!-- TODO: Controls are too wide on mobile in portrait -->
   {#if controlsVisible || settingsMenu}

@@ -21,7 +21,7 @@
     error,
     roomInfo,
     playerState,
-    subtitles = $bindable({}),
+    subtitles = $bindable(),
     onPlayerStateChange,
     transientVideo = $bindable(null),
     fullscreenEl,
