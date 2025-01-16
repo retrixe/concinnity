@@ -259,7 +259,7 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Create the account.
 	hash := HashPassword(data.Password, GenerateSalt())
 	uuid := uuid.New()
-	result, err := createUserStmt.Exec(data.Username, hash, data.Email, uuid)
+	result, err := createUserStmt.Exec(data.Username, hash, data.Email, uuid, true)
 	if err != nil {
 		handleInternalServerError(w, err)
 		return
