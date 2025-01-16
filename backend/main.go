@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/gorilla/handlers"
 	_ "github.com/lib/pq"
@@ -30,9 +31,10 @@ Rooms are deleted after 10 minutes of no members.
 */
 
 var db *sql.DB
-var config Config = Config{BasePath: "/"}
+var config Config = Config{BasePath: "/", Port: 8000}
 
 type Config struct {
+	Port          int    `json:"port"`
 	BasePath      string `json:"basePath"`
 	SecureCookies bool   `json:"secureCookies"`
 	DatabaseURL   string `json:"databaseUrl"`
@@ -77,7 +79,7 @@ func main() {
 	http.HandleFunc("GET /api/room/{id}/subtitle", GetRoomSubtitleEndpoint)
 	http.HandleFunc("POST /api/room/{id}/subtitle", CreateRoomSubtitleEndpoint)
 
-	port := "8000"
+	port := strconv.Itoa(config.Port)
 	if os.Getenv("PORT") != "" {
 		port = os.Getenv("PORT")
 	}
