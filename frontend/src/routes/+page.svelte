@@ -65,13 +65,22 @@
       media="(prefers-color-scheme: dark)"
     />
     <source
+      type="image/jpeg"
+      srcset="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-dark.jpg"
+      media="(prefers-color-scheme: dark)"
+    />
+    <source
       type="image/webp"
       srcset="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-light.webp"
+    />
+    <source
+      type="image/jpeg"
+      srcset="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-light.jpg"
     />
     <img
       class="content"
       alt="A screenshot of the concinnity website"
-      src="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-dark.webp"
+      src="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-dark.jpg"
     />
   </picture>
 </div>

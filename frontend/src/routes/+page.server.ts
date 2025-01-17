@@ -11,7 +11,7 @@ interface PageData {
 export const load: PageServerLoad<PageData> = () => {
   return {
     title: 'concinnity',
-    image: 'https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-dark.png',
+    image: 'https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-dark.webp',
     imageLarge: true,
     description:
       'Watch videos together with your friends using concinnity, a FOSS, lightweight and easy to use website.',
