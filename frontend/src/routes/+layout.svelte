@@ -3,7 +3,7 @@
   import { page } from '$app/state'
   import type { Snippet } from 'svelte'
   import type { LayoutData } from './$types'
-  import { invalidate } from '$app/navigation'
+  import { invalidate, onNavigate } from '$app/navigation'
   import ky from '$lib/api/ky'
 
   const { data, children }: { data: LayoutData; children: Snippet } = $props()
@@ -20,6 +20,17 @@
       console.error('Failed to logout!', error)
     }
   }
+
+  onNavigate(navigation => {
+    if (!('startViewTransition' in document)) return
+
+    return new Promise(resolve => {
+      document.startViewTransition(async () => {
+        resolve()
+        await navigation.complete
+      })
+    })
+  })
 </script>
 
 <svelte:head>

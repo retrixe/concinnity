@@ -61,17 +61,17 @@
   <picture>
     <source
       type="image/webp"
-      srcset="https://f002.backblazeb2.com/file/mythic-storage-public/demo-dark.webp"
+      srcset="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-dark.webp"
       media="(prefers-color-scheme: dark)"
     />
     <source
       type="image/webp"
-      srcset="https://f002.backblazeb2.com/file/mythic-storage-public/demo-light.webp"
+      srcset="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-light.webp"
     />
     <img
       class="content"
       alt="A screenshot of the concinnity website"
-      src="https://f002.backblazeb2.com/file/mythic-storage-public/demo-dark.webp"
+      src="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-dark.webp"
     />
   </picture>
 </div>
