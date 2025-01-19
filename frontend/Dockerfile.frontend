@@ -1,6 +1,15 @@
 FROM node:18
+
 WORKDIR /app
-COPY package*.json ./
-RUN npm install
+
 COPY . .
-CMD ["npm", "run", "dev"]
+
+RUN corepack enable
+
+RUN corepack prepare yarn@stable --activate
+
+RUN yarn install
+
+CMD ["yarn", "run", "dev"]
+
+
