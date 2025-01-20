@@ -6,10 +6,11 @@ COPY . .
 
 RUN corepack enable
 
-RUN corepack prepare yarn@stable --activate
-
 RUN yarn install
 
-CMD ["yarn", "run", "dev"]
+RUN yarn build
+
+CMD ["yarn", "preview", "--host", "--port", "5173"]
+
 
 
