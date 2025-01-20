@@ -26,7 +26,7 @@
       goto(`/room/${id}`).catch(console.error)
       status = null
     } catch (e) {
-      status = e instanceof Error ? e.message : typeof e === 'string' ? e : 'Failed to create room!'
+      status = e instanceof Error ? e.message : (e?.toString() ?? 'Failed to create room!')
     }
   }
 </script>

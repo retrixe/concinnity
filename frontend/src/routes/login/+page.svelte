@@ -44,7 +44,7 @@
       }
       return ''
     } catch (e: unknown) {
-      return e instanceof Error ? e.message : typeof e === 'string' ? e : `Failed to ${keyword}!`
+      return e instanceof Error ? e.message : (e?.toString() ?? `Failed to ${keyword}!`)
     }
   }
 </script>
