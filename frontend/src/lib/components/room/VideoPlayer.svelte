@@ -16,12 +16,13 @@
     Subtitles,
     SubtitlesSlash,
   } from 'phosphor-svelte'
+  import ky from '$lib/api/ky'
   import type { PlayerState } from '$lib/api/room'
   import { stringifyDuration } from '$lib/utils/duration'
-  import Button from '../Button.svelte'
-  import { PUBLIC_BACKEND_URL } from '$env/static/public'
-  import { page } from '$app/state'
   import { openFileOrFiles } from '$lib/utils/openFile'
+  import { srt2webvtt } from '$lib/utils/srt'
+  import Button from '../Button.svelte'
+  import { page } from '$app/state'
 
   interface Props {
     video: File
@@ -38,7 +39,7 @@
     name,
     playerState,
     onPlayerStateChange,
-    subtitles = $bindable({}), // TODO: Remove the bindables and rework how this data flow works...
+    subtitles = $bindable(), // TODO: Remove the bindables and rework how this data flow works...
     fullscreenEl,
     onStop: handleStop,
   }: Props = $props()
@@ -138,16 +139,11 @@
 
   // In case the subtitles are replaced at the parent component, we use $effect here
   $effect(() => {
-    if (subtitle?.[0] && subtitles[subtitle[1]]) {
+    if (subtitle?.[0] && !subtitles[subtitle[1]]) {
       const name = subtitle[1]
       subtitles[name] = ''
-      fetch(`${PUBLIC_BACKEND_URL}/api/room/${id}/subtitle?name=${encodeURIComponent(name)}`, {
-        headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
-      })
-        .then(res => {
-          if (res.ok) return res.text()
-          throw new Error('Failed to retrieve subtitles! ' + res.statusText)
-        })
+      ky(`api/room/${id}/subtitle?name=${encodeURIComponent(name)}`)
+        .text()
         .then(text => (subtitles[name] = text))
         .catch((e: unknown) => {
           console.error('Failed to retrieve subtitles!', e)
@@ -159,24 +155,18 @@
   const subtitleUrl = $derived.by(() => {
     if (!subtitle?.[0]) return null
     const subs = subtitles[subtitle[1]]
-    return subs ? URL.createObjectURL(new Blob([subs], { type: 'text/plain' })) : null
+    return subs ? URL.createObjectURL(new Blob([srt2webvtt(subs)], { type: 'text/plain' })) : null
   })
-  $inspect(subtitleUrl) // FIXME: Display subtitles in video!
 
   const handleSubtitleUpload = async () => {
     const file = await openFileOrFiles()
     if (!file) return
+    if (file.size > 1024 * 1024) return alert('Subtitles must be less than 1MB!')
     const filename = encodeURIComponent(file.name)
     try {
-      const req = await fetch(`${PUBLIC_BACKEND_URL}/api/room/${id}/subtitle?name=${filename}`, {
-        method: 'POST',
-        body: file,
-        headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
-      })
-      if (!req.ok) {
-        console.error('Failed to upload subtitle!', req)
-      }
+      await ky.post(`api/room/${id}/subtitle?name=${filename}`, { body: file })
     } catch (e: unknown) {
+      alert('Failed to upload subtitle!')
       console.error('Failed to upload subtitle!', e)
     }
   }
@@ -234,7 +224,11 @@
     bind:volume
     bind:playbackRate
     playsinline
-  ></video>
+  >
+    {#if subtitleUrl}
+      <track kind="subtitles" src={subtitleUrl} label={subtitle?.[1] ?? 'N/A'} default />
+    {/if}
+  </video>
   <!-- TODO: Width of transiently passed videos are incorrect sometimes -->
   <!-- TODO: Controls are too wide on mobile in portrait -->
   {#if controlsVisible || settingsMenu}

@@ -174,9 +174,12 @@ func CreateRoomSubtitleEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
+	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 1024*1024)) // 1 MB limit
+	if err != nil || len(body) == 0 {
 		http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
+		return
+	} else if len(body) == 1024*1024 {
+		http.Error(w, errorJson("Body too large!"), http.StatusRequestEntityTooLarge)
 		return
 	}
 

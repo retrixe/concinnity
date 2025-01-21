@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto, invalidate } from '$app/navigation'
   import { page } from '$app/state'
-  import { PUBLIC_BACKEND_URL } from '$env/static/public'
+  import ky from '$lib/api/ky'
   import Box from '$lib/components/Box.svelte'
   import Button from '$lib/components/Button.svelte'
   import TextInput from '$lib/components/TextInput.svelte'
@@ -36,23 +36,15 @@
 
   async function handleLoginRegister(keyword: 'login' | 'register'): Promise<string> {
     try {
-      const req = await fetch(`${PUBLIC_BACKEND_URL}/api/${keyword}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(keyword === 'login' ? login : register),
-      })
-      const res = (await req.json()) as { token: string; username: string; error?: string }
-      if (!req.ok) {
-        throw new Error(res.error ?? `Failed to ${keyword}! Error: ${req.statusText}`)
-      }
+      const res = await ky
+        .post(`api/${keyword}`, { json: keyword === 'login' ? login : register })
+        .json<{ token: string; username: string }>()
       if (keyword === 'login') {
         localStorage.setItem('concinnity:token', res.token)
       }
       return ''
     } catch (e: unknown) {
-      return e instanceof Error ? e.message : typeof e === 'string' ? e : `Failed to ${keyword}!`
+      return e instanceof Error ? e.message : (e?.toString() ?? `Failed to ${keyword}!`)
     }
   }
 </script>

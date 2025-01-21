@@ -3,8 +3,8 @@
   import { page } from '$app/state'
   import type { Snippet } from 'svelte'
   import type { LayoutData } from './$types'
-  import { invalidate } from '$app/navigation'
-  import { PUBLIC_BACKEND_URL } from '$env/static/public'
+  import { invalidate, onNavigate } from '$app/navigation'
+  import ky from '$lib/api/ky'
 
   const { data, children }: { data: LayoutData; children: Snippet } = $props()
   const { username } = $derived(data)
@@ -13,20 +13,24 @@
   async function logout(event: Event) {
     event.preventDefault()
     try {
-      const req = await fetch(`${PUBLIC_BACKEND_URL}/api/logout`, {
-        method: 'POST',
-        headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
-      })
-      if (!req.ok) {
-        const error = (await req.json()) as { error?: string }
-        throw new Error(error.error ?? req.statusText)
-      }
+      await ky.post('api/logout')
       localStorage.removeItem('concinnity:token')
       invalidate('app:auth').catch(console.error)
     } catch (error) {
       console.error('Failed to logout!', error)
     }
   }
+
+  onNavigate(navigation => {
+    if (!('startViewTransition' in document)) return
+
+    return new Promise(resolve => {
+      document.startViewTransition(async () => {
+        resolve()
+        await navigation.complete
+      })
+    })
+  })
 </script>
 
 <svelte:head>

@@ -1153,6 +1153,7 @@ __metadata:
     eslint-plugin-svelte: "npm:^2.46.1"
     globals: "npm:^15.14.0"
     husky: "npm:^9.1.7"
+    ky: "npm:^1.7.4"
     phosphor-svelte: "npm:^3.0.1"
     prettier: "npm:^3.3.2"
     prettier-plugin-svelte: "npm:^3.2.6"
@@ -2702,6 +2703,13 @@ __metadata:
   version: 0.35.0
   resolution: "known-css-properties@npm:0.35.0"
   checksum: 10c0/04a4a2859d62670bb25b5b28091a1f03f6f0d3298a5ed3e7476397c5287b98c434f6dd9c004a0c67a53b7f21acc93f83c972e98c122f568d4d0bd21fd2b90fb6
+  languageName: node
+  linkType: hard
+
+"ky@npm:^1.7.4":
+  version: 1.7.4
+  resolution: "ky@npm:1.7.4"
+  checksum: 10c0/8b28b85cbee6d3e073ff796b92661f4bf155ec9b9a131411de1c34fb2f89f8507e67ff3df369e3c6d18714134774e8735e88cba72b19d005a09112b800d14474
   languageName: node
   linkType: hard
 

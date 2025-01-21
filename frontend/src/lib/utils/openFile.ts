@@ -3,6 +3,7 @@ interface FileWithHandle extends File {
   handle?: FileSystemFileHandle
 }
 
+// TODO: Restrict file types for videos and subtitles.
 export function openFileOrFiles(multiple: true): Promise<FileWithHandle[] | undefined>
 export function openFileOrFiles(multiple?: false): Promise<FileWithHandle | undefined>
 export async function openFileOrFiles(multiple = false) {

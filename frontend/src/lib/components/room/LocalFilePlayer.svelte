@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state'
-  import { PUBLIC_BACKEND_URL } from '$env/static/public'
+  import ky from '$lib/api/ky'
   import { RoomType, type PlayerState, type RoomInfo } from '$lib/api/room'
   import { openFileOrFiles } from '$lib/utils/openFile'
   import Button from '../Button.svelte'
@@ -21,7 +21,7 @@
     error,
     roomInfo,
     playerState,
-    subtitles = $bindable({}),
+    subtitles = $bindable(),
     onPlayerStateChange,
     transientVideo = $bindable(null),
     fullscreenEl,
@@ -45,19 +45,10 @@
     }
   }
 
-  const handleStop = async () => {
-    try {
-      const req = await fetch(`${PUBLIC_BACKEND_URL}/api/room/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ type: RoomType.None, target: '' }),
-        headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
-      })
-      if (!req.ok) {
-        console.error('Failed to remove video from room!', req)
-      }
-    } catch (e: unknown) {
-      console.error('Failed to remove video from room!', e)
-    }
+  const handleStop = () => {
+    ky.patch(`api/room/${id}`, { json: { type: RoomType.None, target: '' } }).catch((e: unknown) =>
+      console.error('Failed to stop video!', e),
+    )
   }
 </script>
 

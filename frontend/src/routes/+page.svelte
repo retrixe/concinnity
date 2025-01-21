@@ -2,7 +2,7 @@
   import type { FormEventHandler } from 'svelte/elements'
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
-  import { PUBLIC_BACKEND_URL } from '$env/static/public'
+  import ky from '$lib/api/ky'
   import Button from '$lib/components/Button.svelte'
   import TextInput from '$lib/components/TextInput.svelte'
 
@@ -20,19 +20,13 @@
   async function handleCreateRoom() {
     status = ''
     try {
-      const req = await fetch(`${PUBLIC_BACKEND_URL}/api/room`, {
-        method: 'POST',
-        headers: { authorization: localStorage.getItem('concinnity:token') ?? '' },
-        body: JSON.stringify(roomId ? { id: roomId } : {}),
-      })
-      const data = (await req.json()) as { error?: string; id: string }
-      if (!req.ok) {
-        throw new Error(data.error ?? req.statusText)
-      }
-      goto(`/room/${data.id}`).catch(console.error)
+      const { id } = await ky
+        .post('api/room', { json: roomId ? { id: roomId } : {} })
+        .json<{ id: string }>()
+      goto(`/room/${id}`).catch(console.error)
       status = null
     } catch (e) {
-      status = e instanceof Error ? e.message : typeof e === 'string' ? e : 'Failed to create room!'
+      status = e instanceof Error ? e.message : (e?.toString() ?? 'Failed to create room!')
     }
   }
 </script>
@@ -67,17 +61,26 @@
   <picture>
     <source
       type="image/webp"
-      srcset="https://f002.backblazeb2.com/file/mythic-storage-public/demo-dark.webp"
+      srcset="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-dark.webp"
+      media="(prefers-color-scheme: dark)"
+    />
+    <source
+      type="image/jpeg"
+      srcset="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-dark.jpg"
       media="(prefers-color-scheme: dark)"
     />
     <source
       type="image/webp"
-      srcset="https://f002.backblazeb2.com/file/mythic-storage-public/demo-light.webp"
+      srcset="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-light.webp"
+    />
+    <source
+      type="image/jpeg"
+      srcset="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-light.jpg"
     />
     <img
       class="content"
       alt="A screenshot of the concinnity website"
-      src="https://f002.backblazeb2.com/file/mythic-storage-public/demo-dark.webp"
+      src="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-dark.jpg"
     />
   </picture>
 </div>

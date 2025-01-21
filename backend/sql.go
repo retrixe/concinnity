@@ -39,7 +39,7 @@ const findUserByUsernameQuery = "SELECT username, password, email, id, created_a
 const findUserByEmailQuery = "SELECT username, password, email, id, created_at, verified FROM users " +
 	"WHERE email = $1 LIMIT 1;"
 const findUsernamesByIdQuery = "SELECT id, username FROM users WHERE id = ANY($1);"
-const createUserQuery = "INSERT INTO users (username, password, email, id) VALUES ($1, $2, $3, $4);"
+const createUserQuery = "INSERT INTO users (username, password, email, id, verified) VALUES ($1, $2, $3, $4, $5);"
 
 const insertTokenQuery = "INSERT INTO tokens (token, created_at, user_id) VALUES ($1, $2, $3);"
 const deleteTokenQuery = "DELETE FROM tokens WHERE token = $1;"
