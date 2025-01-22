@@ -5,7 +5,8 @@
   import type { LayoutData } from './$types'
   import { invalidate, onNavigate } from '$app/navigation'
   import ky from '$lib/api/ky'
-  import GitHubImage from '../../static/github-mark.svg?component'
+  import GitHubImage from '$lib/assets/GitHubImage.svelte'
+  
 
   const { data, children }: { data: LayoutData; children: Snippet } = $props()
   const { username } = $derived(data)
