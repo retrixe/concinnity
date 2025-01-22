@@ -63,8 +63,8 @@
     <a href="/login" class="unstyled-link">Login</a>
     <div class="divider"></div>
     <a href="/login" class="unstyled-link">Sign Up</a>
-    <div class="divider"></div>
     {#if page.url.pathname === '/'}
+      <div class="divider"></div>
       <a
         href="https://github.com/retrixe/concinnity"
         target="_blank"
