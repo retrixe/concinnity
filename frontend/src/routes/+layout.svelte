@@ -104,6 +104,19 @@
       }
     }
 
+    input {
+      font: inherit;
+    }
+    select {
+      font: inherit;
+    }
+    button {
+      font: inherit;
+    }
+    textarea {
+      font: inherit;
+    }
+
     body {
       font-family: system-ui, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue',
         Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
@@ -121,6 +134,7 @@
   }
 
   .top-bar {
+    z-index: 100;
     height: 4rem;
     position: fixed;
     display: flex;
