@@ -69,7 +69,7 @@
         href="https://github.com/retrixe/concinnity"
         target="_blank"
         rel="noopener noreferrer"
-        class="unstyled-link last-link"
+        class="unstyled-link"
       >
         <GitHubImage className="github-image" viewBox="0 0 98 96" height="28" width="28" />
       </a>
