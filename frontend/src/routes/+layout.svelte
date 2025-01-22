@@ -5,6 +5,7 @@
   import type { LayoutData } from './$types'
   import { invalidate, onNavigate } from '$app/navigation'
   import ky from '$lib/api/ky'
+  import GitHubImage from '$lib/assets/GitHubImage.svelte'
 
   const { data, children }: { data: LayoutData; children: Snippet } = $props()
   const { username } = $derived(data)
@@ -62,6 +63,17 @@
     <a href="/login" class="unstyled-link">Login</a>
     <div class="divider"></div>
     <a href="/login" class="unstyled-link">Sign Up</a>
+    {#if page.url.pathname === '/'}
+      <div class="divider"></div>
+      <a
+        href="https://github.com/retrixe/concinnity"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="unstyled-link"
+      >
+        <GitHubImage className="github-image" viewBox="0 0 98 96" height="28" width="28" />
+      </a>
+    {/if}
   {:else}
     <a href="/" class="unstyled-link">Home</a>
   {/if}
@@ -91,6 +103,9 @@
         --surface-color: #0e0e10; /* Jet black */
         --color: #ffffff;
         --divider-color: #666;
+      }
+      .github-image {
+        filter: brightness(0) invert(1);
       }
     }
 
