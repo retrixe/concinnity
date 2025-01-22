@@ -1,17 +1,15 @@
-<script>
-  export let className = '';
-  export let height = '96';
-  export let width = '98';
-  export let viewBox = '0 0 98 96';
+<script lang="ts">
+  import type { SvelteHTMLElements } from 'svelte/elements'
+  const {
+    className,
+    height = '96',
+    width = '98',
+    viewBox = '0 0 98 96',
+    ...rest
+  }: SvelteHTMLElements['svg'] = $props()
 </script>
 
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  height={height}
-  width={width}
-  viewBox={viewBox}
-  class={className}
->
+<svg xmlns="http://www.w3.org/2000/svg" {height} {width} {viewBox} class={className} {...rest}>
   <path
     fill-rule="evenodd"
     clip-rule="evenodd"

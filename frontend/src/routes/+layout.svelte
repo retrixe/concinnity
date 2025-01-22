@@ -6,7 +6,6 @@
   import { invalidate, onNavigate } from '$app/navigation'
   import ky from '$lib/api/ky'
   import GitHubImage from '$lib/assets/GitHubImage.svelte'
-  
 
   const { data, children }: { data: LayoutData; children: Snippet } = $props()
   const { username } = $derived(data)
@@ -65,14 +64,16 @@
     <div class="divider"></div>
     <a href="/login" class="unstyled-link">Sign Up</a>
     <div class="divider"></div>
-    <a
-      href="https://github.com/retrixe"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="unstyled-link last-link"
-    >
-      <GitHubImage class="github-image" viewBox="0 0 98 96" height="28" width="28" />
-    </a>
+    {#if page.url.pathname === '/'}
+      <a
+        href="https://github.com/retrixe/concinnity"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="unstyled-link last-link"
+      >
+        <GitHubImage className="github-image" viewBox="0 0 98 96" height="28" width="28" />
+      </a>
+    {/if}
   {:else}
     <a href="/" class="unstyled-link">Home</a>
   {/if}
