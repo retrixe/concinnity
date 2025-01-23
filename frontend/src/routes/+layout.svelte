@@ -157,7 +157,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--divider-color);
     h1 {
       font-size: 1.5rem;

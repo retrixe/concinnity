@@ -60,6 +60,11 @@
   </div>
   <picture>
     <source
+      type="image/avif"
+      srcset="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-dark.avif"
+      media="(prefers-color-scheme: dark)"
+    />
+    <source
       type="image/webp"
       srcset="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-dark.webp"
       media="(prefers-color-scheme: dark)"
@@ -68,6 +73,10 @@
       type="image/jpeg"
       srcset="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-dark.jpg"
       media="(prefers-color-scheme: dark)"
+    />
+    <source
+      type="image/avif"
+      srcset="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-light.avif"
     />
     <source
       type="image/webp"
@@ -80,7 +89,8 @@
     <img
       class="content"
       alt="A screenshot of the concinnity website"
-      src="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-dark.jpg"
+      src="https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-light.jpg"
+      style="aspect-ratio: 16 / 10"
     />
   </picture>
 </div>
