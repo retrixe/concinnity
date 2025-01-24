@@ -11,6 +11,7 @@
     isIncomingPlayerStateMessage,
     isIncomingRoomInfoMessage,
     isIncomingSubtitleMessage,
+    isIncomingTypingIndicator,
     MessageType,
     RoomType,
     type ChatMessage,
@@ -29,10 +30,12 @@
   let roomInfo: RoomInfo | null = $state(null)
   let subtitles: Record<string, string | null> = $state({})
   let transientVideo: File | null = $state(null)
+  let typingStates: Record<string, boolean>[] = $state([])
 
   let ws: WebSocket | null = $state(null)
   let wsError: string | null = $state(null)
   const wsInitialConnect = $derived((ws === null && !wsError) || roomInfo === null)
+  const { username } = $derived(page.data)
 
   const onMessage = (event: MessageEvent) => {
     try {
@@ -56,6 +59,17 @@
         }
       } else if (isIncomingPlayerStateMessage(message)) {
         playerState = message.data
+      } else if (isIncomingTypingIndicator(message)) {
+        const incomingKey = Object.keys(message.data)[0]
+        const existingIndex = typingStates.findIndex(item => {
+          const key = Object.keys(item)[0]
+          return key === incomingKey
+        })
+        if (existingIndex !== -1) {
+          typingStates[existingIndex] = message.data
+        } else {
+          typingStates.push(message.data)
+        }
       } else if (message.type !== MessageType.Pong) {
         console.warn('Unhandled message type!', message)
       }
@@ -132,6 +146,11 @@
     onSendMessage={(message: string) => {
       ws?.send(JSON.stringify({ type: 'chat', data: message }))
     }}
+    onTyping={(username: string, isTyping: boolean) => {
+      ws?.send(JSON.stringify({ type: 'typing', data: { [username]: isTyping } }))
+    }}
+    {username}
+    {typingStates}
   />
 </div>
 
