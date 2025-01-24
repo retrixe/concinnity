@@ -225,6 +225,11 @@ type PingPongMessageBi struct {
 	Timestamp int    `json:"timestamp"`
 }
 
+type TypingIndicatorMessageBi struct {
+	Type string `json:"type"` 
+	Data map[string]bool `json:"data"`
+}
+
 type PlayerStateMessageBi struct {
 	Type string                 `json:"type"` // player_state
 	Data PlayerStateMessageData `json:"data"`
@@ -471,6 +476,22 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 					return true // Skip current session
 				}
 				write <- playerStateData
+				return true
+			})
+		} else if msgData.Type == "typing" {
+			var typingData TypingIndicatorMessageBi
+			err = json.Unmarshal(data, &typingData)
+			log.Printf("Received data: %s", data)		
+
+			if err != nil {
+				wsError(c, "Error while sending typing indicators!", websocket.StatusUnsupportedData)
+				continue
+			}
+			members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
+				if write == writeChannel {
+					return true // Skip current session
+				}
+				write <- typingData
 				return true
 			})
 		} else if msgData.Type == "ping" {
