@@ -4,16 +4,20 @@
   import type { ChatMessage } from '$lib/api/room'
   import usernameCache from '$lib/state/usernameCache.svelte'
   import Textarea from '../Textarea.svelte'
+  import TypingIndicator from './TypingIndicator.svelte'
 
   const systemUUID = '00000000-0000-0000-0000-000000000000'
 
   interface Props {
+    username: string
     disabled?: boolean
     messages: ChatMessage[]
+    typingStates: Record<string, boolean>[]
     onSendMessage: (message: string) => void
+    onTyping: (username: string, isTyping: boolean) => void
   }
 
-  const { messages, onSendMessage, disabled }: Props = $props()
+  const { typingStates, username, messages, disabled, onSendMessage, onTyping }: Props = $props()
 
   type ChatMessageGroup = Omit<Omit<ChatMessage, 'message'>, 'id'> & { messages: string[] }
   const messageGroups = $derived(
@@ -26,6 +30,15 @@
       return acc
     }, []),
   )
+  const typingUsers = $derived(
+    typingStates
+      .filter(state => Object.values(state)[0]) // Keep only active users (true)
+      .map(state => Object.keys(state)[0]), // Extract the username
+  )
+  $effect(() => {
+    $inspect(messageGroups)
+    $inspect(typingUsers)
+  })
 
   // Fetch usernames for user IDs
   let prevId = 0
@@ -63,7 +76,17 @@
   let message = $state('')
   const handleSendMessage = () => {
     onSendMessage(message.trim())
+    onTyping(username, false)
     message = ''
+  }
+  let typingTimeout: ReturnType<typeof setTimeout>
+  const handleTyping = () => {
+    onTyping(username, true)
+    clearTimeout(typingTimeout)
+    typingTimeout = setTimeout(() => {
+      console.log(`${username} stopped typing.`)
+      onTyping(username, false) // Reset typing state.
+    }, 5000)
   }
 
   // Scroll to the bottom when messages are added
@@ -104,6 +127,7 @@
     maxlength={2000}
     placeholder="Type message here..."
     bind:value={message}
+    oninput={handleTyping}
     onkeypress={(e: KeyboardEvent) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
@@ -111,6 +135,7 @@
       }
     }}
   />
+  <TypingIndicator {typingUsers} />
 </div>
 
 <style lang="scss">
