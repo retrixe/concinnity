@@ -5,69 +5,8 @@ import (
 	"log"
 )
 
-var findUserByTokenStmt *sql.Stmt
-var findUserByNameOrEmailStmt *sql.Stmt
-var findUserByUsernameStmt *sql.Stmt
-var findUserByEmailStmt *sql.Stmt
-var findUsernamesByIdStmt *sql.Stmt
-var createUserStmt *sql.Stmt
-
-var insertTokenStmt *sql.Stmt
-var deleteTokenStmt *sql.Stmt
-
-var insertRoomStmt *sql.Stmt
-var findRoomStmt *sql.Stmt
-var findInactiveRoomsStmt *sql.Stmt
-var updateRoomStmt *sql.Stmt
-var updateRoomStateStmt *sql.Stmt
-var deleteRoomStmt *sql.Stmt
-
-var findChatMessagesByRoomStmt *sql.Stmt
-var insertChatMessageStmt *sql.Stmt
-
-var findSubtitlesByRoomStmt *sql.Stmt
-var findSubtitleStmt *sql.Stmt
-var insertSubtitleStmt *sql.Stmt
-
-const findUserByTokenQuery = "SELECT username, password, email, id, users.created_at " +
-	"AS user_created_at, verified, token, tokens.created_at AS token_created_at FROM tokens " +
-	"JOIN users ON tokens.user_id = users.id WHERE token = $1;"
-const findUserByNameOrEmailQuery = "SELECT username, password, email, id, created_at, verified FROM users " +
-	"WHERE username = $1 OR email = $2 LIMIT 1;"
-const findUserByUsernameQuery = "SELECT username, password, email, id, created_at, verified FROM users " +
-	"WHERE username = $1 LIMIT 1;"
-const findUserByEmailQuery = "SELECT username, password, email, id, created_at, verified FROM users " +
-	"WHERE email = $1 LIMIT 1;"
-const findUsernamesByIdQuery = "SELECT id, username FROM users WHERE id = ANY($1);"
-const createUserQuery = "INSERT INTO users (username, password, email, id, verified) VALUES ($1, $2, $3, $4, $5);"
-
-const insertTokenQuery = "INSERT INTO tokens (token, created_at, user_id) VALUES ($1, $2, $3);"
-const deleteTokenQuery = "DELETE FROM tokens WHERE token = $1;"
-
-const insertRoomQuery = "INSERT INTO rooms (id, type, target) " +
-	"VALUES ($1, $2, $3);"
-const findRoomQuery = "SELECT id, created_at, modified_at, type, target, " +
-	"paused, speed, timestamp, last_action FROM rooms WHERE id = $1;"
-const findInactiveRoomsQuery = "SELECT id FROM rooms WHERE modified_at < NOW() - INTERVAL '10 minutes';"
-const updateRoomQuery = `WITH subs AS (DELETE FROM subtitles WHERE room_id = $1) UPDATE rooms
-  SET type = $2, target = $3, modified_at = NOW(),
-  paused = true, speed = 1, timestamp = 0, last_action = NOW() WHERE id = $1
-	RETURNING created_at, modified_at;`
-const updateRoomStateQuery = "UPDATE rooms SET " +
-	"paused = $2, speed = $3, timestamp = $4, last_action = $5, modified_at = NOW() WHERE id = $1;"
-const deleteRoomQuery = "DELETE FROM rooms WHERE id = $1;"
-
-const findChatMessagesByRoomQuery = "SELECT id, user_id, timestamp, message FROM chats WHERE room_id = $1;"
-const insertChatMessageQuery = `WITH rooms AS (
-  UPDATE rooms SET modified_at = NOW() WHERE id = $1
-) INSERT INTO chats (room_id, user_id, message) VALUES ($1, $2, $3) RETURNING id, timestamp;`
-
-const findSubtitlesByRoomQuery = "SELECT name FROM subtitles WHERE room_id = $1;"
-const findSubtitleQuery = "SELECT data FROM subtitles WHERE room_id = $1 AND name = $2;"
-const insertSubtitleQuery = `INSERT INTO subtitles (room_id, name, data) VALUES ($1, $2, $3)
-  ON CONFLICT (room_id, name) DO UPDATE SET data = $3;`
-
-const initialiseDatabaseQuery = `BEGIN;
+func CreateSqlTables() {
+	if _, err := db.Exec(`BEGIN;
 
 CREATE TABLE IF NOT EXISTS users (
 	username VARCHAR(16) NOT NULL UNIQUE,
@@ -109,98 +48,90 @@ CREATE TABLE IF NOT EXISTS subtitles (
 	PRIMARY KEY (room_id, name));
 CREATE INDEX IF NOT EXISTS subtitles_room_id_idx ON subtitles (room_id);
 
-COMMIT;`
-
-func CreateSqlTables() {
-	_, err := db.Exec(initialiseDatabaseQuery)
-	if err != nil {
+COMMIT;`); err != nil {
 		log.Panicln("Failed to create tables and indexes!", err)
 	}
 }
 
+var (
+	findUserByTokenStmt       *sql.Stmt
+	findUserByNameOrEmailStmt *sql.Stmt
+	findUserByUsernameStmt    *sql.Stmt
+	findUserByEmailStmt       *sql.Stmt
+	findUsernamesByIdStmt     *sql.Stmt
+	createUserStmt            *sql.Stmt
+
+	insertTokenStmt *sql.Stmt
+	deleteTokenStmt *sql.Stmt
+
+	insertRoomStmt        *sql.Stmt
+	findRoomStmt          *sql.Stmt
+	findInactiveRoomsStmt *sql.Stmt
+	updateRoomStmt        *sql.Stmt
+	updateRoomStateStmt   *sql.Stmt
+	deleteRoomStmt        *sql.Stmt
+
+	findChatMessagesByRoomStmt *sql.Stmt
+	insertChatMessageStmt      *sql.Stmt
+
+	findSubtitlesByRoomStmt *sql.Stmt
+	findSubtitleStmt        *sql.Stmt
+	insertSubtitleStmt      *sql.Stmt
+)
+
 func PrepareSqlStatements() {
-	var err error
+	findUserByTokenStmt = prepareQuery("SELECT username, password, email, id, users.created_at " +
+		"AS user_created_at, verified, token, tokens.created_at AS token_created_at FROM tokens " +
+		"JOIN users ON tokens.user_id = users.id WHERE token = $1;")
+	findUserByNameOrEmailStmt = prepareQuery("SELECT username, password, email, id, created_at, verified FROM users " +
+		"WHERE username = $1 OR email = $2 LIMIT 1;")
+	findUserByUsernameStmt = prepareQuery("SELECT username, password, email, id, created_at, verified FROM users " +
+		"WHERE username = $1 LIMIT 1;")
+	findUserByEmailStmt = prepareQuery("SELECT username, password, email, id, created_at, verified FROM users " +
+		"WHERE email = $1 LIMIT 1;")
+	findUsernamesByIdStmt = prepareQuery("SELECT id, username FROM users WHERE id = ANY($1);")
+	createUserStmt = prepareQuery("INSERT INTO users (username, password, email, id, verified) VALUES ($1, $2, $3, $4, $5);")
 
-	findUserByTokenStmt, err = db.Prepare(findUserByTokenQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to find user by token!", err)
-	}
-	findUserByNameOrEmailStmt, err = db.Prepare(findUserByNameOrEmailQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to find user by username or email!", err)
-	}
-	findUserByUsernameStmt, err = db.Prepare(findUserByUsernameQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to find user by username!", err)
-	}
-	findUserByEmailStmt, err = db.Prepare(findUserByEmailQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to find user by email!", err)
-	}
-	findUsernamesByIdStmt, err = db.Prepare(findUsernamesByIdQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to find usernames by ID!", err)
-	}
-	createUserStmt, err = db.Prepare(createUserQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to insert user!", err)
-	}
+	insertTokenStmt = prepareQuery("INSERT INTO tokens (token, created_at, user_id) VALUES ($1, $2, $3);")
+	deleteTokenStmt = prepareQuery("DELETE FROM tokens WHERE token = $1;")
 
-	insertTokenStmt, err = db.Prepare(insertTokenQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to insert token!", err)
-	}
-	deleteTokenStmt, err = db.Prepare(deleteTokenQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to delete token!", err)
-	}
+	insertRoomStmt = prepareQuery("INSERT INTO rooms (id, type, target) " +
+		"VALUES ($1, $2, $3);")
+	findRoomStmt = prepareQuery("SELECT id, created_at, modified_at, type, target, " +
+		"paused, speed, timestamp, last_action FROM rooms WHERE id = $1;")
+	findInactiveRoomsStmt = prepareQuery("SELECT id FROM rooms WHERE modified_at < NOW() - INTERVAL '10 minutes';")
+	updateRoomStmt = prepareQuery(`
+		WITH subs AS (
+			DELETE FROM subtitles WHERE room_id = $1
+		) UPDATE rooms
+  		SET type = $2, target = $3, modified_at = NOW(),
+					paused = true, speed = 1, timestamp = 0, last_action = NOW()
+			WHERE id = $1
+			RETURNING created_at, modified_at;`)
+	updateRoomStateStmt = prepareQuery("UPDATE rooms SET " +
+		"paused = $2, speed = $3, timestamp = $4, last_action = $5, modified_at = NOW() WHERE id = $1;")
+	deleteRoomStmt = prepareQuery("DELETE FROM rooms WHERE id = $1;")
 
-	insertRoomStmt, err = db.Prepare(insertRoomQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to insert room!", err)
-	}
-	findRoomStmt, err = db.Prepare(findRoomQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to find room!", err)
-	}
-	findInactiveRoomsStmt, err = db.Prepare(findInactiveRoomsQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to find inactive rooms!", err)
-	}
-	updateRoomStmt, err = db.Prepare(updateRoomQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to update room!", err)
-	}
-	updateRoomStateStmt, err = db.Prepare(updateRoomStateQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to update room state!", err)
-	}
-	deleteRoomStmt, err = db.Prepare(deleteRoomQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to delete room!", err)
-	}
+	findChatMessagesByRoomStmt = prepareQuery("SELECT id, user_id, timestamp, message FROM chats WHERE room_id = $1;")
+	insertChatMessageStmt = prepareQuery(`
+		WITH rooms AS (
+  		UPDATE rooms SET modified_at = NOW() WHERE id = $1
+		) INSERT INTO chats (room_id, user_id, message) VALUES ($1, $2, $3) RETURNING id, timestamp;`)
 
-	findChatMessagesByRoomStmt, err = db.Prepare(findChatMessagesByRoomQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to find chat messages by room ID!", err)
-	}
-	insertChatMessageStmt, err = db.Prepare(insertChatMessageQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to insert chat message!", err)
-	}
+	findSubtitlesByRoomStmt = prepareQuery("SELECT name FROM subtitles WHERE room_id = $1;")
+	findSubtitleStmt = prepareQuery("SELECT data FROM subtitles WHERE room_id = $1 AND name = $2;")
+	insertSubtitleStmt = prepareQuery(`
+		INSERT INTO subtitles (room_id, name, data) VALUES ($1, $2, $3)
+  	ON CONFLICT (room_id, name) DO UPDATE SET data = $3;
+	`)
+}
 
-	findSubtitlesByRoomStmt, err = db.Prepare(findSubtitlesByRoomQuery)
+func prepareQuery(query string) *sql.Stmt {
+	stmt, err := db.Prepare(query)
 	if err != nil {
-		log.Panicln("Failed to prepare query to find subtitles by room ID!", err)
+		log.Panicln("failed to build SQL query: ", query)
 	}
-	insertSubtitleStmt, err = db.Prepare(insertSubtitleQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to insert subtitle!", err)
-	}
-	findSubtitleStmt, err = db.Prepare(findSubtitleQuery)
-	if err != nil {
-		log.Panicln("Failed to prepare query to find subtitle!", err)
-	}
+	return stmt
 }
 
 func FindChatMessagesByRoom(id string) ([]ChatMessage, error) {
