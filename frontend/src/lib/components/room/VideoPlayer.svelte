@@ -264,7 +264,7 @@
           ? '-' + stringifyDuration(duration - currentTime)
           : stringifyDuration(currentTime)}
       </span>
-      <Button onclick={handleMuteToggle}>
+      <Button class="hide-on-mobile" onclick={handleMuteToggle}>
         {#if muted}
           <SpeakerX weight="bold" size="16px" />
         {:else if volume < 0.5}
@@ -282,6 +282,7 @@
         onkeydown={handleVolumeScrub}
         disabled={muted}
         style:width="80px"
+        class="hide-on-mobile"
       />
       <div style:position="relative">
         <Button onclick={handleSettingsOpen}>
@@ -358,6 +359,12 @@
 </div>
 
 <style lang="scss">
+  :global(.hide-on-mobile) {
+    @media screen and (max-width: 600px) {
+      display: none;
+    }
+  }
+
   .player-container {
     max-width: 100%;
     max-height: 100%;
