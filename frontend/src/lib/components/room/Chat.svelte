@@ -1,23 +1,24 @@
 <script lang="ts">
-  import { untrack } from 'svelte'
+  import { untrack, onDestroy } from 'svelte'
   import ky from '$lib/api/ky'
   import type { ChatMessage } from '$lib/api/room'
   import usernameCache from '$lib/state/usernameCache.svelte'
   import Textarea from '../Textarea.svelte'
   import TypingIndicator from './TypingIndicator.svelte'
+  import type { SvelteMap } from 'svelte/reactivity'
 
   const systemUUID = '00000000-0000-0000-0000-000000000000'
 
   interface Props {
+    map: SvelteMap<string, number>
     username: string
     disabled?: boolean
     messages: ChatMessage[]
-    typingStates: Record<string, boolean>[]
     onSendMessage: (message: string) => void
-    onTyping: (username: string, isTyping: boolean) => void
+    onTyping: (map: SvelteMap<string, number>) => void
   }
-
-  const { typingStates, username, messages, disabled, onSendMessage, onTyping }: Props = $props()
+  let typingTimer: number | null = $state(null)
+  const { map, username, messages, disabled, onSendMessage, onTyping }: Props = $props()
 
   type ChatMessageGroup = Omit<Omit<ChatMessage, 'message'>, 'id'> & { messages: string[] }
   const messageGroups = $derived(
@@ -30,15 +31,8 @@
       return acc
     }, []),
   )
-  const typingUsers = $derived(
-    typingStates
-      .filter(state => Object.values(state)[0]) // Keep only active users (true)
-      .map(state => Object.keys(state)[0]), // Extract the username
-  )
-  $effect(() => {
-    $inspect(messageGroups)
-    $inspect(typingUsers)
-  })
+
+  const showTypingUsers = $derived(Array.from(map.keys()).filter(key => key !== username))
 
   // Fetch usernames for user IDs
   let prevId = 0
@@ -75,19 +69,38 @@
 
   let message = $state('')
   const handleSendMessage = () => {
+    map.delete(username)
+    onTyping(map)
     onSendMessage(message.trim())
-    onTyping(username, false)
     message = ''
   }
-  let typingTimeout: ReturnType<typeof setTimeout>
+
   const handleTyping = () => {
-    onTyping(username, true)
-    clearTimeout(typingTimeout)
-    typingTimeout = setTimeout(() => {
-      console.log(`${username} stopped typing.`)
-      onTyping(username, false) // Reset typing state.
+    map.set(username, Date.now())
+    onTyping(map)
+    if (typingTimer) {
+      clearTimeout(typingTimer)
+    }
+    typingTimer = setTimeout(() => {
+      const currentTime = Date.now()
+      const lastTypedTime = map.get(username)
+      if (lastTypedTime && currentTime - lastTypedTime >= 5000) {
+        map.delete(username)
+        onTyping(map)
+      }
+
+      typingTimer = null
     }, 5000)
   }
+
+  // Clean up timer when component is destroyed
+  onDestroy(() => {
+    if (typingTimer) {
+      clearTimeout(typingTimer)
+    }
+    map.delete(username)
+    onTyping(map)
+  })
 
   // Scroll to the bottom when messages are added
   // TODO (low): This doesn't interact well with Chrome fullscreen. Maybe use flex column-reverse there?
@@ -135,7 +148,7 @@
       }
     }}
   />
-  <TypingIndicator {typingUsers} />
+  <TypingIndicator {showTypingUsers} />
 </div>
 
 <style lang="scss">
