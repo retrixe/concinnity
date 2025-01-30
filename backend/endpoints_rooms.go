@@ -225,18 +225,16 @@ type PingPongMessageBi struct {
 	Timestamp int    `json:"timestamp"`
 }
 
-
 type TypingIndicatorMessageIncoming struct {
-    Type      string `json:"type"`
-    Timestamp int64  `json:"timestamp"`
+	Type      string `json:"type"`
+	Timestamp int64  `json:"timestamp"`
 }
 
 type TypingIndicatorMessageOutgoing struct {
-    Type     string            `json:"type"`
-    Username string            `json:"username"`
-	Timestamp int64   `json:"timestamp"`
+	Type      string `json:"type"`
+	Username  string `json:"username"`
+	Timestamp int64  `json:"timestamp"`
 }
-
 
 type PlayerStateMessageBi struct {
 	Type string                 `json:"type"` // player_state
@@ -487,27 +485,24 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 				return true
 			})
 		} else if msgData.Type == "typing" {
-		var incoming TypingIndicatorMessageIncoming
-		var userId uuid.UUID
-    	var username string
-    	_ = findUsernamesByIdStmt.QueryRow(pq.Array([]uuid.UUID{user.ID})).Scan(&userId, &username)
-		err = json.Unmarshal(data, &incoming)
-		if err != nil {
+			var incoming TypingIndicatorMessageIncoming
+			err = json.Unmarshal(data, &incoming)
+			if err != nil {
 				wsError(c, "Error while sending typing indicators!", websocket.StatusUnsupportedData)
-			continue
-		}
-		outgoingData := TypingIndicatorMessageOutgoing{
-			Type:"typing",
-			Username: username, 
-			Timestamp: incoming.Timestamp,
+				continue
 			}
-		members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
-			if userId != user.ID {
-				write <- outgoingData
+			outgoingData := TypingIndicatorMessageOutgoing{
+				Type:      "typing",
+				Username:  user.Username,
+				Timestamp: incoming.Timestamp,
 			}
-			return true
-		})
-			} else if msgData.Type == "ping" {
+			members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
+				if write != writeChannel {
+					write <- outgoingData
+				}
+				return true // Skip current session
+			})
+		} else if msgData.Type == "ping" {
 			var pingData PingPongMessageBi
 			err = json.Unmarshal(data, &pingData)
 			if err != nil {
