@@ -41,15 +41,7 @@
     try {
       if (typeof event.data !== 'string') throw new Error('Invalid message data type!')
       const message = JSON.parse(event.data) as GenericMessage
-      if (isIncomingChatMessage(message)) {
-        // TODO (low): Replace messages.length with IDs
-        if (message.data.length === 1) messages.push(message.data[0])
-        else messages.push(...message.data.slice(messages.length))
-      } else if (isIncomingSubtitleMessage(message)) {
-        message.data.forEach(name => {
-          subtitles[name] = null
-        })
-      } else if (isIncomingRoomInfoMessage(message)) {
+      if (isIncomingRoomInfoMessage(message)) {
         if (roomInfo === null) {
           roomInfo = message.data // On first run, we expect player state to come up afterwards
         } else {
@@ -68,6 +60,19 @@
           }
         }, 5000)
         typingIndicators.set(message.userId, [message.timestamp, timeoutId])
+      } else if (isIncomingChatMessage(message)) {
+        // TODO (low): Replace messages.length with IDs
+        const newMessages = message.data.slice(message.data.length === 1 ? 0 : messages.length)
+        for (const message of newMessages) {
+          const typingIndicator = typingIndicators.get(message.userId)
+          if (typingIndicator) {
+            clearTimeout(typingIndicator[1])
+            typingIndicators.delete(message.userId)
+          }
+        }
+        messages.push(...newMessages)
+      } else if (isIncomingSubtitleMessage(message)) {
+        message.data.forEach(name => (subtitles[name] = null))
       } else if (message.type !== MessageType.Pong) {
         console.warn('Unhandled message type!', message)
       }
@@ -95,6 +100,7 @@
     return () => {
       clearInterval(interval)
       ws?.close()
+      typingIndicators.forEach(([, timeoutId]) => clearTimeout(timeoutId))
     }
   })
 
