@@ -92,7 +92,7 @@ export interface IncomingChatMessage extends GenericMessage {
 
 export interface IncomingTypingIndicator extends GenericMessage {
   type: MessageType.Typing
-  username: string
+  userId: string
   timestamp: number
 }
 

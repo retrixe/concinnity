@@ -35,14 +35,17 @@
   // Fetch usernames for user IDs
   let prevId = 0
   $effect(() => {
-    const userIds = messages.slice(prevId).reduce((set, message) => {
-      const userId = message.userId === systemUUID ? message.message.split(' ')[0] : message.userId
-      if (untrack(() => !usernameCache.has(userId)) /* Ignore changes to usernameCache */) {
-        usernameCache.set(userId, null)
-        set.add(userId)
-      }
-      return set
-    }, new Set<string>())
+    const userIds = messages
+      .slice(prevId)
+      .map(({ userId, message }) => (userId === systemUUID ? message.split(' ')[0] : userId))
+      .concat(typingUsers)
+      .reduce((set, userId) => {
+        if (untrack(() => !usernameCache.has(userId)) /* Ignore changes to usernameCache */) {
+          usernameCache.set(userId, null)
+          set.add(userId)
+        }
+        return set
+      }, new Set<string>())
     prevId = messages.length
     if (!userIds.size) return
 

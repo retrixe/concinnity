@@ -60,14 +60,14 @@
       } else if (isIncomingPlayerStateMessage(message)) {
         playerState = message.data
       } else if (isIncomingTypingIndicator(message)) {
-        const existing = typingIndicators.get(message.username)
+        const existing = typingIndicators.get(message.userId)
         if (existing) clearTimeout(existing[1])
         const timeoutId = setTimeout(() => {
-          if (typingIndicators.get(message.username)?.[0] === message.timestamp) {
-            typingIndicators.delete(message.username)
+          if (typingIndicators.get(message.userId)?.[0] === message.timestamp) {
+            typingIndicators.delete(message.userId)
           }
         }, 5000)
-        typingIndicators.set(message.username, [message.timestamp, timeoutId])
+        typingIndicators.set(message.userId, [message.timestamp, timeoutId])
       } else if (message.type !== MessageType.Pong) {
         console.warn('Unhandled message type!', message)
       }

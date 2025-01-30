@@ -231,9 +231,9 @@ type TypingIndicatorMessageIncoming struct {
 }
 
 type TypingIndicatorMessageOutgoing struct {
-	Type      string `json:"type"`
-	Username  string `json:"username"`
-	Timestamp int64  `json:"timestamp"`
+	Type      string    `json:"type"`
+	UserID    uuid.UUID `json:"userId"`
+	Timestamp int64     `json:"timestamp"`
 }
 
 type PlayerStateMessageBi struct {
@@ -493,7 +493,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 			}
 			outgoingData := TypingIndicatorMessageOutgoing{
 				Type:      "typing",
-				Username:  user.Username,
+				UserID:    user.ID,
 				Timestamp: incoming.Timestamp,
 			}
 			members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {

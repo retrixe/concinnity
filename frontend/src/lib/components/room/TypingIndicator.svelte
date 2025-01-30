@@ -1,18 +1,18 @@
 <script lang="ts">
-  interface Props {
-    typingUsers: string[]
-  }
+  import usernameCache from '$lib/state/usernameCache.svelte'
 
-  const { typingUsers }: Props = $props()
+  const { typingUsers }: { typingUsers: string[] } = $props()
+
+  const getUsername = (userId: string) => usernameCache.get(userId) ?? userId.split('-')[0] // UUID
 </script>
 
 <p class="typing-indicator">
   {#if typingUsers.length >= 3}
     Multiple users are typing...
   {:else if typingUsers.length === 2}
-    <b>{typingUsers[0]}</b> and <b>{typingUsers[1]}</b> are typing...
+    <b>{getUsername(typingUsers[0])}</b> and <b>{getUsername(typingUsers[1])}</b> are typing...
   {:else if typingUsers.length === 1}
-    <b>{typingUsers[0]}</b> is typing...
+    <b>{getUsername(typingUsers[0])}</b> is typing...
   {/if}
 </p>
 
