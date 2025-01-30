@@ -63,8 +63,6 @@
         const existing = typingIndicators.get(message.username)
         if (existing) clearTimeout(existing[1])
         const timeoutId = setTimeout(() => {
-          console.log(typingIndicators.get(message.username)?.[0])
-          console.log(message.timestamp)
           if (typingIndicators.get(message.username)?.[0] === message.timestamp) {
             typingIndicators.delete(message.username)
           }

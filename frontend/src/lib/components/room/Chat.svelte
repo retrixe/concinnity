@@ -30,7 +30,7 @@
     }, []),
   )
 
-  const showTypingUsers = $derived(Array.from(typingIndicators.keys()))
+  const typingUsers = $derived(Array.from(typingIndicators.keys()))
 
   // Fetch usernames for user IDs
   let prevId = 0
@@ -71,9 +71,7 @@
     message = ''
   }
 
-  const handleTyping = () => {
-    onTyping()
-  }
+  const handleTyping = () => onTyping()
 
   // Scroll to the bottom when messages are added
   // TODO (low): This doesn't interact well with Chrome fullscreen. Maybe use flex column-reverse there?
@@ -121,7 +119,7 @@
       }
     }}
   />
-  <TypingIndicator {showTypingUsers} />
+  <TypingIndicator {typingUsers} />
 </div>
 
 <style lang="scss">
