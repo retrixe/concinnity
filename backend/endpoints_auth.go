@@ -224,9 +224,9 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 	} else if data.Username == "system" { // Reserve this name to use in chat.
 		http.Error(w, errorJson("An account with this e-mail already exists!"), http.StatusConflict)
 		return
-	} else if res, _ := regexp.MatchString("^[a-zA-Z0-9_]{4,16}$", data.Username); !res {
+	} else if res, _ := regexp.MatchString("^[a-z0-9_]{4,16}$", data.Username); !res {
 		http.Error(w, errorJson("Username should be 4-16 characters long, and "+
-			"contain alphanumeric characters or _ only!"), http.StatusBadRequest)
+			"contain lowercase alphanumeric characters or _ only!"), http.StatusBadRequest)
 		return
 	} else if res, _ := regexp.MatchString("^.{8,64}$", data.Password); !res {
 		http.Error(w, errorJson("Your password must be between 8 and 64 characters long!"),
