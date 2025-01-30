@@ -11,6 +11,7 @@
     isIncomingPlayerStateMessage,
     isIncomingRoomInfoMessage,
     isIncomingSubtitleMessage,
+    isIncomingTypingIndicator,
     MessageType,
     RoomType,
     type ChatMessage,
@@ -18,6 +19,7 @@
     type PlayerState,
     type RoomInfo,
   } from '$lib/api/room'
+  import { SvelteMap } from 'svelte/reactivity'
 
   // TODO: Support watching remote files
   const id = page.params.id
@@ -29,6 +31,7 @@
   let roomInfo: RoomInfo | null = $state(null)
   let subtitles: Record<string, string | null> = $state({})
   let transientVideo: File | null = $state(null)
+  let typingIndicators = new SvelteMap<string, [number, number]>()
 
   let ws: WebSocket | null = $state(null)
   let wsError: string | null = $state(null)
@@ -56,6 +59,15 @@
         }
       } else if (isIncomingPlayerStateMessage(message)) {
         playerState = message.data
+      } else if (isIncomingTypingIndicator(message)) {
+        const existing = typingIndicators.get(message.username)
+        if (existing) clearTimeout(existing[1])
+        const timeoutId = setTimeout(() => {
+          if (typingIndicators.get(message.username)?.[0] === message.timestamp) {
+            typingIndicators.delete(message.username)
+          }
+        }, 5000)
+        typingIndicators.set(message.username, [message.timestamp, timeoutId])
       } else if (message.type !== MessageType.Pong) {
         console.warn('Unhandled message type!', message)
       }
@@ -132,6 +144,10 @@
     onSendMessage={(message: string) => {
       ws?.send(JSON.stringify({ type: 'chat', data: message }))
     }}
+    onTyping={() => {
+      ws?.send(JSON.stringify({ type: 'typing', timestamp: Date.now() }))
+    }}
+    {typingIndicators}
   />
 </div>
 

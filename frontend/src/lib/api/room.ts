@@ -73,6 +73,7 @@ export function connect(id: string, handlers: Handlers, reconnect = false): Prom
 }
 
 export enum MessageType {
+  Typing = 'typing',
   Chat = 'chat',
   RoomInfo = 'room_info',
   PlayerState = 'player_state',
@@ -87,6 +88,12 @@ export interface GenericMessage {
 export interface IncomingChatMessage extends GenericMessage {
   type: MessageType.Chat
   data: ChatMessage[]
+}
+
+export interface IncomingTypingIndicator extends GenericMessage {
+  type: MessageType.Typing
+  username: string
+  timestamp: number
 }
 
 export interface IncomingPlayerStateMessage extends GenericMessage {
@@ -106,6 +113,10 @@ export interface IncomingSubtitleMessage extends GenericMessage {
 
 export const isIncomingChatMessage = (message: GenericMessage): message is IncomingChatMessage =>
   message.type === MessageType.Chat && Array.isArray((message as IncomingChatMessage).data)
+
+export const isIncomingTypingIndicator = (
+  message: GenericMessage,
+): message is IncomingTypingIndicator => message.type === MessageType.Typing
 
 export const isIncomingPlayerStateMessage = (
   message: GenericMessage,

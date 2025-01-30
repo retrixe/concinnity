@@ -4,17 +4,20 @@
   import type { ChatMessage } from '$lib/api/room'
   import usernameCache from '$lib/state/usernameCache.svelte'
   import Textarea from '../Textarea.svelte'
+  import TypingIndicator from './TypingIndicator.svelte'
+  import type { SvelteMap } from 'svelte/reactivity'
 
   const systemUUID = '00000000-0000-0000-0000-000000000000'
 
   interface Props {
+    typingIndicators: SvelteMap<string, [number, number]>
     disabled?: boolean
     messages: ChatMessage[]
     onSendMessage: (message: string) => void
+    onTyping: () => void
   }
 
-  const { messages, onSendMessage, disabled }: Props = $props()
-
+  const { typingIndicators, messages, disabled, onSendMessage, onTyping }: Props = $props()
   type ChatMessageGroup = Omit<Omit<ChatMessage, 'message'>, 'id'> & { messages: string[] }
   const messageGroups = $derived(
     messages.reduce<ChatMessageGroup[]>((acc, { userId, timestamp, message }) => {
@@ -26,6 +29,8 @@
       return acc
     }, []),
   )
+
+  const typingUsers = $derived(Array.from(typingIndicators.keys()))
 
   // Fetch usernames for user IDs
   let prevId = 0
@@ -66,6 +71,8 @@
     message = ''
   }
 
+  const handleTyping = () => onTyping()
+
   // Scroll to the bottom when messages are added
   // TODO (low): This doesn't interact well with Chrome fullscreen. Maybe use flex column-reverse there?
   let messagesEl = null as HTMLDivElement | null
@@ -104,6 +111,7 @@
     maxlength={2000}
     placeholder="Type message here..."
     bind:value={message}
+    oninput={handleTyping}
     onkeypress={(e: KeyboardEvent) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
@@ -111,6 +119,7 @@
       }
     }}
   />
+  <TypingIndicator {typingUsers} />
 </div>
 
 <style lang="scss">
