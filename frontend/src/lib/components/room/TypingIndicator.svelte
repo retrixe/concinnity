@@ -6,20 +6,24 @@
   const { typingUsers }: Props = $props()
 </script>
 
-<div class="typing-indicator">
+<p class="typing-indicator">
   {#if typingUsers.length >= 3}
-    <p>Multiple users are typing...</p>
+    Multiple users are typing...
   {:else if typingUsers.length === 2}
-    <p>{`${typingUsers[0]} and ${typingUsers[1]} are typing...`}</p>
-  {:else if typingUsers.length === 0}
-    <p></p>
-  {:else}
-    <p>{`${typingUsers[0]} is typing...`}</p>
+    <b>{typingUsers[0]}</b> and <b>{typingUsers[1]}</b> are typing...
+  {:else if typingUsers.length === 1}
+    <b>{typingUsers[0]}</b> is typing...
   {/if}
-</div>
+</p>
 
 <style lang="scss">
   .typing-indicator {
+    /* Just in case */
     font-size: 1rem;
+    line-height: 1.2;
+    height: 1.2rem;
+    margin: 0.4rem 0;
+    white-space: nowrap;
+    overflow: hidden;
   }
 </style>

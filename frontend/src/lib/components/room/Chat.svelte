@@ -126,9 +126,11 @@
   .chat {
     min-height: 0; // Fixes chat overflowing out of parent
     padding: 1rem;
+    padding-bottom: 0;
     display: flex;
     flex-direction: column;
     :global(textarea) {
+      margin-bottom: 0rem;
       font-family: inherit;
       resize: none;
       width: 100%;
