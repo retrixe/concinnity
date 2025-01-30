@@ -31,12 +31,11 @@
   let roomInfo: RoomInfo | null = $state(null)
   let subtitles: Record<string, string | null> = $state({})
   let transientVideo: File | null = $state(null)
-  let map = $state(new SvelteMap<string, number>())
+  let typingIndicators = new SvelteMap<string, [number, number]>()
 
   let ws: WebSocket | null = $state(null)
   let wsError: string | null = $state(null)
   const wsInitialConnect = $derived((ws === null && !wsError) || roomInfo === null)
-  const { username } = $derived(page.data)
 
   const onMessage = (event: MessageEvent) => {
     try {
@@ -61,7 +60,16 @@
       } else if (isIncomingPlayerStateMessage(message)) {
         playerState = message.data
       } else if (isIncomingTypingIndicator(message)) {
-        map = new SvelteMap(Object.entries(message.data) as [string, number][])
+        const existing = typingIndicators.get(message.username)
+        if (existing) clearTimeout(existing[1])
+        const timeoutId = setTimeout(() => {
+          console.log(typingIndicators.get(message.username)?.[0])
+          console.log(message.timestamp)
+          if (typingIndicators.get(message.username)?.[0] === message.timestamp) {
+            typingIndicators.delete(message.username)
+          }
+        }, 5000)
+        typingIndicators.set(message.username, [message.timestamp, timeoutId])
       } else if (message.type !== MessageType.Pong) {
         console.warn('Unhandled message type!', message)
       }
@@ -138,11 +146,10 @@
     onSendMessage={(message: string) => {
       ws?.send(JSON.stringify({ type: 'chat', data: message }))
     }}
-    onTyping={(map: SvelteMap<string, number>) => {
-      ws?.send(JSON.stringify({ type: 'typing', data: Object.fromEntries(map) }))
+    onTyping={() => {
+      ws?.send(JSON.stringify({ type: 'typing', timestamp: Date.now() }))
     }}
-    {username}
-    {map}
+    {typingIndicators}
   />
 </div>
 

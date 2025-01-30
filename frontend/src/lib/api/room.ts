@@ -1,5 +1,4 @@
 import { PUBLIC_BACKEND_URL } from '$env/static/public'
-import type { SvelteMap } from 'svelte/reactivity'
 
 export enum RoomType {
   None = '',
@@ -93,7 +92,8 @@ export interface IncomingChatMessage extends GenericMessage {
 
 export interface IncomingTypingIndicator extends GenericMessage {
   type: MessageType.Typing
-  data: SvelteMap<string, number>
+  username: string
+  timestamp: number
 }
 
 export interface IncomingPlayerStateMessage extends GenericMessage {

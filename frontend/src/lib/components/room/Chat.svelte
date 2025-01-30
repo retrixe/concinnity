@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { untrack, onDestroy } from 'svelte'
+  import { untrack } from 'svelte'
   import ky from '$lib/api/ky'
   import type { ChatMessage } from '$lib/api/room'
   import usernameCache from '$lib/state/usernameCache.svelte'
@@ -10,16 +10,14 @@
   const systemUUID = '00000000-0000-0000-0000-000000000000'
 
   interface Props {
-    map: SvelteMap<string, number>
-    username: string
+    typingIndicators: SvelteMap<string, [number, number]>
     disabled?: boolean
     messages: ChatMessage[]
     onSendMessage: (message: string) => void
-    onTyping: (map: SvelteMap<string, number>) => void
+    onTyping: () => void
   }
-  let typingTimer: number | null = $state(null)
-  const { map, username, messages, disabled, onSendMessage, onTyping }: Props = $props()
 
+  const { typingIndicators, messages, disabled, onSendMessage, onTyping }: Props = $props()
   type ChatMessageGroup = Omit<Omit<ChatMessage, 'message'>, 'id'> & { messages: string[] }
   const messageGroups = $derived(
     messages.reduce<ChatMessageGroup[]>((acc, { userId, timestamp, message }) => {
@@ -32,7 +30,7 @@
     }, []),
   )
 
-  const showTypingUsers = $derived(Array.from(map.keys()).filter(key => key !== username))
+  const showTypingUsers = $derived(Array.from(typingIndicators.keys()))
 
   // Fetch usernames for user IDs
   let prevId = 0
@@ -69,38 +67,13 @@
 
   let message = $state('')
   const handleSendMessage = () => {
-    map.delete(username)
-    onTyping(map)
     onSendMessage(message.trim())
     message = ''
   }
 
   const handleTyping = () => {
-    map.set(username, Date.now())
-    onTyping(map)
-    if (typingTimer) {
-      clearTimeout(typingTimer)
-    }
-    typingTimer = setTimeout(() => {
-      const currentTime = Date.now()
-      const lastTypedTime = map.get(username)
-      if (lastTypedTime && currentTime - lastTypedTime >= 5000) {
-        map.delete(username)
-        onTyping(map)
-      }
-
-      typingTimer = null
-    }, 5000)
+    onTyping()
   }
-
-  // Clean up timer when component is destroyed
-  onDestroy(() => {
-    if (typingTimer) {
-      clearTimeout(typingTimer)
-    }
-    map.delete(username)
-    onTyping(map)
-  })
 
   // Scroll to the bottom when messages are added
   // TODO (low): This doesn't interact well with Chrome fullscreen. Maybe use flex column-reverse there?
