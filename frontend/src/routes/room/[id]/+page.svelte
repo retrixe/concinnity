@@ -123,6 +123,22 @@
   const onPlayerStateChange = (newState: PlayerState) => {
     ws?.send(JSON.stringify({ type: 'player_state', data: newState }))
   }
+
+  let typingTimeout: number | null = null
+  const onTyping = () => {
+    if (typeof typingTimeout === 'number') return // Return if the function is throttled
+    typingTimeout = setTimeout(() => (typingTimeout = null), 3000) // One typing msg every 3 seconds
+    ws?.send(JSON.stringify({ type: 'typing', timestamp: Date.now() }))
+  }
+
+  const onSendMessage = (message: string) => {
+    // Remove throttle if user sends a message
+    if (typeof typingTimeout === 'number') {
+      clearTimeout(typingTimeout)
+      typingTimeout = null
+    }
+    ws?.send(JSON.stringify({ type: 'chat', data: message }))
+  }
 </script>
 
 <svelte:document bind:visibilityState />
@@ -147,12 +163,8 @@
   <Chat
     disabled={wsError !== null || ws === null}
     {messages}
-    onSendMessage={(message: string) => {
-      ws?.send(JSON.stringify({ type: 'chat', data: message }))
-    }}
-    onTyping={() => {
-      ws?.send(JSON.stringify({ type: 'typing', timestamp: Date.now() }))
-    }}
+    {onSendMessage}
+    {onTyping}
     {typingIndicators}
   />
 </div>
