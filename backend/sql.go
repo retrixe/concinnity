@@ -3,10 +3,12 @@ package main
 import (
 	"database/sql"
 	"log"
+	"regexp"
+	"strings"
 )
 
 func CreateSqlTables() {
-	if _, err := db.Exec(`BEGIN;
+	if _, err := db.Exec(translate(`BEGIN;
 
 CREATE TABLE IF NOT EXISTS users (
 	username VARCHAR(16) NOT NULL UNIQUE,
@@ -48,8 +50,8 @@ CREATE TABLE IF NOT EXISTS subtitles (
 	PRIMARY KEY (room_id, name));
 CREATE INDEX IF NOT EXISTS subtitles_room_id_idx ON subtitles (room_id);
 
-COMMIT;`); err != nil {
-		log.Panicln("Failed to create tables and indexes!", err)
+COMMIT;`)); err != nil {
+		log.Fatalln("Failed to create tables and indexes!", err)
 	}
 }
 
@@ -126,10 +128,30 @@ func PrepareSqlStatements() {
 	`)
 }
 
+func translate(query string) string {
+	if config.Database == "mysql" {
+		query = strings.ReplaceAll(query, "TIMESTAMPTZ", "TIMESTAMP")
+		query = strings.ReplaceAll(query, "GENERATED ALWAYS AS IDENTITY", "AUTO_INCREMENT")
+		interpolation, err := regexp.Compile(`\$\d+`)
+		if err != nil {
+			log.Fatalln("failed to compile mysql interpolation regexp:", err)
+		}
+		query = interpolation.ReplaceAllString(query, "?")
+		// TODO: Fix these
+		query = strings.ReplaceAll(query, "ON CONFLICT (room_id, name) DO", "ON DUPLICATE KEY")
+		// The following might work on PostgreSQL too?
+		query = strings.ReplaceAll(query, "= ANY", "IN ") // Does this even work?
+		query = strings.ReplaceAll(query, "INTERVAL '10 minutes'", "INTERVAL 10 MINUTE")
+		return query
+	}
+	return query
+}
+
 func prepareQuery(query string) *sql.Stmt {
+	query = translate(query)
 	stmt, err := db.Prepare(query)
 	if err != nil {
-		log.Panicln("failed to build SQL query: ", query)
+		log.Fatalln("failed to build SQL query:", query, err)
 	}
 	return stmt
 }

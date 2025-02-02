@@ -4,6 +4,7 @@ go 1.22
 
 require (
 	github.com/coder/websocket v1.8.13-0.20241204191143-11bda985bf5f
+	github.com/go-sql-driver/mysql v1.8.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/lib/pq v1.10.9
@@ -13,6 +14,7 @@ require (
 )
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 )

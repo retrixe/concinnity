@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/handlers"
 	_ "github.com/lib/pq"
 )
@@ -31,13 +32,18 @@ Rooms are deleted after 10 minutes of no members.
 */
 
 var db *sql.DB
-var config Config = Config{BasePath: "/", Port: 8000}
+var config Config = Config{BasePath: "/", Port: 8000, Database: "postgres"}
 
 type Config struct {
 	Port          int    `json:"port"`
 	BasePath      string `json:"basePath"`
 	SecureCookies bool   `json:"secureCookies"`
-	DatabaseURL   string `json:"databaseUrl"`
+	// Note:
+	// - MySQL support is best effort
+	// - MySQL requires ?parseTime=true&multiStatements=true to be set on the URL
+	// - Prefer using MySQL with UTC time zone
+	Database    string `json:"database"`
+	DatabaseURL string `json:"databaseUrl"`
 }
 
 // TODO: implement e-mail verification option, add forgot password endpoint, room member limit
@@ -45,15 +51,15 @@ func main() {
 	log.SetOutput(os.Stderr)
 	configFile, err := os.ReadFile("config.json")
 	if err != nil {
-		log.Panicln("Failed to read config file!", err)
+		log.Fatalln("Failed to read config file!", err)
 	}
 	err = json.Unmarshal(configFile, &config)
 	if err != nil {
-		log.Panicln("Failed to parse config file!", err)
+		log.Fatalln("Failed to parse config file!", err)
 	}
-	db, err = sql.Open("postgres", config.DatabaseURL)
+	db, err = sql.Open(config.Database, config.DatabaseURL)
 	if err != nil {
-		log.Panicln("Failed to open connection to database!", err)
+		log.Fatalln("Failed to open connection to database!", err)
 	}
 	db.SetMaxOpenConns(10)
 	CreateSqlTables()
