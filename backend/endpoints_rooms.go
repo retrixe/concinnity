@@ -16,6 +16,7 @@ import (
 
 	"github.com/coder/websocket"
 	"github.com/coder/websocket/wsjson"
+	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	nanoid "github.com/matoous/go-nanoid/v2"
@@ -65,6 +66,9 @@ func CreateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	result, err := insertRoomStmt.Exec(id, body.Type, body.Target)
 	if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23505" {
+		http.Error(w, errorJson("Room ID already exists!"), http.StatusConflict)
+		return
+	} else if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
 		http.Error(w, errorJson("Room ID already exists!"), http.StatusConflict)
 		return
 	} else if err != nil {
@@ -185,6 +189,9 @@ func CreateRoomSubtitleEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	result, err := insertSubtitleStmt.Exec(r.PathValue("id"), r.URL.Query().Get("name"), body)
 	if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Class() == "23503" {
+		http.Error(w, errorJson("Room does not exist!"), http.StatusConflict)
+		return
+	} else if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1452 {
 		http.Error(w, errorJson("Room does not exist!"), http.StatusConflict)
 		return
 	} else if err != nil {

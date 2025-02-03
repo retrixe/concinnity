@@ -130,19 +130,14 @@ func PrepareSqlStatements() {
 
 func translate(query string) string {
 	if config.Database == "mysql" {
+		query = regexp.MustCompile(`\$\d+`).ReplaceAllString(query, "?")
 		query = strings.ReplaceAll(query, "TIMESTAMPTZ", "TIMESTAMP")
 		query = strings.ReplaceAll(query, "GENERATED ALWAYS AS IDENTITY", "AUTO_INCREMENT")
-		interpolation, err := regexp.Compile(`\$\d+`)
-		if err != nil {
-			log.Fatalln("failed to compile mysql interpolation regexp:", err)
-		}
-		query = interpolation.ReplaceAllString(query, "?")
-		// TODO: Fix these
-		query = strings.ReplaceAll(query, "ON CONFLICT (room_id, name) DO", "ON DUPLICATE KEY")
-		// The following might work on PostgreSQL too?
-		query = strings.ReplaceAll(query, "= ANY", "IN ") // Does this even work?
-		query = strings.ReplaceAll(query, "INTERVAL '10 minutes'", "INTERVAL 10 MINUTE")
-		return query
+		query = regexp.MustCompile(`INTERVAL '(\d+) (\w+)s'`).ReplaceAllString(query, "INTERVAL $1 $2")
+		query = regexp.MustCompile(`ON CONFLICT \([^)]+\) DO UPDATE SET`).ReplaceAllString(query, "ON DUPLICATE KEY UPDATE")
+		// TODO: Translate CTEs to MySQL equivalents
+		// TODO: Translate UPDATE ... RETURNING to MySQL equivalents
+		// TODO: Translate ANY() in queries not taking arrays to MySQL equivalents
 	}
 	return query
 }
