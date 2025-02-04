@@ -669,6 +669,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/trusted-types@npm:^2.0.7":
+  version: 2.0.7
+  resolution: "@types/trusted-types@npm:2.0.7"
+  checksum: 10c0/4c4855f10de7c6c135e0d32ce462419d8abbbc33713b31d294596c0cc34ae1fa6112a2f9da729c8f7a20707782b0d69da3b1f8df6645b0366d08825ca1522e0c
+  languageName: node
+  linkType: hard
+
 "@typescript-eslint/eslint-plugin@npm:8.18.2":
   version: 8.18.2
   resolution: "@typescript-eslint/eslint-plugin@npm:8.18.2"
@@ -1144,6 +1151,7 @@ __metadata:
     "@sveltejs/kit": "npm:^2.0.0"
     "@sveltejs/vite-plugin-svelte": "npm:^4.0.0"
     "@typescript-eslint/parser": "npm:^8.18.2"
+    dompurify: "npm:^3.2.4"
     eslint: "npm:^9.7.0"
     eslint-config-prettier: "npm:^9.1.0"
     eslint-plugin-import: "npm:^2.31.0"
@@ -1158,6 +1166,7 @@ __metadata:
     prettier: "npm:^3.3.2"
     prettier-plugin-svelte: "npm:^3.2.6"
     sass-embedded: "npm:^1.83.0"
+    snarkdown: "npm:^2.0.0"
     svelte: "npm:^5.0.0"
     svelte-check: "npm:^4.0.0"
     svelte-eslint-parser: "npm:^0.43.0"
@@ -1297,6 +1306,18 @@ __metadata:
   dependencies:
     esutils: "npm:^2.0.2"
   checksum: 10c0/b6416aaff1f380bf56c3b552f31fdf7a69b45689368deca72d28636f41c16bb28ec3ebc40ace97db4c1afc0ceeb8120e8492fe0046841c94c2933b2e30a7d5ac
+  languageName: node
+  linkType: hard
+
+"dompurify@npm:^3.2.4":
+  version: 3.2.4
+  resolution: "dompurify@npm:3.2.4"
+  dependencies:
+    "@types/trusted-types": "npm:^2.0.7"
+  dependenciesMeta:
+    "@types/trusted-types":
+      optional: true
+  checksum: 10c0/6be56810fb7ad2776155c8fc2967af5056783c030094362c7d0cf1ad13f2129cf922d8eefab528a34bdebfb98e2f44b306a983ab93aefb9d6f24c18a3d027a05
   languageName: node
   linkType: hard
 
@@ -3893,6 +3914,13 @@ __metadata:
   version: 4.2.0
   resolution: "smart-buffer@npm:4.2.0"
   checksum: 10c0/a16775323e1404dd43fabafe7460be13a471e021637bc7889468eb45ce6a6b207261f454e4e530a19500cc962c4cc5348583520843b363f4193cee5c00e1e539
+  languageName: node
+  linkType: hard
+
+"snarkdown@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "snarkdown@npm:2.0.0"
+  checksum: 10c0/2e1645924041f0a69804b2d0eac3eef0403d1d769da374c73102f1f8a401401990c79e6dd1ee0ea302585ecea232e358c11134781b389b0afffb987f4db5b36d
   languageName: node
   linkType: hard
 

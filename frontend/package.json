@@ -45,7 +45,9 @@
     "vite": "^5.4.11"
   },
   "dependencies": {
+    "dompurify": "^3.2.4",
     "ky": "^1.7.4",
-    "phosphor-svelte": "^3.0.1"
+    "phosphor-svelte": "^3.0.1",
+    "snarkdown": "^2.0.0"
   }
 }
