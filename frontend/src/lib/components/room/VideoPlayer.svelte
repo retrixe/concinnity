@@ -146,6 +146,7 @@
         .text()
         .then(text => (subtitles[name] = text))
         .catch((e: unknown) => {
+          alert('Failed to retrieve subtitles!')
           console.error('Failed to retrieve subtitles!', e)
           subtitles[name] = null
         })

@@ -16,15 +16,16 @@
   let { error, connecting, transientVideo = $bindable(null) }: Props = $props()
 
   const onclick = async () => {
-    const file = await openFileOrFiles()
-    if (!file) return
-
     try {
+      const file = await openFileOrFiles()
+      if (!file) return
+
       await ky.patch(`api/room/${id}`, {
         json: { type: RoomType.LocalFile, target: `${Date.now()}:${file.name}` },
       })
       transientVideo = file
     } catch (e: unknown) {
+      alert('Failed to select local file!')
       console.error('Failed to select local file!', e)
     }
   }

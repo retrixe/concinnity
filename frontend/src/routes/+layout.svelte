@@ -18,6 +18,7 @@
       localStorage.removeItem('concinnity:token')
       invalidate('app:auth').catch(console.error)
     } catch (error) {
+      alert('Failed to logout!')
       console.error('Failed to logout!', error)
     }
   }

@@ -45,10 +45,13 @@
     }
   }
 
-  const handleStop = () => {
-    ky.patch(`api/room/${id}`, { json: { type: RoomType.None, target: '' } }).catch((e: unknown) =>
-      console.error('Failed to stop video!', e),
-    )
+  const handleStop = async () => {
+    try {
+      await ky.patch(`api/room/${id}`, { json: { type: RoomType.None, target: '' } })
+    } catch (e: unknown) {
+      alert('Failed to stop video!')
+      console.error('Failed to stop video!', e)
+    }
   }
 </script>
 
