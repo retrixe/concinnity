@@ -164,6 +164,7 @@
     display: flex;
     flex-direction: column;
     :global(textarea) {
+      flex-shrink: 0;
       margin-bottom: 0rem;
       font-family: inherit;
       resize: none;

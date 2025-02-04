@@ -25,5 +25,6 @@
     margin: 0.4rem 0;
     white-space: nowrap;
     overflow: hidden;
+    flex-shrink: 0;
   }
 </style>

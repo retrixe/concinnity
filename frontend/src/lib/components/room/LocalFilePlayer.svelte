@@ -89,6 +89,11 @@
     text-align: center;
     padding: 1rem;
     gap: 1rem;
+
+    h1 {
+      word-break: break-word;
+      text-wrap: balance;
+    }
   }
 
   .error-banner {

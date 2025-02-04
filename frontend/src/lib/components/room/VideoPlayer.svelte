@@ -198,6 +198,7 @@
 
   // TODO: Implement tooltips
   // TODO: Implement kb controls for all when cursor in bounds (except stop, to avoid accidents)
+  // TODO: Width of transiently passed videos are incorrect sometimes
 </script>
 
 <svelte:document bind:fullscreenElement />
@@ -230,8 +231,6 @@
       <track kind="subtitles" src={subtitleUrl} label={subtitle?.[1] ?? 'N/A'} default />
     {/if}
   </video>
-  <!-- TODO: Width of transiently passed videos are incorrect sometimes -->
-  <!-- TODO: Controls are too wide on mobile in portrait -->
   {#if controlsVisible || settingsMenu}
     <div class="controls top" transition:fade>
       <span>{name}</span>
@@ -253,6 +252,7 @@
         oninput={handleTimeScrub}
         onkeydown={handleTimeScrub}
         style:flex="1"
+        style:min-width="50px"
       />
       <!-- TODO: The constantly changing width of this thing bugs me -->
       <span
