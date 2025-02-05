@@ -38,7 +38,12 @@
 
 <div class="video" class:error>
   {#if error}
-    <h1>Error encountered! Reconnecting in 10s...</h1>
+    <h1>
+      Error encountered!
+      {#if error !== 'You are not authenticated to access this resource!'}
+        Reconnecting in 10s...
+      {/if}
+    </h1>
     <h2>{error}</h2>
   {:else if connecting}
     <h1>Connecting to room...</h1>

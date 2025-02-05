@@ -105,8 +105,9 @@
   })
 
   // Reconnect if there's an error and the page is visible
-  // TODO: Get rid of the 10s delay on first reconnect after page is visible
-  const isError = $derived(!!wsError) // We don't care if the error message changed for this $effect
+  const isError = $derived(
+    wsError && wsError !== 'You are not authenticated to access this resource!',
+  ) // We don't care if the error message changed for this $effect, and don't reconnect if not authed.
   $effect(() => {
     if (isError && visibilityState === 'visible') {
       let timeout = -1
