@@ -106,17 +106,22 @@
 
   // Reconnect if there's an error and the page is visible
   // TODO: Get rid of the 10s delay on first reconnect after page is visible
+  const isError = $derived(!!wsError) // We don't care if the error message changed for this $effect
   $effect(() => {
-    if (wsError && visibilityState === 'visible') {
-      const interval = setInterval(async () => {
+    if (isError && visibilityState === 'visible') {
+      let timeout = -1
+      const reconnect = async () => {
         try {
           ws = await connect(id, { onMessage, onClose }, true)
           wsError = null
         } catch (e: unknown) {
           if (e instanceof Error) wsError = e.message
+          timeout = setTimeout(reconnect, 10000)
         }
-      }, 10000)
-      return () => clearInterval(interval)
+      }
+      if (wsInitialConnect) timeout = setTimeout(reconnect, 10000)
+      else reconnect() // eslint-disable-line @typescript-eslint/no-floating-promises
+      return () => clearTimeout(timeout)
     }
   })
 
