@@ -84,7 +84,9 @@
   $effect(synchroniseToPlayerState)
 
   // Send player state changes on pause or speed change
-  // TODO: This doesn't interact with extensions like Video Speed Controller
+  // TODO: This doesn't interact with e.g. extensions like Video Speed Controller or closing PiP
+  // We could update the player state on ratechange/pause/play/durationchange in the video?
+  // (Though we'll need to ignore any of our own changes when these events are fired...)
   const handlePlayerStateChange = () => {
     lastLocalAction = new Date()
     const time = lastLocalAction.toISOString()
@@ -115,10 +117,11 @@
   const handleMuteToggle = () => (muted = !muted)
 
   const handleVolumeScrub = (e: KeyboardEvent) => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    const increase = e.key === 'ArrowUp' || e.key === 'ArrowRight'
+    const decrease = e.key === 'ArrowDown' || e.key === 'ArrowLeft'
+    if (increase || decrease) {
       e.preventDefault()
-      volume = e.key === 'ArrowLeft' ? Math.max(0, volume - 0.1) : Math.min(1, volume + 0.1)
-      handlePlayerStateChange()
+      volume = decrease ? Math.max(0, volume - 0.1) : Math.min(1, volume + 0.1)
     }
   }
 
@@ -196,13 +199,22 @@
     if (settingsMenu && outsideSettingsMenuBounds) settingsMenu = null
   }
 
+  const handleKeyboardControls = (event: KeyboardEvent) => {
+    if (event.target !== document.body) return
+    if (event.key === ' ') handlePlayPause()
+    if (event.key === 'm') handleMuteToggle()
+    if (event.key === 'f') handleFullScreenToggle()
+    if (event.key === 'p') handlePiPToggle()
+    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') handleVolumeScrub(event)
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') handleTimeScrub(event)
+  }
+
   // TODO: Implement tooltips
-  // TODO: Implement kb controls for all when cursor in bounds (except stop, to avoid accidents)
   // TODO: Width of transiently passed videos are incorrect sometimes
 </script>
 
 <svelte:document bind:fullscreenElement />
-<svelte:window onclickcapture={handleWindowClick} />
+<svelte:window onclickcapture={handleWindowClick} onkeydown={handleKeyboardControls} />
 <div
   role="presentation"
   class="player-container"
