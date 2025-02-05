@@ -39,7 +39,13 @@
 
   const handleSelectVideo = async () => {
     try {
-      video = (await openFileOrFiles()) ?? null
+      video =
+        (await openFileOrFiles({
+          types: [
+            // .mkv is not supported by Firefox (so far, tested on Linux + Chrome / Firefox)
+            { description: 'Videos', accept: { 'video/*': ['.mp4', '.webm', '.mkv', '.mov'] } },
+          ],
+        })) ?? null
     } catch (e: unknown) {
       console.error('Failed to select local file!', e)
     }

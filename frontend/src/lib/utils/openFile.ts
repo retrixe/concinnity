@@ -4,9 +4,10 @@ interface FileWithHandle extends File {
 }
 
 // TODO: Restrict file types for videos and subtitles.
-export function openFileOrFiles(multiple: true): Promise<FileWithHandle[] | undefined>
-export function openFileOrFiles(multiple?: false): Promise<FileWithHandle | undefined>
-export async function openFileOrFiles(multiple = false) {
+export async function openFileOrFiles<T extends boolean = false>(options?: {
+  multiple?: T
+  types?: { description?: string; accept: Record<string, string[]> }[]
+}): Promise<(T extends true ? FileWithHandle[] : FileWithHandle) | undefined> {
   // Feature detection. The API needs to be supported
   // and the app not run in an iframe.
   const supportsFileSystemAccess =
@@ -25,9 +26,9 @@ export async function openFileOrFiles(multiple = false) {
       // Show the file picker, optionally allowing multiple files.
       // @ts-expect-error -- Seems to not be recognized by TypeScript.
       // eslint-disable-next-line
-      const handles: FileSystemFileHandle[] = await showOpenFilePicker({ multiple })
+      const handles: FileSystemFileHandle[] = await showOpenFilePicker(options)
       // Only one file is requested.
-      if (!multiple) {
+      if (!options?.multiple) {
         // Add the `FileSystemFileHandle` as `.handle`.
         fileOrFiles = await handles[0].getFile()
         fileOrFiles.handle = handles[0]
@@ -47,7 +48,7 @@ export async function openFileOrFiles(multiple = false) {
         throw err
       }
     }
-    return fileOrFiles
+    return fileOrFiles as (T extends true ? FileWithHandle[] : FileWithHandle) | undefined
   }
   // Fallback if the File System Access API is not supported.
   return new Promise(resolve => {
@@ -56,8 +57,11 @@ export async function openFileOrFiles(multiple = false) {
     input.style.display = 'none'
     input.type = 'file'
     document.body.append(input)
-    if (multiple) {
+    if (options?.multiple) {
       input.multiple = true
+    }
+    if (options?.types?.length) {
+      input.accept = options.types.flatMap(({ accept }) => Object.entries(accept)).join(',')
     }
     // The `change` event fires when the user interacts with the dialog.
     input.addEventListener('change', () => {
@@ -68,7 +72,8 @@ export async function openFileOrFiles(multiple = false) {
         return
       }
       // Return all files or just one file.
-      resolve(multiple ? Array.from(input.files) : input.files[0])
+      const fileOrFiles = options?.multiple ? Array.from(input.files) : input.files[0]
+      resolve(fileOrFiles as (T extends true ? FileWithHandle[] : FileWithHandle) | undefined)
     })
     // Show the picker.
     if ('showPicker' in HTMLInputElement.prototype) {

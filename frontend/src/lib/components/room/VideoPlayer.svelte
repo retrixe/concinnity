@@ -163,7 +163,14 @@
   })
 
   const handleSubtitleUpload = async () => {
-    const file = await openFileOrFiles()
+    const file = await openFileOrFiles({
+      types: [
+        {
+          description: 'Subtitles',
+          accept: { 'text/vtt': ['.vtt'], 'application/x-subrip': ['.srt'] },
+        },
+      ],
+    })
     if (!file) return
     if (file.size > 1024 * 1024) return alert('Subtitles must be less than 1MB!')
     const filename = encodeURIComponent(file.name)

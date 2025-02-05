@@ -17,7 +17,12 @@
 
   const onclick = async () => {
     try {
-      const file = await openFileOrFiles()
+      const file = await openFileOrFiles({
+        types: [
+          // .mkv is not supported by Firefox (so far, tested on Linux + Chrome / Firefox)
+          { description: 'Videos', accept: { 'video/*': ['.mp4', '.webm', '.mkv', '.mov'] } },
+        ],
+      })
       if (!file) return
 
       await ky.patch(`api/room/${id}`, {
