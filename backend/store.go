@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,7 +12,9 @@ type RoomMembers = *xsync.MapOf[chan<- interface{}, uuid.UUID]
 
 var roomMembers *xsync.MapOf[string, RoomMembers] = xsync.NewMapOf[string, RoomMembers]()
 
-var userRooms *xsync.MapOf[uuid.UUID, *atomic.Int32] = xsync.NewMapOf[uuid.UUID, *atomic.Int32]()
+type UserConns = *xsync.MapOf[chan<- interface{}, string]
+
+var userConns *xsync.MapOf[uuid.UUID, UserConns] = xsync.NewMapOf[uuid.UUID, UserConns]()
 
 func CleanInactiveRoomsTask() {
 	for {

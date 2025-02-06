@@ -172,6 +172,7 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutEndpoint(w http.ResponseWriter, r *http.Request) {
+	// Could be made more efficient, but MySQL lacks DELETE ... RETURNING so what's the point *sigh*
 	_, token := IsAuthenticatedHTTP(w, r)
 	if token == nil {
 		return
@@ -189,6 +190,15 @@ func LogoutEndpoint(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errorJson("You are not authenticated to access this resource!"),
 			http.StatusUnauthorized)
 		return
+	}
+	// Disconnect existing sessions
+	if conns, ok := userConns.Load(token.UserID); ok {
+		conns.Range(func(key chan<- interface{}, value string) bool {
+			if value == token.Token {
+				key <- nil
+			}
+			return true
+		})
 	}
 	// Delete cookie on browser.
 	http.SetCookie(w, &http.Cookie{

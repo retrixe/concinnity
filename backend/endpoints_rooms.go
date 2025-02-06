@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	"github.com/coder/websocket"
@@ -305,7 +304,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	} else if err != nil {
 		wsInternalError(c, err)
 		return
-	} else if rooms, ok := userRooms.Load(user.ID); ok && rooms.Load() >= 3 {
+	} else if rooms, ok := userConns.Load(user.ID); ok && rooms.Size() >= 3 {
 		wsError(c, "You are in too many rooms!", 4429)
 		return
 	}
@@ -380,10 +379,10 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	members, _ := roomMembers.LoadOrStore(room.ID, xsync.NewMapOf[chan<- interface{}, uuid.UUID]())
 	members.Store(writeChannel, user.ID)
 	defer members.Delete(writeChannel)
-	roomCounter, _ := userRooms.LoadOrStore(user.ID, &atomic.Int32{})
-	roomCounter.Add(1)
-	defer userRooms.Compute(user.ID, func(value *atomic.Int32, loaded bool) (*atomic.Int32, bool) {
-		if val := value.Add(-1); val == 0 {
+	connections, _ := userConns.LoadOrStore(user.ID, xsync.NewMapOf[chan<- interface{}, string]())
+	connections.Store(writeChannel, authMessage.Token)
+	defer userConns.Compute(user.ID, func(value UserConns, loaded bool) (UserConns, bool) {
+		if value.Delete(writeChannel); value.Size() == 0 {
 			return value, true
 		}
 		return value, false
@@ -392,6 +391,11 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Create write thread
 	go (func() {
 		for msg := range writeChannel {
+			if msg == nil {
+				// Only logging out will send an abrupt `nil` closure atm.
+				wsError(c, "You are not authenticated to access this resource!", 4401)
+				return
+			}
 			err := wsjsonWriteWithTimeout(context.Background(), c, msg)
 			if errors.Is(err, net.ErrClosed) || errors.Is(err, context.Canceled) { // TODO correct?
 				return

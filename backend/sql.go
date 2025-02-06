@@ -137,6 +137,7 @@ func translate(query string) string {
 		query = regexp.MustCompile(`ON CONFLICT \([^)]+\) DO UPDATE SET`).ReplaceAllString(query, "ON DUPLICATE KEY UPDATE")
 		// TODO: Translate CTEs to MySQL equivalents
 		// TODO: Translate UPDATE ... RETURNING to MySQL equivalents
+		// TODO: Translate $# in code with if conditions since MySQL doesn't have ordered parameters
 		// TODO: Translate ANY() in queries not taking arrays to MySQL equivalents
 	}
 	return query
