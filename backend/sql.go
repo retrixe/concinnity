@@ -95,7 +95,7 @@ func PrepareSqlStatements() {
 	createUserStmt = prepareQuery("INSERT INTO users (username, password, email, id, verified) VALUES ($1, $2, $3, $4, $5);")
 
 	insertTokenStmt = prepareQuery("INSERT INTO tokens (token, created_at, user_id) VALUES ($1, $2, $3);")
-	deleteTokenStmt = prepareQuery("DELETE FROM tokens WHERE token = $1;")
+	deleteTokenStmt = prepareQuery("DELETE FROM tokens WHERE token = $1 RETURNING user_id;")
 
 	insertRoomStmt = prepareQuery("INSERT INTO rooms (id, type, target) " +
 		"VALUES ($1, $2, $3);")
@@ -137,6 +137,7 @@ func translate(query string) string {
 		query = regexp.MustCompile(`ON CONFLICT \([^)]+\) DO UPDATE SET`).ReplaceAllString(query, "ON DUPLICATE KEY UPDATE")
 		// TODO: Translate CTEs to MySQL equivalents
 		// TODO: Translate UPDATE ... RETURNING to MySQL equivalents
+		// TODO: Translate DELETE ... RETURNING to MySQL equivalents
 		// TODO: Translate $# in code with if conditions since MySQL doesn't have ordered parameters
 		// TODO: Translate ANY() in queries not taking arrays to MySQL equivalents
 	}

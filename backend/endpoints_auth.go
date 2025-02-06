@@ -172,29 +172,26 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutEndpoint(w http.ResponseWriter, r *http.Request) {
-	// Could be made more efficient, but MySQL lacks DELETE ... RETURNING so what's the point *sigh*
-	_, token := IsAuthenticatedHTTP(w, r)
-	if token == nil {
-		return
-	}
-	result, err := deleteTokenStmt.Exec(token.Token)
-	if err != nil {
-		handleInternalServerError(w, err)
-		return
-	}
-	rows, err := result.RowsAffected()
-	if err != nil {
-		handleInternalServerError(w, err)
-		return
-	} else if rows == 0 {
+	token := GetTokenFromHTTP(r)
+	if token == "" {
 		http.Error(w, errorJson("You are not authenticated to access this resource!"),
 			http.StatusUnauthorized)
 		return
 	}
+	var userID uuid.UUID
+	err := deleteTokenStmt.QueryRow(token).Scan(&userID)
+	if err == sql.ErrNoRows {
+		http.Error(w, errorJson("You are not authenticated to access this resource!"),
+			http.StatusUnauthorized)
+		return
+	} else if err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
 	// Disconnect existing sessions
-	if conns, ok := userConns.Load(token.UserID); ok {
+	if conns, ok := userConns.Load(userID); ok {
 		conns.Range(func(key chan<- interface{}, value string) bool {
-			if value == token.Token {
+			if value == token {
 				key <- nil
 			}
 			return true

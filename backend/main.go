@@ -39,7 +39,7 @@ type Config struct {
 	BasePath      string `json:"basePath"`
 	SecureCookies bool   `json:"secureCookies"`
 	// Note:
-	// - MySQL support is best effort, may have issues and break at any time, PostgreSQL recommended
+	// - MySQL support is best effort and untested! PostgreSQL is the only recommended option.
 	// - MySQL requires ?parseTime=true&multiStatements=true to be set on the URL
 	// - MySQL should be using the UTC time zone, anything else may or may not cause issues
 	Database    string `json:"database"`
