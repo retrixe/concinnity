@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { goto, invalidate } from '$app/navigation'
+  import { goto } from '$app/navigation'
   import { page } from '$app/state'
   import ky from '$lib/api/ky'
   import Box from '$lib/components/Box.svelte'
   import Button from '$lib/components/Button.svelte'
   import TextInput from '$lib/components/TextInput.svelte'
 
-  let login = $state({ username: '', password: '' })
+  let register = $state({ username: '', password: '', email: '' })
   let disabled = $state(false)
   let error: string | null = $state(null)
 
@@ -15,55 +15,58 @@
     if (username) goto('/').catch(console.error)
   })
 
-  async function onLogin() {
+  async function onRegister() {
     disabled = true
     try {
-      const res = await ky
-        .post(`api/login`, { json: login })
-        .json<{ token: string; username: string }>()
-      localStorage.setItem('concinnity:token', res.token)
+      await ky.post(`api/register`, { json: register }).json<{ token: string; username: string }>()
       error = ''
     } catch (e: unknown) {
-      error = e instanceof Error ? e.message : (e?.toString() ?? `Failed to login!`)
+      error = e instanceof Error ? e.message : (e?.toString() ?? `Failed to register!`)
     }
     disabled = false
-    if (!error) {
-      invalidate('app:auth').catch(console.error)
-    }
   }
 </script>
 
 <div class="container">
   <Box>
-    <h2>Login</h2>
+    <h2>Register</h2>
     <br />
-    <label for="login-username">E-mail / Username</label>
+    <label for="register-username">Username</label>
     <TextInput
-      id="login-username"
-      bind:value={login.username}
+      id="register-username"
+      bind:value={register.username}
+      error={!!error}
+      {disabled}
+      type="email"
+      placeholder="e.g. retrixe"
+    />
+    <label for="register-email">E-mail</label>
+    <TextInput
+      id="register-email"
+      bind:value={register.email}
       error={!!error}
       {disabled}
       type="email"
       placeholder="e.g. aelia@retrixe.xyz"
     />
-    <label for="login-password">Password</label>
+    <label for="register-password">Password</label>
     <TextInput
-      id="login-password"
-      bind:value={login.password}
+      id="register-password"
+      bind:value={register.password}
       error={!!error}
       {disabled}
       type="password"
-      onkeypress={e => e.key === 'Enter' && onLogin() /* eslint-disable-line */}
+      onkeypress={e => e.key === 'Enter' && onRegister() /* eslint-disable-line */}
     />
     {#if error === ''}
-      <p class="result">Logged in successfully! You should be redirected shortly...</p>
+      <p class="result">Registered successfully! Wait for your account to be verified.</p>
     {:else if !!error}
       <p class="result error">{error}</p>
     {/if}
     <br />
-    <Button {disabled} onclick={onLogin}>Login</Button>
+    <Button {disabled} onclick={onRegister}>Sign Up</Button>
     <br />
-    <p>Don't have an account? <a href="/register">Sign up</a></p>
+    <p>Already have an account? <a href="/login">Log in</a></p>
   </Box>
 </div>
 

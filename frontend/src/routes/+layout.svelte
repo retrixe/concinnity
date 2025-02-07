@@ -60,10 +60,10 @@
     <span>{username}</span>
     <div class="divider"></div>
     <a href="/" class="unstyled-link" onclick={logout}>Sign Out</a>
-  {:else if page.url.pathname !== '/login'}
+  {:else if page.url.pathname !== '/login' && page.url.pathname !== '/register'}
     <a href="/login" class="unstyled-link">Login</a>
     <div class="divider"></div>
-    <a href="/login" class="unstyled-link">Sign Up</a>
+    <a href="/register" class="unstyled-link">Sign Up</a>
     {#if page.url.pathname === '/'}
       <div class="divider"></div>
       <a
