@@ -100,8 +100,8 @@
       :root {
         color-scheme: dark;
         --link-color: #df73ff;
-        --background-color: #111;
-        --surface-color: #0e0e10; /* Jet black */
+        --background-color: #0e0e10; /* Jet black */
+        --surface-color: #1b1b1b; /* Eerie black */
         --color: #ffffff;
         --divider-color: #666;
       }
@@ -114,7 +114,7 @@
       :root {
         --link-color: #8f00ff;
         --background-color: #f5f5f5; /* White smoke */
-        --surface-color: #f4f5fa; /* White solid */
+        --surface-color: #fcfcfc; /* White smoke but brighter */
         --color: #000000;
         --divider-color: #bbb;
       }

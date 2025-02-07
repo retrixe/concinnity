@@ -114,6 +114,9 @@
     p {
       font-size: 1.2rem;
     }
+    :global(input) {
+      width: 250px;
+    }
     :global(button) {
       font-size: 1rem;
     }

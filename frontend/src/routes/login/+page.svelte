@@ -178,4 +178,8 @@
       align-items: flex-start;
     }
   }
+
+  :global(input) {
+    width: 250px;
+  }
 </style>
