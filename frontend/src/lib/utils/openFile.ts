@@ -3,7 +3,6 @@ interface FileWithHandle extends File {
   handle?: FileSystemFileHandle
 }
 
-// TODO: Restrict file types for videos and subtitles.
 export async function openFileOrFiles<T extends boolean = false>(options?: {
   multiple?: T
   types?: { description?: string; accept: Record<string, string[]> }[]
