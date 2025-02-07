@@ -143,6 +143,9 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 	} else if !user.Verified {
 		http.Error(w, errorJson("Your account is not verified yet!"), http.StatusForbidden)
 		return
+	} else if !ComparePassword(data.Password, user.Password) {
+		http.Error(w, errorJson("Incorrect password!"), http.StatusUnauthorized)
+		return
 	}
 	tokenBytes := make([]byte, 64)
 	_, _ = rand.Read(tokenBytes)
