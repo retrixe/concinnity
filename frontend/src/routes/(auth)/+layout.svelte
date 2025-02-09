@@ -18,19 +18,6 @@
 </div>
 
 <style lang="scss">
-  :global(.error) {
-    color: var(--error-color);
-  }
-
-  :global(label) {
-    padding: 0.5rem 0rem;
-    font-weight: bold;
-  }
-
-  :global(p) {
-    align-self: center;
-  }
-
   .container > :global(div) {
     display: flex;
     flex-direction: column;
@@ -38,6 +25,19 @@
     margin: 1.5rem;
     width: 100%;
     max-width: 400px;
+
+    :global(.error) {
+      color: var(--error-color);
+    }
+
+    :global(label) {
+      padding: 0.5rem 0rem;
+      font-weight: bold;
+    }
+
+    :global(p) {
+      align-self: center;
+    }
   }
 
   .container {

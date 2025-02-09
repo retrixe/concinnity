@@ -55,11 +55,6 @@
 </div>
 
 <style lang="scss">
-  // Linear progress
-  :global(.loader) {
-    max-width: 20rem;
-  }
-
   .error {
     h1 {
       color: var(--error-color);
@@ -84,6 +79,11 @@
     color: white;
     @media screen and (min-width: 768px) {
       flex: 1;
+    }
+
+    // Linear progress
+    :global(.loader) {
+      max-width: 20rem;
     }
   }
 </style>
