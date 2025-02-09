@@ -202,7 +202,9 @@
 
   const handleWindowClick = (event: MouseEvent) => {
     const outsideSettingsMenuBounds =
-      event.target instanceof Element && !event.target.closest('.settings-menu')
+      event.target instanceof Element &&
+      !event.target.closest('.settings-menu') &&
+      !event.target.closest('.settings-open-btn') // Exclude the settings button itself
     if (settingsMenu && outsideSettingsMenuBounds) settingsMenu = null
   }
 
@@ -305,7 +307,7 @@
         class="hide-on-mobile"
       />
       <div style:position="relative">
-        <Button onclick={handleSettingsOpen}>
+        <Button class="settings-open-btn" onclick={handleSettingsOpen}>
           <Gear weight="bold" size="16px" />
         </Button>
         <div class="settings-menu" style:visibility={settingsMenu ? 'visible' : 'hidden'}>
@@ -402,7 +404,7 @@
     justify-content: center;
     cursor: pointer;
     user-select: none;
-    z-index: 2;
+    z-index: 100;
     background-color: rgba(0, 0, 0, 0.5);
   }
 

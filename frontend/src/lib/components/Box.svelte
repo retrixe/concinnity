@@ -14,6 +14,6 @@
     background-color: var(--surface-color);
     border: 1px solid var(--divider-color);
     border-radius: 8px;
-    box-shadow: 0 0 1rem rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 1rem rgba(0, 0, 0, 0.2);
   }
 </style>

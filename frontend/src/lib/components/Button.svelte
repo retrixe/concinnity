@@ -10,6 +10,10 @@
 
 <style lang="scss">
   button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
     padding: 0.6rem 1.6rem;
     color: white;
     background-color: var(--primary-color);
