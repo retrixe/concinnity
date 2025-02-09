@@ -2,9 +2,8 @@
   import { onMount } from 'svelte'
   import { page } from '$app/state'
   import Chat from '$lib/components/room/Chat.svelte'
+  import FilePlayer from '$lib/components/room/FilePlayer.svelte'
   import RoomLanding from '$lib/components/room/RoomLanding.svelte'
-  import LocalFilePlayer from '$lib/components/room/LocalFilePlayer.svelte'
-  import RemoteFilePlayer from '$lib/components/room/RemoteFilePlayer.svelte'
   import {
     connect,
     initialPlayerState,
@@ -153,9 +152,9 @@
 <div class="container room" bind:this={containerEl}>
   {#if !roomInfo || roomInfo.type === RoomType.None}
     <RoomLanding bind:transientVideo error={wsError} connecting={wsInitialConnect} />
-  {:else if roomInfo.type === RoomType.LocalFile}
+  {:else if roomInfo.type === RoomType.LocalFile || roomInfo.type === RoomType.RemoteFile}
     {#key roomInfo.target}
-      <LocalFilePlayer
+      <FilePlayer
         bind:transientVideo
         {roomInfo}
         {playerState}
@@ -165,15 +164,6 @@
         fullscreenEl={containerEl}
       />
     {/key}
-  {:else if roomInfo.type === RoomType.RemoteFile}
-    <RemoteFilePlayer
-      {roomInfo}
-      {playerState}
-      bind:subtitles
-      {onPlayerStateChange}
-      error={wsError}
-      fullscreenEl={containerEl}
-    />
   {:else}
     <RoomLanding bind:transientVideo error="Invalid room type!" connecting={false} />
   {/if}

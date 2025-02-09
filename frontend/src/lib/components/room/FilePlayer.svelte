@@ -29,15 +29,22 @@
     transientVideo = $bindable(null),
     fullscreenEl,
   }: Props = $props()
-  const targetName = $derived(roomInfo.target.substring(roomInfo.target.indexOf(':') + 1))
 
   let video = $state<File | null>(null)
-  const src = $derived(video ? URL.createObjectURL(video) : null)
+  const target = $derived(roomInfo.target.substring(roomInfo.target.indexOf(':') + 1))
+  const src = $derived(
+    roomInfo.type === RoomType.RemoteFile ? target : video ? URL.createObjectURL(video) : null,
+  )
+  const name = $derived(
+    roomInfo.type === RoomType.RemoteFile
+      ? decodeURIComponent(target.substring(target.lastIndexOf('/') + 1))
+      : target,
+  )
   let menuOpen = $state(false)
   // If transientVideo matches up with the target, play it, else discard it
   $effect(() => {
-    if (transientVideo !== null) {
-      if (video === null && targetName === transientVideo.name) video = transientVideo
+    if (roomInfo.type === RoomType.LocalFile && transientVideo !== null) {
+      if (video === null && name === transientVideo.name) video = transientVideo
       transientVideo = null
     }
   })
@@ -69,7 +76,7 @@
 <div class="video-container">
   {#if src === null}
     <div class="video-select">
-      <h1>Select {targetName} to start playing</h1>
+      <h1>Select {name} to start playing</h1>
       <DropdownButton
         primary={{ onclick: handleSelectVideo }}
         secondary={{ onclick: () => (menuOpen = !menuOpen) }}
@@ -84,7 +91,7 @@
   {:else}
     <VideoPlayer
       {src}
-      name={targetName}
+      {name}
       {playerState}
       {onPlayerStateChange}
       bind:subtitles
