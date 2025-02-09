@@ -4,6 +4,7 @@
   import Chat from '$lib/components/room/Chat.svelte'
   import RoomLanding from '$lib/components/room/RoomLanding.svelte'
   import LocalFilePlayer from '$lib/components/room/LocalFilePlayer.svelte'
+  import RemoteFilePlayer from '$lib/components/room/RemoteFilePlayer.svelte'
   import {
     connect,
     initialPlayerState,
@@ -164,6 +165,15 @@
         fullscreenEl={containerEl}
       />
     {/key}
+  {:else if roomInfo.type === RoomType.RemoteFile}
+    <RemoteFilePlayer
+      {roomInfo}
+      {playerState}
+      bind:subtitles
+      {onPlayerStateChange}
+      error={wsError}
+      fullscreenEl={containerEl}
+    />
   {:else}
     <RoomLanding bind:transientVideo error="Invalid room type!" connecting={false} />
   {/if}

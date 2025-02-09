@@ -25,7 +25,7 @@
   import { page } from '$app/state'
 
   interface Props {
-    video: File
+    src: string
     name: string
     playerState: PlayerState
     onPlayerStateChange: (newState: PlayerState) => void
@@ -35,7 +35,7 @@
   }
   const id = page.params.id
   const {
-    video,
+    src,
     name,
     playerState,
     onPlayerStateChange,
@@ -43,7 +43,6 @@
     fullscreenEl,
     onStop: handleStop,
   }: Props = $props()
-  const src = $derived(URL.createObjectURL(video))
 
   let controlsVisible = $state(false)
   let lastLocalAction: Date | null = null

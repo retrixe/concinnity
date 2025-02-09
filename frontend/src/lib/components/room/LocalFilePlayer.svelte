@@ -29,6 +29,7 @@
   const targetName = $derived(roomInfo.target.substring(roomInfo.target.indexOf(':') + 1))
 
   let video = $state<File | null>(null)
+  const src = $derived(video ? URL.createObjectURL(video) : null)
   // If transientVideo matches up with the target, play it, else discard it
   $effect(() => {
     if (transientVideo !== null) {
@@ -62,14 +63,14 @@
 </script>
 
 <div class="video-container">
-  {#if video === null}
+  {#if src === null}
     <div class="video-select">
       <h1>Select {targetName} to start playing</h1>
       <Button onclick={handleSelectVideo}>Select local file</Button>
     </div>
   {:else}
     <VideoPlayer
-      {video}
+      {src}
       name={targetName}
       {playerState}
       {onPlayerStateChange}
