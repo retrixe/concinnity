@@ -3,7 +3,10 @@
   import ky from '$lib/api/ky'
   import { RoomType, type PlayerState, type RoomInfo } from '$lib/api/room'
   import { openFileOrFiles } from '$lib/utils/openFile'
-  import Button from '../Button.svelte'
+  import { CaretDown } from 'phosphor-svelte'
+  import DropdownButton from '../DropdownButton.svelte'
+  import Menu from '../Menu.svelte'
+  import MenuItem from '../MenuItem.svelte'
   import VideoPlayer from './VideoPlayer.svelte'
 
   interface Props {
@@ -30,6 +33,7 @@
 
   let video = $state<File | null>(null)
   const src = $derived(video ? URL.createObjectURL(video) : null)
+  let menuOpen = $state(false)
   // If transientVideo matches up with the target, play it, else discard it
   $effect(() => {
     if (transientVideo !== null) {
@@ -66,7 +70,16 @@
   {#if src === null}
     <div class="video-select">
       <h1>Select {targetName} to start playing</h1>
-      <Button onclick={handleSelectVideo}>Select local file</Button>
+      <DropdownButton
+        primary={{ onclick: handleSelectVideo }}
+        secondary={{ onclick: () => (menuOpen = !menuOpen) }}
+      >
+        {#snippet primaryChild()}Select local file{/snippet}
+        {#snippet secondaryChild()}<CaretDown weight="bold" size="16px" />{/snippet}
+        <Menu open={menuOpen} onClose={() => (menuOpen = false)}>
+          <MenuItem onclick={handleStop}>Play another video</MenuItem>
+        </Menu>
+      </DropdownButton>
     </div>
   {:else}
     <VideoPlayer
