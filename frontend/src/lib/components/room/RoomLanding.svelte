@@ -3,8 +3,14 @@
   import ky from '$lib/api/ky'
   import { RoomType } from '$lib/api/room'
   import { openFileOrFiles } from '$lib/utils/openFile'
-  import Button from '../Button.svelte'
+  import { CaretDown } from 'phosphor-svelte'
   import LinearProgress from '../LinearProgress.svelte'
+  import Button from '../Button.svelte'
+  import Dialog from '../Dialog.svelte'
+  import DropdownButton from '../DropdownButton.svelte'
+  import Menu from '../Menu.svelte'
+  import MenuItem from '../MenuItem.svelte'
+  import TextInput from '../TextInput.svelte'
 
   interface Props {
     error: string | null
@@ -15,7 +21,17 @@
   const id = page.params.id
   let { error, connecting, transientVideo = $bindable(null) }: Props = $props()
 
-  const onclick = async () => {
+  let menuOpen = $state(false)
+  let remoteFileUrl = $state<string | null>(null)
+
+  const handleOpenMenu = () => (menuOpen = !menuOpen)
+
+  const handleOpenRemoteFileDialog = () => {
+    menuOpen = false
+    remoteFileUrl = ''
+  }
+
+  const handleSelectLocalFile = async () => {
     try {
       const file = await openFileOrFiles({
         types: [
@@ -34,6 +50,19 @@
       console.error('Failed to select local file!', e)
     }
   }
+
+  const handlePlayRemoteFile = async () => {
+    if (!remoteFileUrl) return
+
+    try {
+      await ky.patch(`api/room/${id}`, {
+        json: { type: RoomType.RemoteFile, target: `${Date.now()}:${remoteFileUrl}` },
+      })
+    } catch (e: unknown) {
+      alert('Failed to play remote file!')
+      console.error('Failed to play remote file!', e)
+    }
+  }
 </script>
 
 <div class="video" class:error>
@@ -50,7 +79,28 @@
     <LinearProgress />
   {:else}
     <h1>No video playing</h1>
-    <Button {onclick}>Select local file</Button>
+    <DropdownButton
+      primary={{ onclick: handleSelectLocalFile }}
+      secondary={{ onclick: handleOpenMenu }}
+    >
+      {#snippet primaryChild()}Select local file{/snippet}
+      {#snippet secondaryChild()}<CaretDown weight="bold" size="16px" />{/snippet}
+      <Menu open={menuOpen} onClose={handleOpenMenu}>
+        <MenuItem onclick={handleOpenRemoteFileDialog}>Remote file (HTTP/S)</MenuItem>
+      </Menu>
+    </DropdownButton>
+    <Dialog open={remoteFileUrl !== null} onClose={() => (remoteFileUrl = null)}>
+      <h2>Enter URL of remote file</h2>
+      <br />
+      <!-- eslint-disable @typescript-eslint/no-non-null-assertion -->
+      <TextInput
+        bind:value={remoteFileUrl!}
+        type="url"
+        placeholder="e.g. https://retrixe.xyz/example.mp4"
+      />
+      <!-- eslint-enable @typescript-eslint/no-non-null-assertion -->
+      <Button onclick={handlePlayRemoteFile}>Play</Button>
+    </Dialog>
   {/if}
 </div>
 
@@ -84,6 +134,10 @@
     // Linear progress
     :global(.loader) {
       max-width: 20rem;
+    }
+
+    :global(.dialog-content) {
+      color: var(--color);
     }
   }
 </style>

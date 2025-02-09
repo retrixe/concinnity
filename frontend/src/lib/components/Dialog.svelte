@@ -46,6 +46,15 @@
     justify-content: center;
     align-items: center;
     backdrop-filter: brightness(0.5);
+
+    :global(.dialog-content) {
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+      margin: 1.5rem;
+      width: 100%;
+      max-width: 400px;
+    }
   }
 
   :global(.scrolllock) {
