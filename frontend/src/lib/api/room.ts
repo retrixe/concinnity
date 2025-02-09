@@ -56,6 +56,18 @@ export function connect(id: string, handlers: Handlers, reconnect = false): Prom
 
     ws.onmessage = event => {
       console.log('Connected to room')
+      // If the first thing we receive is an error, then reject
+      try {
+        if (typeof event.data !== 'string') throw new Error('Invalid message data type!')
+        const message = JSON.parse(event.data) as { error?: string }
+        if ('error' in message) {
+          return reject(new Error(message.error))
+        }
+      } catch (e: unknown) {
+        console.error('Incoming message data has malformed JSON!', e) // Err on the side of safety
+        ws.close(1002, 'Incoming message data has malformed JSON!')
+        return reject(new Error('Incoming message data has malformed JSON!'))
+      }
       // Set new handlers
       if (handlers.onClose) ws.onclose = handlers.onClose.bind(ws)
       if (handlers.onError) ws.onerror = handlers.onError.bind(ws)

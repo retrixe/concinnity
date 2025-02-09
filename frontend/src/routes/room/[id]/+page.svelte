@@ -120,6 +120,7 @@
           timeout = setTimeout(reconnect, 10000)
         }
       }
+      // TODO: Implement exponential backoff
       if (wsInitialConnect) timeout = setTimeout(reconnect, 10000)
       else reconnect() // eslint-disable-line @typescript-eslint/no-floating-promises
       return () => clearTimeout(timeout)
