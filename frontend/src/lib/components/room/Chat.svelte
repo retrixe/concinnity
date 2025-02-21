@@ -96,6 +96,7 @@
 
 <div class="chat">
   <div class="messages" bind:this={messagesEl}>
+    <div class="spacer"></div>
     {#each messageGroups as messageGroup}
       {#if messageGroup.userId === systemUUID}
         <h5 style:text-align="center">
@@ -169,6 +170,9 @@
       font-family: inherit;
       resize: none;
       width: 100%;
+    }
+    .spacer {
+      height: 1rem;
     }
     @media screen and (width < 768px) {
       flex: 1;
