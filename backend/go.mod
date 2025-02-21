@@ -1,6 +1,6 @@
 module github.com/retrixe/concinnity
 
-go 1.22
+go 1.24
 
 require (
 	github.com/coder/websocket v1.8.13-0.20241204191143-11bda985bf5f

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -132,7 +133,7 @@ func UpdateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	// Send message to all room members about the change
 	if members, ok := roomMembers.Load(id); ok {
-		members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
+		members.Range(func(connId RoomConnID, write chan<- interface{}) bool {
 			write <- RoomInfoMessageOutgoing{
 				Type: "room_info",
 				Data: RoomInfoMessageOutgoingData{
@@ -203,7 +204,7 @@ func CreateRoomSubtitleEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	// Send message to all room members about the change
 	if members, ok := roomMembers.Load(r.PathValue("id")); ok {
-		members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
+		members.Range(func(connId RoomConnID, write chan<- interface{}) bool {
 			write <- SubtitleMessageOutgoing{Type: "subtitle", Data: []string{r.URL.Query().Get("name")}}
 			return true
 		})
@@ -376,9 +377,11 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	writeChannel := make(chan interface{}, 16)
 	defer close(writeChannel)
 	// Register user to room
-	members, _ := roomMembers.LoadOrStore(room.ID, xsync.NewMapOf[chan<- interface{}, uuid.UUID]())
-	members.Store(writeChannel, user.ID)
-	defer members.Delete(writeChannel)
+	// TODO: Implement proper support for reconnects that boot the old connection
+	connId := RoomConnID{UserID: user.ID, ClientID: r.URL.Query().Get("clientId") + rand.Text()}
+	members, _ := roomMembers.LoadOrStore(room.ID, xsync.NewMapOf[RoomConnID, chan<- interface{}]())
+	members.Store(connId, writeChannel)
+	defer members.Delete(connId)
 	connections, _ := userConns.LoadOrStore(user.ID, xsync.NewMapOf[chan<- interface{}, string]())
 	connections.Store(writeChannel, authMessage.Token)
 	defer userConns.Compute(user.ID, func(value UserConns, loaded bool) (UserConns, bool) {
@@ -419,7 +422,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		wsInternalError(c, err)
 		return
 	}
-	members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
+	members.Range(func(connId RoomConnID, write chan<- interface{}) bool {
 		write <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
 		return true
 	})
@@ -467,7 +470,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 				wsInternalError(c, err)
 				return
 			}
-			members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
+			members.Range(func(connId RoomConnID, write chan<- interface{}) bool {
 				write <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
 				return true
 			})
@@ -490,7 +493,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 				wsInternalError(c, err)
 				return
 			}
-			members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
+			members.Range(func(connId RoomConnID, write chan<- interface{}) bool {
 				if write == writeChannel {
 					return true // Skip current session
 				}
@@ -509,7 +512,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 				UserID:    user.ID,
 				Timestamp: incoming.Timestamp,
 			}
-			members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
+			members.Range(func(connId RoomConnID, write chan<- interface{}) bool {
 				if write != writeChannel {
 					write <- outgoingData
 				}
@@ -541,7 +544,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		log.Println("Internal Server Error!", err)
 		return
 	}
-	members.Range(func(write chan<- interface{}, userId uuid.UUID) bool {
+	members.Range(func(connId RoomConnID, write chan<- interface{}) bool {
 		write <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
 		return true
 	})

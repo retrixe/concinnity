@@ -8,7 +8,12 @@ import (
 	"github.com/puzpuzpuz/xsync/v3"
 )
 
-type RoomMembers = *xsync.MapOf[chan<- interface{}, uuid.UUID]
+type RoomConnID struct {
+	UserID   uuid.UUID
+	ClientID string
+}
+
+type RoomMembers = *xsync.MapOf[RoomConnID, chan<- interface{}]
 
 var roomMembers *xsync.MapOf[string, RoomMembers] = xsync.NewMapOf[string, RoomMembers]()
 
