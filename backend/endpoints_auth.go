@@ -195,7 +195,7 @@ func LogoutEndpoint(w http.ResponseWriter, r *http.Request) {
 	if conns, ok := userConns.Load(userID); ok {
 		conns.Range(func(key chan<- interface{}, value string) bool {
 			if value == token {
-				key <- nil
+				key <- WsInternalAuthDisconnect
 			}
 			return true
 		})

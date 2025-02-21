@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/coder/websocket"
@@ -215,6 +216,7 @@ func CreateRoomSubtitleEndpoint(w http.ResponseWriter, r *http.Request) {
 
 type AuthMessageIncoming struct {
 	Token     string `json:"token"`
+	ClientID  string `json:"clientId"`
 	Reconnect bool   `json:"reconnect"` // If this is a reconnect
 }
 
@@ -277,6 +279,11 @@ type SubtitleMessageOutgoing struct {
 	Type string   `json:"type"` // subtitle
 	Data []string `json:"data"`
 }
+
+const (
+	WsInternalAuthDisconnect = iota
+	WsInternalClientReconnect
+)
 
 func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Impl note: If target/type change, client should trash currently playing file, subs and reset state.
@@ -377,10 +384,15 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	writeChannel := make(chan interface{}, 16)
 	defer close(writeChannel)
 	// Register user to room
-	// TODO: Implement proper support for reconnects that boot the old connection
-	connId := RoomConnID{UserID: user.ID, ClientID: r.URL.Query().Get("clientId") + rand.Text()}
+	clientId := authMessage.ClientID
+	if clientId == "" {
+		clientId = rand.Text()
+	}
+	connId := RoomConnID{UserID: user.ID, ClientID: clientId}
 	members, _ := roomMembers.LoadOrStore(room.ID, xsync.NewMapOf[RoomConnID, chan<- interface{}]())
-	members.Store(connId, writeChannel)
+	if oldWriteChannel, loaded := members.LoadAndStore(connId, writeChannel); loaded {
+		oldWriteChannel <- WsInternalClientReconnect
+	}
 	defer members.Delete(connId)
 	connections, _ := userConns.LoadOrStore(user.ID, xsync.NewMapOf[chan<- interface{}, string]())
 	connections.Store(writeChannel, authMessage.Token)
@@ -392,11 +404,15 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Create write thread
+	var silentlyDisconnect atomic.Bool
 	go (func() {
 		for msg := range writeChannel {
-			if msg == nil {
-				// Only logging out will send an abrupt `nil` closure atm.
+			if msg == WsInternalAuthDisconnect {
 				wsError(c, "You are not authenticated to access this resource!", 4401)
+				return
+			} else if msg == WsInternalClientReconnect {
+				silentlyDisconnect.Store(true) // Don't notify other clients of a disconnect.
+				wsError(c, "You reconnected from the same client instance!", 4401)
 				return
 			}
 			err := wsjsonWriteWithTimeout(context.Background(), c, msg)
@@ -532,6 +548,9 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify other clients of the disconnect
+	if silentlyDisconnect.Load() {
+		return
+	}
 	chatMsg = ChatMessage{UserID: uuid.Nil}
 	if closeStatus == websocket.StatusNormalClosure || closeStatus == websocket.StatusGoingAway {
 		chatMsg.Message = user.ID.String() + " left"
