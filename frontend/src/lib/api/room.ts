@@ -41,7 +41,12 @@ interface Handlers {
   onMessage?: (this: WebSocket, ev: MessageEvent) => void
 }
 
-export function connect(id: string, handlers: Handlers, reconnect = false): Promise<WebSocket> {
+export function connect(
+  id: string,
+  clientId: string,
+  handlers: Handlers,
+  reconnect = false,
+): Promise<WebSocket> {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(
       `${PUBLIC_BACKEND_URL.replace('http', 'ws')}/api/room/${id}/join`,
@@ -51,7 +56,8 @@ export function connect(id: string, handlers: Handlers, reconnect = false): Prom
     ws.onopen = () => {
       console.log('Connecting to room')
       // Send login message
-      ws.send(JSON.stringify({ token: localStorage.getItem('concinnity:token'), reconnect }))
+      const token = localStorage.getItem('concinnity:token')
+      ws.send(JSON.stringify({ token, reconnect, clientId }))
     }
 
     ws.onmessage = event => {

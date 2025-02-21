@@ -37,6 +37,8 @@
   let wsError: string | null = $state(null)
   const wsInitialConnect = $derived((ws === null && !wsError) || roomInfo === null)
 
+  const clientId = Math.random().toString(36).substring(2)
+
   const onMessage = (event: MessageEvent) => {
     try {
       if (typeof event.data !== 'string') throw new Error('Invalid message data type!')
@@ -86,7 +88,7 @@
   }
 
   onMount(() => {
-    connect(id, { onMessage, onClose })
+    connect(id, clientId, { onMessage, onClose })
       .then(socket => {
         ws = socket
       })
@@ -113,7 +115,7 @@
       let timeout = -1
       const reconnect = async () => {
         try {
-          ws = await connect(id, { onMessage, onClose }, true)
+          ws = await connect(id, clientId, { onMessage, onClose }, true)
           wsError = null
         } catch (e: unknown) {
           if (e instanceof Error) wsError = e.message
