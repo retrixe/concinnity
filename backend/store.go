@@ -21,6 +21,15 @@ type UserConns = *xsync.MapOf[chan<- interface{}, string]
 
 var userConns *xsync.MapOf[uuid.UUID, UserConns] = xsync.NewMapOf[uuid.UUID, UserConns]()
 
+func RegisterRoomMember(roomID string, userID uuid.UUID, clientID string, ch chan<- interface{}) {
+    connID := RoomConnID{UserID: userID, ClientID: clientID}
+    members, _ := roomMembers.LoadOrStore(roomID, xsync.NewMapOf[RoomConnID, chan<- interface{}]())
+    if oldCh, exists := members.Load(connID); exists {
+        close(oldCh)
+    }
+    members.Store(connID, ch)
+}
+
 func CleanInactiveRoomsTask() {
 	for {
 		time.Sleep(10 * time.Minute)

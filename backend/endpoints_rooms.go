@@ -378,9 +378,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	defer close(writeChannel)
 	// Register user to room
 	// TODO: Implement proper support for reconnects that boot the old connection
-	connId := RoomConnID{UserID: user.ID, ClientID: r.URL.Query().Get("clientId") + rand.Text()}
-	members, _ := roomMembers.LoadOrStore(room.ID, xsync.NewMapOf[RoomConnID, chan<- interface{}]())
-	members.Store(connId, writeChannel)
+	RegisterRoomMember(room.ID, user.ID, r.URL.Query().Get("clientId"), writeChannel)
 	defer members.Delete(connId)
 	connections, _ := userConns.LoadOrStore(user.ID, xsync.NewMapOf[chan<- interface{}, string]())
 	connections.Store(writeChannel, authMessage.Token)
