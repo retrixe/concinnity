@@ -72,6 +72,7 @@
 
   let message = $state('')
   const handleSendMessage = () => {
+    if (!message.trim()) return
     onSendMessage(message.trim())
     message = ''
   }
@@ -159,8 +160,7 @@
 <style lang="scss">
   .chat {
     min-height: 0; // Fixes chat overflowing out of parent
-    padding: 1rem;
-    padding-bottom: 0;
+    padding: 0 1rem;
     display: flex;
     flex-direction: column;
     :global(textarea) {
