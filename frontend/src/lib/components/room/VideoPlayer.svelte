@@ -69,6 +69,7 @@
     playbackRate = playerState.speed
     if (playerState.paused) {
       paused = true
+      autoplayNotif = false
     } else {
       const promise = videoEl?.play()
       promise
