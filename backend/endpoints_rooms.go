@@ -452,9 +452,11 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 			err = json.Unmarshal(data, &chatData)
 			// Enforce 2000 char chat message limit
 			msg := strings.TrimSpace(chatData.Data)
-			if err != nil || len(msg) > 2000 {
+			if err != nil {
 				wsError(c, "Invalid chat message!", websocket.StatusUnsupportedData)
 				continue
+			} else if len(msg) > 2000 || len(msg) == 0 {
+				continue // Discard invalid length messages silently
 			}
 
 			// Update state in db and broadcast
