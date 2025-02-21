@@ -7,6 +7,8 @@
   let disabled = $state(false)
   let error: string | null = $state(null)
 
+  const clearError = () => (error = null)
+
   async function onRegister() {
     disabled = true
     try {
@@ -25,6 +27,7 @@
 <TextInput
   id="register-username"
   bind:value={register.username}
+  oninput={clearError}
   error={!!error}
   {disabled}
   type="email"
@@ -34,6 +37,7 @@
 <TextInput
   id="register-email"
   bind:value={register.email}
+  oninput={clearError}
   error={!!error}
   {disabled}
   type="email"
@@ -43,6 +47,7 @@
 <TextInput
   id="register-password"
   bind:value={register.password}
+  oninput={clearError}
   error={!!error}
   {disabled}
   type="password"

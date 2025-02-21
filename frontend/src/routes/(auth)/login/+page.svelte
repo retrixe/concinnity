@@ -8,6 +8,8 @@
   let disabled = $state(false)
   let error: string | null = $state(null)
 
+  const clearError = () => (error = null)
+
   async function onLogin() {
     disabled = true
     try {
@@ -32,6 +34,7 @@
 <TextInput
   id="login-username"
   bind:value={login.username}
+  oninput={clearError}
   error={!!error}
   {disabled}
   type="email"
@@ -41,6 +44,7 @@
 <TextInput
   id="login-password"
   bind:value={login.password}
+  oninput={clearError}
   error={!!error}
   {disabled}
   type="password"
