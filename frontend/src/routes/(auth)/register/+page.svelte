@@ -3,7 +3,7 @@
   import Button from '$lib/components/Button.svelte'
   import TextInput from '$lib/components/TextInput.svelte'
 
-  let register = $state({ username: '', password: '', email: '' })
+  let register = $state({ username: '', password: '', confirmPw: '', email: '' })
   let disabled = $state(false)
   let error: string | null = $state(null)
 
@@ -12,6 +12,9 @@
   async function onRegister() {
     disabled = true
     try {
+      if (register.password !== register.confirmPw) {
+        throw new Error(`Passwords do not match!`)
+      }
       await ky.post(`api/register`, { json: register }).json<{ token: string; username: string }>()
       error = ''
     } catch (e: unknown) {
@@ -47,6 +50,15 @@
 <TextInput
   id="register-password"
   bind:value={register.password}
+  oninput={clearError}
+  error={!!error}
+  {disabled}
+  type="password"
+/>
+<label for="register-confirm-pw">Confirm Password</label>
+<TextInput
+  id="register-confirm-pw"
+  bind:value={register.confirmPw}
   oninput={clearError}
   error={!!error}
   {disabled}
