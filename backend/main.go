@@ -46,7 +46,8 @@ type Config struct {
 	DatabaseURL string `json:"databaseUrl"`
 }
 
-// TODO: implement e-mail verification option, add forgot password endpoint, room member limit
+// TODO: implement e-mail verification option
+// TODO: add forgot password and reset password endpoint
 func main() {
 	log.SetOutput(os.Stderr)
 	configFile, err := os.ReadFile("config.json")
