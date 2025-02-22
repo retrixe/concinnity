@@ -38,6 +38,10 @@
     :global(p) {
       align-self: center;
     }
+
+    :global(.left-align) {
+      align-self: flex-start;
+    }
   }
 
   .container {
