@@ -6,6 +6,7 @@
   let register = $state({ username: '', password: '', confirmPw: '', email: '' })
   let disabled = $state(false)
   let error: string | null = $state(null)
+  let verified = $state(false)
 
   const clearError = () => (error = null)
 
@@ -15,7 +16,10 @@
       if (register.password !== register.confirmPw) {
         throw new Error(`Passwords do not match!`)
       }
-      await ky.post(`api/register`, { json: register }).json<{ token: string; username: string }>()
+      const res = await ky.post(`api/register`, { json: register }).json<{ verified?: boolean }>()
+      if (res.verified) {
+        verified = true
+      }
       error = ''
     } catch (e: unknown) {
       error = e instanceof Error ? e.message : (e?.toString() ?? `Failed to register!`)
@@ -65,8 +69,12 @@
   type="password"
   onkeypress={e => e.key === 'Enter' && onRegister() /* eslint-disable-line */}
 />
-{#if error === ''}
-  <p class="result">Registered successfully! Wait for your account to be verified.</p>
+{#if error === '' && !verified}
+  <p class="result">Registered successfully! Check your e-mail to verify your account.</p>
+{:else if error === ''}
+  <p class="result">
+    Registered successfully! Go to the <a href="/login">login page</a> to get started.
+  </p>
 {:else if !!error}
   <p class="result error">{error}</p>
 {/if}

@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -273,7 +274,8 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 		handleInternalServerError(w, err)
 		return
 	}
-	result, err := createUserStmt.Exec(data.Username, hash, data.Email, uuid, true)
+	verified := true
+	result, err := createUserStmt.Exec(data.Username, hash, data.Email, uuid, verified)
 	if err != nil {
 		handleInternalServerError(w, err)
 		return
@@ -281,5 +283,5 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 		handleInternalServerError(w, err) // nil err solved by Ostrich algorithm
 		return
 	}
-	w.Write([]byte("{\"success\":true}"))
+	w.Write([]byte("{\"success\":true,\"verified\":" + strconv.FormatBool(verified) + "}"))
 }
