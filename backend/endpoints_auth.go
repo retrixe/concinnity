@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -88,7 +89,19 @@ func GetUsernamesEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	rows, err := findUsernamesByIdStmt.Query(pq.Array(requestedIds))
+	var rows *sql.Rows
+	if config.Database == "mysql" {
+		placeholders := strings.Repeat("?,", len(requestedIds))
+		placeholders = placeholders[:len(placeholders)-1]
+		mysqlArr := make([]interface{}, len(requestedIds))
+		for i, id := range requestedIds {
+			mysqlArr[i] = id
+		}
+		rows, err = prepareQuery(
+			"SELECT id, username FROM users WHERE id IN (" + placeholders + ");").Query(mysqlArr...)
+	} else {
+		rows, err = findUsernamesByIdStmt.Query(pq.Array(requestedIds))
+	}
 	if err != nil {
 		handleInternalServerError(w, err)
 		return

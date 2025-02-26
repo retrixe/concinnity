@@ -39,7 +39,8 @@ type Config struct {
 	BasePath      string `json:"basePath"`
 	SecureCookies bool   `json:"secureCookies"`
 	// Note:
-	// - MySQL support is best effort and untested! PostgreSQL is the only recommended option.
+	// - Using PostgreSQL is recommended, MySQL support is experimental and best effort
+	// - Only MariaDB is supported with the "mysql" option, since Oracle MySQL is missing certain features.
 	// - MySQL requires ?parseTime=true&multiStatements=true to be set on the URL
 	// - MySQL should be using the UTC time zone, anything else may or may not cause issues
 	Database    string `json:"database"`

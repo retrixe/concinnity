@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"regexp"
-	"time"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/lib/pq"
@@ -113,8 +112,7 @@ func UpdateRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := r.PathValue("id")
-	var createdAt, modifiedAt time.Time
-	err := updateRoomStmt.QueryRow(id, body.Type, body.Target).Scan(&createdAt, &modifiedAt)
+	createdAt, modifiedAt, err := UpdateRoom(id, body.Type, body.Target)
 	if err == sql.ErrNoRows {
 		http.Error(w, errorJson("Room not found!"), http.StatusNotFound)
 		return

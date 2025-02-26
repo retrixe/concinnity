@@ -5,6 +5,9 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 func CreateSqlTables() {
@@ -66,12 +69,14 @@ var (
 	insertTokenStmt *sql.Stmt
 	deleteTokenStmt *sql.Stmt
 
-	insertRoomStmt        *sql.Stmt
-	findRoomStmt          *sql.Stmt
-	findInactiveRoomsStmt *sql.Stmt
-	updateRoomStmt        *sql.Stmt
-	updateRoomStateStmt   *sql.Stmt
-	deleteRoomStmt        *sql.Stmt
+	insertRoomStmt         *sql.Stmt
+	findRoomStmt           *sql.Stmt
+	findRoomModifyTimeStmt *sql.Stmt // MySQL specific, complementing updateRoomStmt
+	findInactiveRoomsStmt  *sql.Stmt
+	updateRoomStmt         *sql.Stmt
+	updateRoomModifiedStmt *sql.Stmt // MySQL specific, complementing insertChatMessageStmt
+	updateRoomStateStmt    *sql.Stmt
+	deleteRoomStmt         *sql.Stmt
 
 	findChatMessagesByRoomStmt *sql.Stmt
 	insertChatMessageStmt      *sql.Stmt
@@ -79,6 +84,7 @@ var (
 	findSubtitlesByRoomStmt *sql.Stmt
 	findSubtitleStmt        *sql.Stmt
 	insertSubtitleStmt      *sql.Stmt
+	deleteRoomSubtitlesStmt *sql.Stmt // MySQL specific, complementing updateRoomStmt
 )
 
 func PrepareSqlStatements() {
@@ -91,7 +97,9 @@ func PrepareSqlStatements() {
 		"WHERE username = $1 LIMIT 1;")
 	findUserByEmailStmt = prepareQuery("SELECT username, password, email, id, created_at, verified FROM users " +
 		"WHERE email = $1 LIMIT 1;")
-	findUsernamesByIdStmt = prepareQuery("SELECT id, username FROM users WHERE id = ANY($1);")
+	if config.Database != "mysql" {
+		findUsernamesByIdStmt = prepareQuery("SELECT id, username FROM users WHERE id = ANY($1);")
+	}
 	createUserStmt = prepareQuery("INSERT INTO users (username, password, email, id, verified) VALUES ($1, $2, $3, $4, $5);")
 
 	insertTokenStmt = prepareQuery("INSERT INTO tokens (token, created_at, user_id) VALUES ($1, $2, $3);")
@@ -102,23 +110,38 @@ func PrepareSqlStatements() {
 	findRoomStmt = prepareQuery("SELECT id, created_at, modified_at, type, target, " +
 		"paused, speed, timestamp, last_action FROM rooms WHERE id = $1;")
 	findInactiveRoomsStmt = prepareQuery("SELECT id FROM rooms WHERE modified_at < NOW() - INTERVAL '10 minutes';")
-	updateRoomStmt = prepareQuery(`
-		WITH subs AS (
-			DELETE FROM subtitles WHERE room_id = $1
-		) UPDATE rooms
+	if config.Database == "mysql" {
+		deleteRoomSubtitlesStmt = prepareQuery("DELETE FROM subtitles WHERE room_id = ?;")
+		updateRoomStmt = prepareQuery(`UPDATE rooms
   		SET type = $2, target = $3, modified_at = NOW(),
 					paused = true, speed = 1, timestamp = 0, last_action = NOW()
-			WHERE id = $1
-			RETURNING created_at, modified_at;`)
+			WHERE id = $1;`)
+		findRoomModifyTimeStmt = prepareQuery("SELECT created_at, modified_at FROM rooms WHERE id = $1;")
+	} else {
+		updateRoomStmt = prepareQuery(`
+			WITH subs AS (
+				DELETE FROM subtitles WHERE room_id = $1
+			) UPDATE rooms
+  			SET type = $2, target = $3, modified_at = NOW(),
+						paused = true, speed = 1, timestamp = 0, last_action = NOW()
+				WHERE id = $1
+				RETURNING created_at, modified_at;`)
+	}
 	updateRoomStateStmt = prepareQuery("UPDATE rooms SET " +
 		"paused = $2, speed = $3, timestamp = $4, last_action = $5, modified_at = NOW() WHERE id = $1;")
 	deleteRoomStmt = prepareQuery("DELETE FROM rooms WHERE id = $1;")
 
 	findChatMessagesByRoomStmt = prepareQuery("SELECT id, user_id, timestamp, message FROM chats WHERE room_id = $1;")
-	insertChatMessageStmt = prepareQuery(`
-		WITH rooms AS (
-  		UPDATE rooms SET modified_at = NOW() WHERE id = $1
-		) INSERT INTO chats (room_id, user_id, message) VALUES ($1, $2, $3) RETURNING id, timestamp;`)
+	if config.Database == "mysql" {
+		updateRoomModifiedStmt = prepareQuery("UPDATE rooms SET modified_at = NOW() WHERE id = ?;")
+		insertChatMessageStmt = prepareQuery(
+			"INSERT INTO chats (room_id, user_id, message) VALUES (?, ?, ?) RETURNING id, timestamp;")
+	} else {
+		insertChatMessageStmt = prepareQuery(`
+			WITH rooms AS (
+  			UPDATE rooms SET modified_at = NOW() WHERE id = $1
+			) INSERT INTO chats (room_id, user_id, message) VALUES ($1, $2, $3) RETURNING id, timestamp;`)
+	}
 
 	findSubtitlesByRoomStmt = prepareQuery("SELECT name FROM subtitles WHERE room_id = $1;")
 	findSubtitleStmt = prepareQuery("SELECT data FROM subtitles WHERE room_id = $1 AND name = $2;")
@@ -135,11 +158,7 @@ func translate(query string) string {
 		query = strings.ReplaceAll(query, "GENERATED ALWAYS AS IDENTITY", "AUTO_INCREMENT")
 		query = regexp.MustCompile(`INTERVAL '(\d+) (\w+)s'`).ReplaceAllString(query, "INTERVAL $1 $2")
 		query = regexp.MustCompile(`ON CONFLICT \([^)]+\) DO UPDATE SET`).ReplaceAllString(query, "ON DUPLICATE KEY UPDATE")
-		// TODO: Translate CTEs to MySQL equivalents
-		// TODO: Translate UPDATE ... RETURNING to MySQL equivalents
-		// TODO: Translate DELETE ... RETURNING to MySQL equivalents
-		// TODO: Translate $# in code with if conditions since MySQL doesn't have ordered parameters
-		// TODO: Translate ANY() in queries not taking arrays to MySQL equivalents
+		// DELETE ... RETURNING works only with MariaDB 10.0+ (not MySQL!)
 	}
 	return query
 }
@@ -151,6 +170,40 @@ func prepareQuery(query string) *sql.Stmt {
 		log.Fatalln("failed to build SQL query:", query, err)
 	}
 	return stmt
+}
+
+func UpdateRoom(id string, roomType string, target string) (createdAt, modifiedAt time.Time, err error) {
+	if config.Database == "mysql" {
+		tx, err := db.Begin()
+		if err != nil {
+			return createdAt, modifiedAt, err
+		}
+		defer tx.Rollback()
+		_, err = tx.Stmt(deleteRoomSubtitlesStmt).Exec(id)
+		if err != nil {
+			return createdAt, modifiedAt, err
+		}
+		result, err := tx.Stmt(updateRoomStmt).Exec(roomType, target, id)
+		if err != nil {
+			return createdAt, modifiedAt, err
+		}
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			return createdAt, modifiedAt, err
+		} else if rowsAffected == 0 {
+			return createdAt, modifiedAt, sql.ErrNoRows
+		}
+		err = tx.Stmt(findRoomModifyTimeStmt).QueryRow(id).Scan(&createdAt, &modifiedAt)
+		if err != nil {
+			return createdAt, modifiedAt, err
+		}
+		if err = tx.Commit(); err != nil {
+			return createdAt, modifiedAt, err
+		}
+		return createdAt, modifiedAt, err
+	}
+	err = updateRoomStmt.QueryRow(id, roomType, target).Scan(&createdAt, &modifiedAt)
+	return
 }
 
 func FindChatMessagesByRoom(id string) ([]ChatMessage, error) {
@@ -171,6 +224,30 @@ func FindChatMessagesByRoom(id string) ([]ChatMessage, error) {
 		return nil, err
 	}
 	return chat, nil
+}
+
+func InsertChatMessage(roomId string, userId *uuid.UUID, message string) (id int, timestamp time.Time, err error) {
+	if config.Database == "mysql" {
+		tx, err := db.Begin()
+		if err != nil {
+			return id, timestamp, err
+		}
+		defer tx.Rollback()
+		_, err = tx.Stmt(updateRoomModifiedStmt).Exec(roomId)
+		if err != nil {
+			return id, timestamp, err
+		}
+		err = tx.Stmt(insertChatMessageStmt).QueryRow(roomId, userId, message).Scan(&id, &timestamp)
+		if err != nil {
+			return id, timestamp, err
+		}
+		if err = tx.Commit(); err != nil {
+			return id, timestamp, err
+		}
+		return id, timestamp, err
+	}
+	err = insertChatMessageStmt.QueryRow(roomId, userId, message).Scan(&id, &timestamp)
+	return
 }
 
 func FindSubtitlesByRoom(roomId string) ([]string, error) {

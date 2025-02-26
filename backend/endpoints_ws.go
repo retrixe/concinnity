@@ -238,8 +238,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	} else {
 		chatMsg.Message = user.ID.String() + " joined"
 	}
-	err = insertChatMessageStmt.QueryRow(room.ID, nil, chatMsg.Message).Scan(
-		&chatMsg.ID, &chatMsg.Timestamp)
+	chatMsg.ID, chatMsg.Timestamp, err = InsertChatMessage(room.ID, nil, chatMsg.Message)
 	if err != nil {
 		wsInternalError(c, err)
 		return
@@ -286,8 +285,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 
 			// Update state in db and broadcast
 			chatMsg := ChatMessage{UserID: user.ID, Message: msg}
-			err = insertChatMessageStmt.QueryRow(room.ID, user.ID, chatMsg.Message).Scan(
-				&chatMsg.ID, &chatMsg.Timestamp)
+			chatMsg.ID, chatMsg.Timestamp, err = InsertChatMessage(room.ID, &user.ID, chatMsg.Message)
 			if err != nil {
 				wsInternalError(c, err)
 				return
@@ -305,9 +303,17 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Update state in db and broadcast
-			result, err := updateRoomStateStmt.Exec(room.ID,
-				playerStateData.Data.Paused, playerStateData.Data.Speed,
-				playerStateData.Data.Timestamp, playerStateData.Data.LastAction)
+			var result sql.Result
+			if config.Database == "mysql" {
+				result, err = updateRoomStateStmt.Exec(
+					playerStateData.Data.Paused, playerStateData.Data.Speed,
+					playerStateData.Data.Timestamp, playerStateData.Data.LastAction,
+					room.ID)
+			} else {
+				result, err = updateRoomStateStmt.Exec(room.ID,
+					playerStateData.Data.Paused, playerStateData.Data.Speed,
+					playerStateData.Data.Timestamp, playerStateData.Data.LastAction)
+			}
 			if err != nil {
 				wsInternalError(c, err)
 				return
@@ -363,8 +369,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	} else {
 		chatMsg.Message = user.ID.String() + " was disconnected"
 	}
-	err = insertChatMessageStmt.QueryRow(room.ID, nil, chatMsg.Message).Scan(
-		&chatMsg.ID, &chatMsg.Timestamp)
+	chatMsg.ID, chatMsg.Timestamp, err = InsertChatMessage(room.ID, nil, chatMsg.Message)
 	if err != nil {
 		log.Println("Internal Server Error!", err)
 		return
