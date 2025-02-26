@@ -20,7 +20,7 @@
     font-size: 1rem;
     transition: border 0.2s ease-in-out;
     &:focus {
-      border: 1px solid var(--primary-color);
+      outline: 1px solid var(--primary-color);
     }
   }
 
