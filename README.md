@@ -40,14 +40,38 @@ The backend requires the `config.json` file to be created in the `backend/` fold
   "port": 8000,
   "basePath": "/",
   "secureCookies": false,
-  "databaseUrl": "see: https://pkg.go.dev/github.com/lib/pq#hdr-Connection_String_Parameters"
+  "database": "optional: postgres (default, recommended) or mysql (experimental, requires MariaDB)",
+  "databaseUrl": "see https://pkg.go.dev/github.com/lib/pq#hdr-Connection_String_Parameters (postgres) or https://github.com/go-sql-driver/mysql?tab=readme-ov-file#dsn-data-source-name (mysql)"
 }
 ```
 
 The `databaseUrl` must be provided, and in production, it is recommended to make use of `secureCookies` as well. You may change the `port` as needed, and `basePath` should be modified if you are reverse proxying the backend through Apache/nginx/etc and placing the backend under another path.
+
+⚠️ *Note:* [MySQL support has several caveats and connection parameters you must set.](backend/main.go#L41)
 
 ## Security Practices and Reverse Proxying
 
 If self-hosting, you should take a look at [Octyne's corresponding documentation](https://github.com/retrixe/octyne#security-practices-and-reverse-proxying), which is largely applicable to Concinnity's frontend and backend.
 
 For further guidance, create an issue to expand this documentation.
+
+## API Documentation
+
+The concinnity API is currently unstable and largely undocumented. You can find limited technical information in the backend's source code (with the frontend serving as an example of a fully functional client).
+
+## License
+
+Copyright (C) 2025 retrixe
+
+Concinnity is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Concinnity is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with Concinnity.  If not, see <http://www.gnu.org/licenses/>.
