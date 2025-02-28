@@ -25,11 +25,11 @@
 </script>
 
 <h2>Forgot your password?</h2>
-<br />
+<div class="spacer"></div>
 <p class="left-align">
   No worries! Enter your email address and we will send you a link to reset your password.
 </p>
-<br />
+<div class="spacer"></div>
 <label for="forgot-password-username-email">Username / E-mail</label>
 <TextInput
   id="forgot-password-username-email"
@@ -46,7 +46,7 @@
 {:else if !!error}
   <p class="result error">{error}</p>
 {/if}
-<br />
+<div class="spacer"></div>
 <Button {disabled} onclick={onForgotPassword}>Send E-mail</Button>
-<br />
+<div class="spacer"></div>
 <p>Want to try logging in? <a href="/login">Log in</a></p>

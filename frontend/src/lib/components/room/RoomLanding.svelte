@@ -91,7 +91,6 @@
     </DropdownButton>
     <Dialog open={remoteFileUrl !== null} onClose={() => (remoteFileUrl = null)}>
       <h2>Enter URL of remote file</h2>
-      <br />
       <!-- eslint-disable @typescript-eslint/no-non-null-assertion -->
       <TextInput
         bind:value={remoteFileUrl!}
@@ -138,6 +137,7 @@
 
     :global(.dialog-content) {
       color: var(--color);
+      gap: 1rem;
     }
   }
 </style>

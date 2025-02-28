@@ -29,7 +29,7 @@
 </script>
 
 <h2>Login</h2>
-<br />
+<div class="spacer"></div>
 <label for="login-username">E-mail / Username</label>
 <TextInput
   id="login-username"
@@ -55,7 +55,7 @@
 {:else if !!error}
   <p class="result error">{error}</p>
 {/if}
-<br />
+<div class="spacer"></div>
 <Button {disabled} onclick={onLogin}>Login</Button>
-<br />
+<div class="spacer"></div>
 <p>Don't have an account? <a href="/register">Sign up</a></p>

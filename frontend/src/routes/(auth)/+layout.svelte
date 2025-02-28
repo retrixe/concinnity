@@ -42,6 +42,10 @@
     :global(.left-align) {
       align-self: flex-start;
     }
+
+    :global(.spacer) {
+      margin-top: 1rem;
+    }
   }
 
   .container {

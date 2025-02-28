@@ -17,7 +17,7 @@
 </script>
 
 <h2>Verify Account</h2>
-<br />
+<div class="spacer"></div>
 {#if error === ''}
   <p class="result left-align">
     Verified your account <b>{'eslyfail'}</b> successfully! Redirecting you to the

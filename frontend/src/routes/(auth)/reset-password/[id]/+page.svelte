@@ -25,9 +25,9 @@
 </script>
 
 <h2>Reset Password</h2>
-<br />
+<div class="spacer"></div>
 <p class="left-align">Enter your new account password for: <b>{'eslyfail'}</b></p>
-<br />
+<div class="spacer"></div>
 <label for="reset-password">Password</label>
 <TextInput
   id="reset-password"
@@ -52,7 +52,7 @@
 {:else if !!error}
   <p class="result error">{error}</p>
 {/if}
-<br />
+<div class="spacer"></div>
 <Button {disabled} onclick={onResetPassword}>Reset Password</Button>
-<br />
+<div class="spacer"></div>
 <p>Want to try logging in? <a href="/login">Log in</a></p>

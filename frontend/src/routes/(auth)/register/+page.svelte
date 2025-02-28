@@ -29,7 +29,7 @@
 </script>
 
 <h2>Register</h2>
-<br />
+<div class="spacer"></div>
 <label for="register-username">Username</label>
 <TextInput
   id="register-username"
@@ -78,7 +78,7 @@
 {:else if !!error}
   <p class="result error">{error}</p>
 {/if}
-<br />
+<div class="spacer"></div>
 <Button {disabled} onclick={onRegister}>Sign Up</Button>
-<br />
+<div class="spacer"></div>
 <p>Already have an account? <a href="/login">Log in</a></p>
