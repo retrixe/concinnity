@@ -4,13 +4,13 @@
   import { RoomType } from '$lib/api/room'
   import { openFileOrFiles } from '$lib/utils/openFile'
   import { CaretDown } from 'phosphor-svelte'
-  import LinearProgress from '../LinearProgress.svelte'
-  import Button from '../Button.svelte'
-  import Dialog from '../Dialog.svelte'
-  import DropdownButton from '../DropdownButton.svelte'
-  import Menu from '../Menu.svelte'
-  import MenuItem from '../MenuItem.svelte'
-  import TextInput from '../TextInput.svelte'
+  import LinearProgress from '$lib/ui/LinearProgress.svelte'
+  import Button from '$lib/ui/Button.svelte'
+  import Dialog from '$lib/ui/Dialog.svelte'
+  import DropdownButton from '$lib/ui/DropdownButton.svelte'
+  import Menu from '$lib/ui/Menu.svelte'
+  import MenuItem from '$lib/ui/MenuItem.svelte'
+  import TextInput from '$lib/ui/TextInput.svelte'
 
   interface Props {
     error: string | null

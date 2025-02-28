@@ -5,7 +5,7 @@
   import ky from '$lib/api/ky'
   import type { ChatMessage } from '$lib/api/room'
   import usernameCache from '$lib/state/usernameCache.svelte'
-  import Textarea from '../Textarea.svelte'
+  import Textarea from '$lib/ui/Textarea.svelte'
   import TypingIndicator from './TypingIndicator.svelte'
   import type { SvelteMap } from 'svelte/reactivity'
 

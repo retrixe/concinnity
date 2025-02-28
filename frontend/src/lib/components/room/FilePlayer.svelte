@@ -4,9 +4,9 @@
   import { RoomType, type PlayerState, type RoomInfo } from '$lib/api/room'
   import { openFileOrFiles } from '$lib/utils/openFile'
   import { CaretDown } from 'phosphor-svelte'
-  import DropdownButton from '../DropdownButton.svelte'
-  import Menu from '../Menu.svelte'
-  import MenuItem from '../MenuItem.svelte'
+  import DropdownButton from '$lib/ui/DropdownButton.svelte'
+  import Menu from '$lib/ui/Menu.svelte'
+  import MenuItem from '$lib/ui/MenuItem.svelte'
   import VideoPlayer from './VideoPlayer.svelte'
 
   interface Props {

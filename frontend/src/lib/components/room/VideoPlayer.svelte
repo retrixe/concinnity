@@ -18,10 +18,10 @@
   } from 'phosphor-svelte'
   import ky from '$lib/api/ky'
   import type { PlayerState } from '$lib/api/room'
+  import Button from '$lib/ui/Button.svelte'
   import { stringifyDuration } from '$lib/utils/duration'
   import { openFileOrFiles } from '$lib/utils/openFile'
   import { srt2webvtt } from '$lib/utils/srt'
-  import Button from '../Button.svelte'
   import { page } from '$app/state'
 
   interface Props {
