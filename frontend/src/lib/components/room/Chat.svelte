@@ -1,7 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte'
-  import DOMPurify from 'dompurify'
-  import snarkdown from 'snarkdown'
+  import { Remarkable } from 'remarkable'
+  import { linkify } from 'remarkable/linkify'
   import ky from '$lib/api/ky'
   import type { ChatMessage } from '$lib/api/room'
   import usernameCache from '$lib/state/usernameCache.svelte'
@@ -92,6 +92,9 @@
     if (messages.length && messagesEl && isScrolledToBottom)
       messagesEl.scrollTop = messagesEl.scrollHeight - messagesEl.clientHeight
   })
+
+  const remarkable = new Remarkable('commonmark', { linkTarget: '_blank' }).use(linkify)
+  remarkable.inline.ruler.enable('del')
 </script>
 
 <div class="chat">
@@ -106,36 +109,10 @@
         <div>
           <h4>{getUsername(messageGroup.userId)} — {parseTimestamp(messageGroup.timestamp)}</h4>
           {#each messageGroup.messages as message}
-            <p>
+            <div class="message-content">
               <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html DOMPurify.sanitize(
-                snarkdown(message).replace('<a href=', '<a target="_blank" href='), // Open in new tab
-                {
-                  ALLOWED_TAGS: [
-                    'code',
-                    'h1',
-                    'h2',
-                    'h3',
-                    'h4',
-                    'h5',
-                    'h6',
-                    'pre',
-                    'ol',
-                    'ul',
-                    'li',
-                    'blockquote',
-                    'img',
-                    'a',
-                    'em',
-                    'strong',
-                    's',
-                    'br',
-                    'hr',
-                  ],
-                  ALLOWED_ATTR: ['href', 'target', 'src'],
-                },
-              )}
-            </p>
+              {@html remarkable.render(message)}
+            </div>
           {/each}
         </div>
       {/if}
@@ -192,8 +169,11 @@
     h5 {
       margin-top: 0.5rem;
     }
-    p {
+    .message-content {
       margin-top: 0.3rem;
+      > :global(*) {
+        display: inline;
+      }
       :global(img) {
         width: 100%;
       }
