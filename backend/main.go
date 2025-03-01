@@ -8,7 +8,7 @@ import (
 	"os"
 	"strconv"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/handlers"
 	_ "github.com/lib/pq"
 )
@@ -38,13 +38,8 @@ type Config struct {
 	Port          int    `json:"port"`
 	BasePath      string `json:"basePath"`
 	SecureCookies bool   `json:"secureCookies"`
-	// Note:
-	// - Using PostgreSQL is recommended, MySQL support is experimental and best effort
-	// - Only MariaDB is supported with the "mysql" option, since Oracle MySQL is missing certain features.
-	// - MySQL requires ?parseTime=true&multiStatements=true to be set on the URL
-	// - MySQL should be using the UTC time zone, anything else may or may not cause issues
-	Database    string `json:"database"`
-	DatabaseURL string `json:"databaseUrl"`
+	Database      string `json:"database"`
+	DatabaseURL   string `json:"databaseUrl"`
 }
 
 // TODO: implement e-mail verification option
@@ -58,6 +53,19 @@ func main() {
 	err = json.Unmarshal(configFile, &config)
 	if err != nil {
 		log.Fatalln("Failed to parse config file!", err)
+	}
+	if config.Database == "mariadb" {
+		config.Database = "mysql"
+		dsn, err := mysql.ParseDSN(config.DatabaseURL)
+		if err != nil {
+			log.Fatalln("Failed to parse MariaDB DSN!", err)
+		}
+		dsn.MultiStatements = true
+		dsn.ParseTime = true
+		dsn.Params = map[string]string{"time_zone": "'+00:00'"} // dsn.Loc is already UTC
+		config.DatabaseURL = dsn.FormatDSN()
+	} else if config.Database == "mysql" {
+		log.Fatalln("MySQL is not supported!")
 	}
 	db, err = sql.Open(config.Database, config.DatabaseURL)
 	if err != nil {

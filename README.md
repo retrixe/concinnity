@@ -10,7 +10,7 @@ If you want to use concinnity with your friends, visit [concinnity.retrixe.xyz](
 
 ## Quick Start
 
-- Prerequisites: You must have a PostgreSQL database setup, and Golang, Node.js and corepack are needed to build the application.
+- Prerequisites: You must have a PostgreSQL/MariaDB database setup, and Golang, Node.js and corepack are needed to build the application.
 - To run the backend on a server:
   - Run `go build` in the `backend` folder to compile it.
   - Create a `config.json` in the same folder according to the section on [backend configuration](#backend).
@@ -40,14 +40,14 @@ The backend requires the `config.json` file to be created in the `backend/` fold
   "port": 8000,
   "basePath": "/",
   "secureCookies": false,
-  "database": "optional: postgres (default, recommended) or mysql (experimental, requires MariaDB)",
-  "databaseUrl": "see https://pkg.go.dev/github.com/lib/pq#hdr-Connection_String_Parameters (postgres) or https://github.com/go-sql-driver/mysql?tab=readme-ov-file#dsn-data-source-name (mysql)"
+  "database": "optional: postgres (default, recommended) or mariadb",
+  "databaseUrl": "see https://pkg.go.dev/github.com/lib/pq#hdr-Connection_String_Parameters (postgres) or https://github.com/go-sql-driver/mysql?tab=readme-ov-file#dsn-data-source-name (mariadb)"
 }
 ```
 
 The `databaseUrl` must be provided, and in production, it is recommended to make use of `secureCookies` as well. You may change the `port` as needed, and `basePath` should be modified if you are reverse proxying the backend through Apache/nginx/etc and placing the backend under another path.
 
-⚠️ *Note:* [MySQL support has several caveats and connection parameters you must set.](backend/main.go#L41)
+⚠️ *Note:* MariaDB support *will not work* with Oracle MySQL or Percona.
 
 ## Security Practices and Reverse Proxying
 
