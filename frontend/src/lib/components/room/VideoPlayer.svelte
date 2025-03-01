@@ -23,6 +23,7 @@
   import { openFileOrFiles } from '$lib/utils/openFile'
   import { srt2webvtt } from '$lib/utils/srt'
   import { page } from '$app/state'
+  import Tooltip from '$lib/ui/Tooltip.svelte'
 
   interface Props {
     src: string
@@ -257,13 +258,15 @@
       <span>{name}</span>
     </div>
     <div class="controls bottom" transition:fade>
-      <Button onclick={handlePlayPause}>
-        {#if paused}
-          <Play weight="bold" size="16px" />
-        {:else}
-          <Pause weight="bold" size="16px" />
-        {/if}
-      </Button>
+      <Tooltip text={paused ? 'Play' : 'Pause'}>
+        <Button onclick={handlePlayPause}>
+          {#if paused}
+            <Play weight="bold" size="16px" />
+          {:else}
+            <Pause weight="bold" size="16px" />
+          {/if}
+        </Button>
+      </Tooltip>
       <input
         type="range"
         min="0"
@@ -286,15 +289,17 @@
           ? '-' + stringifyDuration(duration - currentTime)
           : stringifyDuration(currentTime)}
       </span>
-      <Button class="hide-on-mobile" onclick={handleMuteToggle}>
-        {#if muted}
-          <SpeakerX weight="bold" size="16px" />
-        {:else if volume < 0.5}
-          <SpeakerLow weight="bold" size="16px" />
-        {:else}
-          <SpeakerHigh weight="bold" size="16px" />
-        {/if}
-      </Button>
+      <Tooltip text={muted ? 'Unmute' : 'Mute'}>
+        <Button class="hide-on-mobile" onclick={handleMuteToggle}>
+          {#if muted}
+            <SpeakerX weight="bold" size="16px" />
+          {:else if volume < 0.5}
+            <SpeakerLow weight="bold" size="16px" />
+          {:else}
+            <SpeakerHigh weight="bold" size="16px" />
+          {/if}
+        </Button>
+      </Tooltip>
       <input
         type="range"
         min="0"
@@ -307,9 +312,11 @@
         class="hide-on-mobile"
       />
       <div style:position="relative">
-        <Button class="settings-open-btn" onclick={handleSettingsOpen}>
-          <Gear weight="bold" size="16px" />
-        </Button>
+        <Tooltip text="Settings">
+          <Button class="settings-open-btn" onclick={handleSettingsOpen}>
+            <Gear weight="bold" size="16px" />
+          </Button>
+        </Tooltip>
         <div class="settings-menu" style:visibility={settingsMenu ? 'visible' : 'hidden'}>
           {#if settingsMenu == 'speed'}
             <Button onclick={handleSettingsNav('options')} class="highlight">
@@ -354,28 +361,36 @@
           {/if}
         </div>
       </div>
-      <Button onclick={handleStop}>
-        <Stop weight="bold" size="16px" />
-      </Button>
+      <Tooltip text="Stop playback">
+        <Button onclick={handleStop}>
+          <Stop weight="bold" size="16px" />
+        </Button>
+      </Tooltip>
       {#if Object.keys(subtitles).length}
-        <Button onclick={handleSubtitleToggle}>
-          {#if subtitle?.[0]}
-            <Subtitles weight="bold" size="16px" />
+        <Tooltip text={subtitle?.[0] ? 'Hide subtitles' : 'Show subtitles'}>
+          <Button onclick={handleSubtitleToggle}>
+            {#if subtitle?.[0]}
+              <Subtitles weight="bold" size="16px" />
+            {:else}
+              <SubtitlesSlash weight="bold" size="16px" />
+            {/if}
+          </Button>
+        </Tooltip>
+      {/if}
+      <Tooltip text="Picture-in-picture">
+        <Button onclick={handlePiPToggle}>
+          <PictureInPicture weight="bold" size="16px" />
+        </Button>
+      </Tooltip>
+      <Tooltip text={fullscreenElement === fullscreenEl ? 'Exit fullscreen' : 'Enter fullscreen'}>
+        <Button onclick={handleFullScreenToggle}>
+          {#if fullscreenElement === fullscreenEl}
+            <ArrowsIn weight="bold" size="16px" />
           {:else}
-            <SubtitlesSlash weight="bold" size="16px" />
+            <ArrowsOut weight="bold" size="16px" />
           {/if}
         </Button>
-      {/if}
-      <Button onclick={handlePiPToggle}>
-        <PictureInPicture weight="bold" size="16px" />
-      </Button>
-      <Button onclick={handleFullScreenToggle}>
-        {#if fullscreenElement === fullscreenEl}
-          <ArrowsIn weight="bold" size="16px" />
-        {:else}
-          <ArrowsOut weight="bold" size="16px" />
-        {/if}
-      </Button>
+      </Tooltip>
     </div>
   {/if}
 </div>
