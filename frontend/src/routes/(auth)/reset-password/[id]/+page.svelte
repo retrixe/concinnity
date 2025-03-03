@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Button from '$lib/ui/Button.svelte'
-  import TextInput from '$lib/ui/TextInput.svelte'
+  import Button from '$lib/lunaria/Button.svelte'
+  import TextInput from '$lib/lunaria/TextInput.svelte'
 
   let password = $state('')
   let confirmPw = $state('')

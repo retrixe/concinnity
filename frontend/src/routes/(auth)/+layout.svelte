@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte'
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
-  import Box from '$lib/ui/Box.svelte'
+  import Box from '$lib/lunaria/Box.svelte'
 
   const { children }: { children: Snippet } = $props()
   const { username } = $derived(page.data)

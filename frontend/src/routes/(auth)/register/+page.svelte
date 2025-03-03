@@ -1,7 +1,7 @@
 <script lang="ts">
   import ky from '$lib/api/ky'
-  import Button from '$lib/ui/Button.svelte'
-  import TextInput from '$lib/ui/TextInput.svelte'
+  import Button from '$lib/lunaria/Button.svelte'
+  import TextInput from '$lib/lunaria/TextInput.svelte'
 
   let register = $state({ username: '', password: '', confirmPw: '', email: '' })
   let disabled = $state(false)

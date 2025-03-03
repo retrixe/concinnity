@@ -1,8 +1,8 @@
 <script lang="ts">
   import { invalidate } from '$app/navigation'
   import ky from '$lib/api/ky'
-  import Button from '$lib/ui/Button.svelte'
-  import TextInput from '$lib/ui/TextInput.svelte'
+  import Button from '$lib/lunaria/Button.svelte'
+  import TextInput from '$lib/lunaria/TextInput.svelte'
 
   let login = $state({ username: '', password: '' })
   let disabled = $state(false)
