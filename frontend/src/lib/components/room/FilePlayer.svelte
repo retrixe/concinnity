@@ -119,7 +119,6 @@
 
     h1 {
       word-break: break-word;
-      text-wrap: balance;
     }
   }
 

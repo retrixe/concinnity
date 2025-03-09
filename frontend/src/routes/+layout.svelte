@@ -6,6 +6,7 @@
   import { invalidate, onNavigate } from '$app/navigation'
   import ky from '$lib/api/ky'
   import GitHubImage from '$lib/assets/GitHubImage.svelte'
+  import '$lib/lunaria/Baseline.scss'
 
   const { data, children }: { data: LayoutData; children: Snippet } = $props()
   const { username } = $derived(data)
@@ -86,19 +87,19 @@
 
 <style lang="scss">
   :global {
-    * {
-      margin: 0;
-      box-sizing: border-box;
-    }
-
     :root {
       --primary-color: #8f00ff;
       --error-color: #ff0042;
+
+      --link-color: #8f00ff;
+      --background-color: #f5f5f5; /* White smoke */
+      --surface-color: #fcfcfc; /* White smoke but brighter */
+      --color: #000000;
+      --divider-color: #bbb;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        color-scheme: dark;
         --link-color: #df73ff;
         --background-color: #0e0e10; /* Jet black */
         --surface-color: #1b1b1b; /* Eerie black */
@@ -107,44 +108,6 @@
       }
       .github-image {
         filter: brightness(0) invert(1);
-      }
-    }
-
-    @media (prefers-color-scheme: light) {
-      :root {
-        --link-color: #8f00ff;
-        --background-color: #f5f5f5; /* White smoke */
-        --surface-color: #fcfcfc; /* White smoke but brighter */
-        --color: #000000;
-        --divider-color: #bbb;
-      }
-    }
-
-    input {
-      font: inherit;
-    }
-    select {
-      font: inherit;
-    }
-    button {
-      font: inherit;
-    }
-    textarea {
-      font: inherit;
-    }
-
-    body {
-      font-family: system-ui, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue',
-        Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
-      background-color: var(--background-color);
-      color: var(--color);
-      width: 100vw;
-      max-width: 100%;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      a {
-        color: var(--link-color);
       }
     }
   }
@@ -162,6 +125,7 @@
     border-bottom: 1px solid var(--divider-color);
     h1 {
       font-size: 1.5rem;
+      line-height: 1;
       flex: 1;
     }
     span {
@@ -182,6 +146,6 @@
   .divider {
     border-left: 1px solid var(--divider-color);
     height: 28px;
-    margin: 0px 0.8rem;
+    margin: 0px 8px;
   }
 </style>
