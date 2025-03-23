@@ -6,6 +6,11 @@
   import { invalidate, onNavigate } from '$app/navigation'
   import ky from '$lib/api/ky'
   import GitHubImage from '$lib/assets/GitHubImage.svelte'
+  import '$lib/lunaria/Baseline.scss'
+  import TopBar from '$lib/lunaria/TopBar/TopBar.svelte'
+  import TopBarDivider from '$lib/lunaria/TopBar/TopBarDivider.svelte'
+  import TopBarTitle from '$lib/lunaria/TopBar/TopBarTitle.svelte'
+  import TopBarLink from '$lib/lunaria/TopBar/TopBarLink.svelte'
 
   const { data, children }: { data: LayoutData; children: Snippet } = $props()
   const { username } = $derived(data)
@@ -52,53 +57,50 @@
   {/if}
 </svelte:head>
 
-<div class="top-bar">
-  <h1>
-    <a class="unstyled-link" href="/">concinnity</a>
-  </h1>
+<TopBar>
+  <TopBarTitle>
+    <TopBarLink href="/">concinnity</TopBarLink>
+  </TopBarTitle>
   {#if username}
     <span>{username}</span>
-    <div class="divider"></div>
-    <a href="/" class="unstyled-link" onclick={logout}>Sign Out</a>
+    <TopBarDivider />
+    <TopBarLink href="/" onclick={logout}>Sign Out</TopBarLink>
   {:else if page.url.pathname !== '/login' && page.url.pathname !== '/register'}
-    <a href="/login" class="unstyled-link">Login</a>
-    <div class="divider"></div>
-    <a href="/register" class="unstyled-link">Sign Up</a>
+    <TopBarLink href="/login">Login</TopBarLink>
+    <TopBarDivider />
+    <TopBarLink href="/register">Sign Up</TopBarLink>
     {#if page.url.pathname === '/'}
-      <div class="divider"></div>
-      <a
+      <TopBarDivider />
+      <TopBarLink
         href="https://github.com/retrixe/concinnity"
         target="_blank"
         rel="noopener noreferrer"
-        class="unstyled-link"
       >
         <GitHubImage className="github-image" viewBox="0 0 98 96" height="28" width="28" />
-      </a>
+      </TopBarLink>
     {/if}
   {:else}
-    <a href="/" class="unstyled-link">Home</a>
+    <TopBarLink href="/">Home</TopBarLink>
   {/if}
-</div>
-
-<div style:margin-top="4rem"></div>
+</TopBar>
 
 {@render children()}
 
 <style lang="scss">
   :global {
-    * {
-      margin: 0;
-      box-sizing: border-box;
-    }
-
     :root {
       --primary-color: #8f00ff;
       --error-color: #ff0042;
+
+      --link-color: #8f00ff;
+      --background-color: #f5f5f5; /* White smoke */
+      --surface-color: #fcfcfc; /* White smoke but brighter */
+      --color: #000000;
+      --divider-color: #bbb;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        color-scheme: dark;
         --link-color: #df73ff;
         --background-color: #0e0e10; /* Jet black */
         --surface-color: #1b1b1b; /* Eerie black */
@@ -109,79 +111,10 @@
         filter: brightness(0) invert(1);
       }
     }
-
-    @media (prefers-color-scheme: light) {
-      :root {
-        --link-color: #8f00ff;
-        --background-color: #f5f5f5; /* White smoke */
-        --surface-color: #fcfcfc; /* White smoke but brighter */
-        --color: #000000;
-        --divider-color: #bbb;
-      }
-    }
-
-    input {
-      font: inherit;
-    }
-    select {
-      font: inherit;
-    }
-    button {
-      font: inherit;
-    }
-    textarea {
-      font: inherit;
-    }
-
-    body {
-      font-family: system-ui, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue',
-        Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
-      background-color: var(--background-color);
-      color: var(--color);
-      width: 100vw;
-      max-width: 100%;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      a {
-        color: var(--link-color);
-      }
-    }
   }
 
-  .top-bar {
-    z-index: 100;
-    height: 4rem;
-    position: fixed;
-    display: flex;
-    width: 100%;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--divider-color);
-    h1 {
-      font-size: 1.5rem;
-      flex: 1;
-    }
-    span {
-      font-weight: bold;
-      color: var(--link-color);
-    }
-    a {
-      font-weight: bold;
-      text-decoration: none;
-    }
-  }
-
-  .unstyled-link {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .divider {
-    border-left: 1px solid var(--divider-color);
-    height: 28px;
-    margin: 0px 0.8rem;
+  span {
+    font-weight: bold;
+    color: var(--link-color);
   }
 </style>

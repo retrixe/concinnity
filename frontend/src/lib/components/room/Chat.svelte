@@ -205,7 +205,6 @@
 
   .messages {
     flex: 1;
-    word-wrap: break-word;
     white-space: pre-line;
     overflow-y: scroll;
     margin-bottom: 1rem;
@@ -217,9 +216,6 @@
       margin-top: 0.3rem;
       > :global(*) {
         display: inline;
-      }
-      :global(img) {
-        width: 100%;
       }
       :global(blockquote) {
         padding-left: 1rem;
