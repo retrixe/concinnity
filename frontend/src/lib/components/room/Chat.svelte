@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, untrack } from 'svelte'
+  import { untrack } from 'svelte'
   import { Remarkable } from 'remarkable'
   import { linkify } from 'remarkable/linkify'
   import ky from '$lib/api/ky'
@@ -15,18 +15,14 @@
 
   const systemUUID = '00000000-0000-0000-0000-000000000000'
 
-  type AudioType = 'join' | 'leave' | 'message'
-  let soundEffects: Record<AudioType, HTMLAudioElement> | null = null
-
-  onMount(() => {
-    if (typeof Audio === 'undefined') return
-
-    soundEffects = {
-      join: new Audio(joinWebm),
-      leave: new Audio(leaveWebm),
-      message: new Audio(messageWebm),
-    }
-  })
+  const soundEffects =
+    typeof Audio === 'undefined'
+      ? null
+      : {
+          join: new Audio(joinWebm),
+          leave: new Audio(leaveWebm),
+          message: new Audio(messageWebm),
+        }
 
   const playNotificationSound = (chatMessage: ChatMessage, chatCooldown = false) => {
     if (chatMessage.userId === systemUUID) {
