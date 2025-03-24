@@ -1,7 +1,9 @@
 <script lang="ts">
   import { untrack } from 'svelte'
   import { Remarkable } from 'remarkable'
-  import { linkify } from 'remarkable/linkify'
+  // @ts-expect-error -- breaks `yarn preview` to import directly
+  import { linkify } from 'remarkable/dist/cjs/linkify.js'
+  import type { Plugin } from 'remarkable/lib'
   import ky from '$lib/api/ky'
   import type { ChatMessage } from '$lib/api/room'
   import usernameCache from '$lib/state/usernameCache.svelte'
@@ -133,7 +135,7 @@
     if (shouldNotify) previousTimestamp = currentTimestamp
   })
 
-  const remarkable = new Remarkable('commonmark', { linkTarget: '_blank' }).use(linkify)
+  const remarkable = new Remarkable('commonmark', { linkTarget: '_blank' }).use(linkify as Plugin)
   remarkable.inline.ruler.enable('del')
 </script>
 
