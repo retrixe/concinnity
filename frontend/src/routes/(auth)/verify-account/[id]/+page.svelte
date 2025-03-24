@@ -20,7 +20,7 @@
 <div class="spacer"></div>
 {#if error === ''}
   <p class="result left-align">
-    Verified your account <b>{'eslyfail'}</b> successfully! Redirecting you to the
+    Verified your account <b>eslyfail</b> successfully! Redirecting you to the
     <a href="/login">login page</a> in 5s...
   </p>
 {:else if !!error}

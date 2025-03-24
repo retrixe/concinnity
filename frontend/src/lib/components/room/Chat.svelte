@@ -140,7 +140,7 @@
 <div class="chat">
   <div class="messages" bind:this={messagesEl}>
     <div class="spacer"></div>
-    {#each messageGroups as messageGroup}
+    {#each messageGroups as messageGroup, i (i)}
       {#if messageGroup.userId === systemUUID}
         <h5 style:text-align="center">
           {replaceLeadingUUID(messageGroup.messages[0])} — {parseTimestamp(messageGroup.timestamp)}
@@ -148,7 +148,7 @@
       {:else}
         <div>
           <h4>{getUsername(messageGroup.userId)} — {parseTimestamp(messageGroup.timestamp)}</h4>
-          {#each messageGroup.messages as message}
+          {#each messageGroup.messages as message, i (i)}
             <div class="message-content">
               <!-- eslint-disable-next-line svelte/no-at-html-tags -->
               {@html remarkable.render(message)}

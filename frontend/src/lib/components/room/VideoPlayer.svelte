@@ -334,7 +334,7 @@
             <Button onclick={handleSettingsNav('options')} class="highlight">
               <CaretLeft weight="bold" size="16px" /> Back to options
             </Button>
-            {#each Object.keys(subtitles) as sub}
+            {#each Object.keys(subtitles) as sub (sub)}
               <Button
                 onclick={handleSubtitleSelect(sub)}
                 class={subtitle?.[0] && subtitle[1] === sub ? 'highlight' : ''}

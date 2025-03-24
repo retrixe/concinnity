@@ -26,7 +26,7 @@
 
 <h2>Reset Password</h2>
 <div class="spacer"></div>
-<p class="left-align">Enter your new account password for: <b>{'eslyfail'}</b></p>
+<p class="left-align">Enter your new account password for: <b>eslyfail</b></p>
 <div class="spacer"></div>
 <label for="reset-password">Password</label>
 <TextInput

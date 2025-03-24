@@ -1,6 +1,5 @@
 import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
-import * as typescriptParser from '@typescript-eslint/parser'
 import sveltePlugin from 'eslint-plugin-svelte'
 import * as svelteParser from 'svelte-eslint-parser'
 import importPlugin from 'eslint-plugin-import'
@@ -8,6 +7,7 @@ import pluginPromise from 'eslint-plugin-promise'
 import nodePlugin from 'eslint-plugin-n'
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import globals from 'globals'
+import svelteConfig from './svelte.config.js'
 
 export default tseslint.config(
   {
@@ -29,12 +29,14 @@ export default tseslint.config(
   ...sveltePlugin.configs['flat/recommended'],
   ...sveltePlugin.configs['flat/prettier'],
   {
-    files: ['**/*.svelte'],
+    files: ['**/*.svelte', '**/*.svelte.ts'],
     languageOptions: {
       parser: svelteParser,
       parserOptions: {
-        parser: typescriptParser,
-        extraFileExtensions: ['.svelte'],
+        projectService: true,
+        parser: tseslint.parser,
+        extraFileExtensions: ['.svelte', '.svelte.ts'],
+        svelteConfig,
       },
     },
   },
