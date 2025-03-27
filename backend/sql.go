@@ -49,7 +49,7 @@ CREATE INDEX IF NOT EXISTS chats_room_id_idx ON chats (room_id);
 CREATE TABLE IF NOT EXISTS subtitles (
   room_id VARCHAR(24) NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
   name VARCHAR(200) NOT NULL,
-	data TEXT NOT NULL,
+	data MEDIUMTEXT NOT NULL,
 	PRIMARY KEY (room_id, name));
 CREATE INDEX IF NOT EXISTS subtitles_room_id_idx ON subtitles (room_id);
 
@@ -159,6 +159,8 @@ func translate(query string) string {
 		query = regexp.MustCompile(`INTERVAL '(\d+) (\w+)s'`).ReplaceAllString(query, "INTERVAL $1 $2")
 		query = regexp.MustCompile(`ON CONFLICT \([^)]+\) DO UPDATE SET`).ReplaceAllString(query, "ON DUPLICATE KEY UPDATE")
 		// DELETE ... RETURNING works only with MariaDB 10.0+ (not MySQL!)
+	} else {
+		query = strings.ReplaceAll(query, "MEDIUMTEXT", "TEXT")
 	}
 	return query
 }
