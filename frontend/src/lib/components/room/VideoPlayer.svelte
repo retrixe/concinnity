@@ -141,6 +141,15 @@
     subtitle = subtitle ? [!subtitle[0], subtitle[1]] : [true, Object.keys(subtitles)[0]]
   }
 
+  // If there weren't subtitles before, but there are now, then use the first subtitle in the list.
+  let subtitleCount = 0
+  $effect(() => {
+    if (!subtitle && !subtitleCount && Object.keys(subtitles).length) {
+      subtitle = [true, Object.keys(subtitles)[0]]
+    }
+    subtitleCount = Object.keys(subtitles).length
+  })
+
   // In case the subtitles are replaced at the parent component, we use $effect here
   $effect(() => {
     if (subtitle?.[0] && !subtitles[subtitle[1]]) {
