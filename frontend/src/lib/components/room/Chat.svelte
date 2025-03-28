@@ -207,21 +207,19 @@
     overflow-y: scroll;
     margin-bottom: 1rem;
     h4,
-    h5 {
+    h5,
+    .message-content {
       margin-top: 0.5rem;
     }
     .message-content {
-      margin-top: 0.4rem;
-      > :global(*) {
-        display: inline;
+      &,
+      :global(blockquote) {
+        display: flex;
+        flex-direction: column;
       }
       :global(blockquote) {
-        display: inline-block;
         padding-left: 1rem;
         border-left: 4px solid gray;
-      }
-      :global(pre) {
-        display: inline-block;
       }
     }
   }
