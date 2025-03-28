@@ -211,13 +211,17 @@
       margin-top: 0.5rem;
     }
     .message-content {
-      margin-top: 0.3rem;
+      margin-top: 0.4rem;
       > :global(*) {
         display: inline;
       }
       :global(blockquote) {
+        display: inline-block;
         padding-left: 1rem;
         border-left: 4px solid gray;
+      }
+      :global(pre) {
+        display: inline-block;
       }
     }
   }
