@@ -19,19 +19,24 @@
     type PlayerState,
     type RoomInfo,
   } from '$lib/api/room'
+  import * as soundEffects from '$lib/utils/soundEffects'
   import { SvelteMap } from 'svelte/reactivity'
+
+  const systemUUID = '00000000-0000-0000-0000-000000000000'
 
   // TODO: Support watching remote files
   const id = page.params.id
 
-  let containerEl = $state(null) as Element | null
-  let visibilityState = $state('visible') as DocumentVisibilityState
   let messages: ChatMessage[] = $state([])
   let playerState = $state(initialPlayerState)
   let roomInfo: RoomInfo | null = $state(null)
   let subtitles: Record<string, string | null> = $state({})
-  let transientVideo: File | null = $state(null)
   let typingIndicators = new SvelteMap<string, [number, number]>()
+
+  let containerEl = $state(null) as Element | null
+  let visibilityState = $state('visible') as DocumentVisibilityState
+  let transientVideo: File | null = $state(null)
+  let lastNotificationSound = Number.NEGATIVE_INFINITY
 
   let ws: WebSocket | null = $state(null)
   let wsError: string | null = $state(null)
@@ -65,11 +70,31 @@
       } else if (isIncomingChatMessage(message)) {
         // TODO (low): Replace messages.length with IDs
         const newMessages = message.data.slice(message.data.length === 1 ? 0 : messages.length)
+        if (newMessages.length === 0) return
         for (const message of newMessages) {
           const typingIndicator = typingIndicators.get(message.userId)
           if (typingIndicator) {
             clearTimeout(typingIndicator[1])
             typingIndicators.delete(message.userId)
+          }
+        }
+        const currentTimestamp = new Date().getTime()
+        if (newMessages.length > 1) {
+          soundEffects.join?.play().catch(console.warn)
+          lastNotificationSound = currentTimestamp
+        } else {
+          const { message, userId } = newMessages[0]
+          if (userId === systemUUID) {
+            if (message.endsWith('joined') || message.endsWith('reconnected')) {
+              soundEffects.join?.play().catch(console.warn)
+              lastNotificationSound = currentTimestamp
+            } else if (message.endsWith('left') || message.endsWith('disconnected')) {
+              soundEffects.leave?.play().catch(console.warn)
+              lastNotificationSound = currentTimestamp
+            }
+          } else if (currentTimestamp - lastNotificationSound > 5000 && !document.hasFocus()) {
+            soundEffects.message?.play().catch(console.warn)
+            lastNotificationSound = currentTimestamp
           }
         }
         messages.push(...newMessages)

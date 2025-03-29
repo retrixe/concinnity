@@ -11,34 +11,7 @@
   import TypingIndicator from './TypingIndicator.svelte'
   import type { SvelteMap } from 'svelte/reactivity'
 
-  import joinWebm from '$lib/assets/join.webm'
-  import leaveWebm from '$lib/assets/leave.webm'
-  import messageWebm from '$lib/assets/message.webm'
-
   const systemUUID = '00000000-0000-0000-0000-000000000000'
-
-  const soundEffects =
-    typeof Audio === 'undefined'
-      ? null
-      : {
-          join: new Audio(joinWebm),
-          leave: new Audio(leaveWebm),
-          message: new Audio(messageWebm),
-        }
-
-  const playNotificationSound = (chatMessage: ChatMessage, chatCooldown = false) => {
-    if (chatMessage.userId === systemUUID) {
-      const { message } = chatMessage
-
-      if (message.endsWith('joined') || message.endsWith('reconnected')) {
-        soundEffects?.join.play().catch(console.warn)
-      } else if (message.endsWith('left') || message.endsWith('disconnected')) {
-        soundEffects?.leave.play().catch(console.warn)
-      }
-    } else if (!chatCooldown) {
-      soundEffects?.message.play().catch(console.warn)
-    }
-  }
 
   interface Props {
     typingIndicators: SvelteMap<string, [number, number]>
@@ -120,19 +93,6 @@
   $effect(() => {
     if (messages.length && messagesEl && isScrolledToBottom)
       messagesEl.scrollTop = messagesEl.scrollHeight - messagesEl.clientHeight
-  })
-
-  // Notification sounds
-  let previousTimestamp = Number.NEGATIVE_INFINITY
-  $effect(() => {
-    if (!messages.length) return
-
-    const currentTimestamp = new Date().getTime()
-    const shouldNotify =
-      messages.length && !document.hasFocus() && currentTimestamp - previousTimestamp > 5000
-
-    playNotificationSound(messages[messages.length - 1], !shouldNotify)
-    if (shouldNotify) previousTimestamp = currentTimestamp
   })
 
   const remarkable = new Remarkable('commonmark', { linkTarget: '_blank' }).use(linkify as Plugin)
