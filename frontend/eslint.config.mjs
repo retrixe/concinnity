@@ -26,16 +26,16 @@ export default tseslint.config(
   pluginPromise.configs['flat/recommended'],
   importPlugin.flatConfigs.recommended, // Could use TypeScript resolver
   nodePlugin.configs['flat/recommended-module'],
-  ...sveltePlugin.configs['flat/recommended'],
-  ...sveltePlugin.configs['flat/prettier'],
+  ...sveltePlugin.configs.recommended,
+  ...sveltePlugin.configs.prettier,
   {
-    files: ['**/*.svelte', '**/*.svelte.ts'],
+    files: ['**/*.svelte', '**/*.svelte.js', '**/*.svelte.ts'],
     languageOptions: {
       parser: svelteParser,
       parserOptions: {
         projectService: true,
         parser: tseslint.parser,
-        extraFileExtensions: ['.svelte', '.svelte.ts'],
+        extraFileExtensions: ['.svelte'],
         svelteConfig,
       },
     },
