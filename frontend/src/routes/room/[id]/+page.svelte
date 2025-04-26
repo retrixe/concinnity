@@ -37,6 +37,7 @@
   let visibilityState = $state('visible') as DocumentVisibilityState
   let transientVideo: File | null = $state(null)
   let lastNotificationSound = Number.NEGATIVE_INFINITY
+  let unreadMessageCount = $state(0)
 
   let ws: WebSocket | null = $state(null)
   let wsError: string | null = $state(null)
@@ -80,7 +81,7 @@
         }
         const currentTimestamp = new Date().getTime()
         if (newMessages.length > 1) {
-          soundEffects.join?.play().catch(console.warn)
+          soundEffects.join?.play().catch(console.warn) // A reconnect, just play the join sound
           lastNotificationSound = currentTimestamp
         } else {
           const { message, userId } = newMessages[0]
@@ -98,6 +99,7 @@
           }
         }
         messages.push(...newMessages)
+        if (visibilityState !== 'visible') unreadMessageCount += newMessages.length
       } else if (isIncomingSubtitleMessage(message)) {
         message.data.forEach(name => (subtitles[name] = null))
       } else if (message.type !== MessageType.Pong) {
@@ -129,6 +131,10 @@
       ws?.close()
       typingIndicators.forEach(([, timeoutId]) => clearTimeout(timeoutId))
     }
+  })
+
+  $effect(() => {
+    if (visibilityState === 'visible') unreadMessageCount = 0
   })
 
   // Reconnect if there's an error and the page is visible
@@ -176,6 +182,11 @@
 </script>
 
 <svelte:document bind:visibilityState />
+<svelte:head>
+  <title>
+    {(unreadMessageCount ? `(${unreadMessageCount}) ` : '') + (page.data.title as string)}
+  </title>
+</svelte:head>
 <div class="container room" bind:this={containerEl}>
   {#if !roomInfo || roomInfo.type === RoomType.None}
     <RoomLanding bind:transientVideo error={wsError} connecting={wsInitialConnect} />
