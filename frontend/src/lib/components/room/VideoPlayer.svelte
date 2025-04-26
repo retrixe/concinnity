@@ -1,4 +1,5 @@
 <script lang="ts">
+  // TODO: Width of transiently passed videos are incorrect sometimes
   import { fade } from 'svelte/transition'
   import { Button, Tooltip } from 'heliodor'
   import {
@@ -226,9 +227,6 @@
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown') handleVolumeScrub(event)
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') handleTimeScrub(event)
   }
-
-  // TODO: Implement tooltips
-  // TODO: Width of transiently passed videos are incorrect sometimes
 </script>
 
 <svelte:document bind:fullscreenElement />

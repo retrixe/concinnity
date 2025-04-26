@@ -24,7 +24,6 @@
 
   const systemUUID = '00000000-0000-0000-0000-000000000000'
 
-  // TODO: Support watching remote files
   const id = page.params.id
 
   let messages: ChatMessage[] = $state([])
@@ -153,7 +152,7 @@
           timeout = setTimeout(reconnect, 10000)
         }
       }
-      // TODO: Implement exponential backoff
+      // TODO (low): Implement exponential backoff
       if (wsInitialConnect) timeout = setTimeout(reconnect, 10000)
       else reconnect() // eslint-disable-line @typescript-eslint/no-floating-promises
       return () => clearTimeout(timeout)
