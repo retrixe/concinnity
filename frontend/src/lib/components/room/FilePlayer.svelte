@@ -4,10 +4,8 @@
   import { RoomType, type PlayerState, type RoomInfo } from '$lib/api/room'
   import { openFileOrFiles } from '$lib/utils/openFile'
   import { CaretDown } from 'phosphor-svelte'
-  import DropdownButton from '$lib/lunaria/DropdownButton.svelte'
-  import Menu from '$lib/lunaria/Menu.svelte'
-  import MenuItem from '$lib/lunaria/MenuItem.svelte'
   import VideoPlayer from './VideoPlayer.svelte'
+  import { DropdownButton, Menu, MenuItem } from 'heliodor'
 
   interface Props {
     error: string | null

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte'
+  import { Textarea } from 'heliodor'
   import { Remarkable } from 'remarkable'
   // @ts-expect-error -- breaks `yarn preview` to import directly
   import { linkify } from 'remarkable/dist/cjs/linkify.js'
@@ -7,7 +8,6 @@
   import ky from '$lib/api/ky'
   import type { ChatMessage } from '$lib/api/room'
   import usernameCache from '$lib/state/usernameCache.svelte'
-  import Textarea from '$lib/lunaria/Textarea.svelte'
   import TypingIndicator from './TypingIndicator.svelte'
   import type { SvelteMap } from 'svelte/reactivity'
 

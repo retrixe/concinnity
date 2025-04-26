@@ -1,7 +1,6 @@
 <script lang="ts">
   import ky from '$lib/api/ky'
-  import Button from '$lib/lunaria/Button.svelte'
-  import TextInput from '$lib/lunaria/TextInput.svelte'
+  import { Button, TextInput } from 'heliodor'
 
   let register = $state({ username: '', password: '', confirmPw: '', email: '' })
   let disabled = $state(false)

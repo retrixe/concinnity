@@ -1,5 +1,6 @@
 <script lang="ts">
   import { fade } from 'svelte/transition'
+  import { Button, Tooltip } from 'heliodor'
   import {
     ArrowsIn,
     ArrowsOut,
@@ -18,12 +19,10 @@
   } from 'phosphor-svelte'
   import ky from '$lib/api/ky'
   import type { PlayerState } from '$lib/api/room'
-  import Button from '$lib/lunaria/Button.svelte'
   import { stringifyDuration } from '$lib/utils/duration'
   import { openFileOrFiles } from '$lib/utils/openFile'
   import { srt2webvtt } from '$lib/utils/srt'
   import { page } from '$app/state'
-  import Tooltip from '$lib/lunaria/Tooltip.svelte'
 
   interface Props {
     src: string

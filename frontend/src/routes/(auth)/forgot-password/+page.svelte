@@ -1,6 +1,5 @@
 <script lang="ts">
-  import Button from '$lib/lunaria/Button.svelte'
-  import TextInput from '$lib/lunaria/TextInput.svelte'
+  import { Button, TextInput } from 'heliodor'
 
   let usenameEmail = $state('')
   let disabled = $state(false)

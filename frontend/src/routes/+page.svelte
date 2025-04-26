@@ -3,8 +3,7 @@
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
   import ky from '$lib/api/ky'
-  import Button from '$lib/lunaria/Button.svelte'
-  import TextInput from '$lib/lunaria/TextInput.svelte'
+  import { Button, TextInput } from 'heliodor'
 
   const { username } = $derived(page.data)
 

@@ -1,8 +1,7 @@
 <script lang="ts">
   import { invalidate } from '$app/navigation'
   import ky from '$lib/api/ky'
-  import Button from '$lib/lunaria/Button.svelte'
-  import TextInput from '$lib/lunaria/TextInput.svelte'
+  import { Button, TextInput } from 'heliodor'
 
   let login = $state({ username: '', password: '' })
   let disabled = $state(false)

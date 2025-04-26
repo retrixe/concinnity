@@ -6,11 +6,8 @@
   import { invalidate, onNavigate } from '$app/navigation'
   import ky from '$lib/api/ky'
   import GitHubImage from '$lib/assets/GitHubImage.svelte'
-  import '$lib/lunaria/Baseline.scss'
-  import TopBar from '$lib/lunaria/TopBar/TopBar.svelte'
-  import TopBarDivider from '$lib/lunaria/TopBar/TopBarDivider.svelte'
-  import TopBarTitle from '$lib/lunaria/TopBar/TopBarTitle.svelte'
-  import TopBarLink from '$lib/lunaria/TopBar/TopBarLink.svelte'
+  import 'heliodor/Baseline.scss'
+  import { TopBar, TopBarDivider, TopBarTitle, TopBarLink } from 'heliodor'
 
   const { data, children }: { data: LayoutData; children: Snippet } = $props()
   const { username } = $derived(data)
