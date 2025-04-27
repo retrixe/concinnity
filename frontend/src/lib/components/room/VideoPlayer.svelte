@@ -45,28 +45,29 @@
     onStop: handleStop,
   }: Props = $props()
 
+  let videoEl = $state(null) as HTMLVideoElement | null
   let controlsVisible = $state(false)
+  let displayCurrentTime = $state(false)
+  let settingsMenu = $state<null | 'options' | 'speed' | 'subtitles'>(null)
+  let fullscreenElement = $state(null) as Element | null
+  let autoplayNotif = $state(false)
   let lastLocalAction: Date | null = null
 
-  let videoEl = $state(null) as HTMLVideoElement | null
   let paused = $state(true)
   let currentTime = $state(0)
   let duration = $state(0)
-  let displayCurrentTime = $state(false)
   let muted = $state(false)
   let volume = $state(1)
   let playbackRate = $state(1)
   let subtitle = $state<null | [boolean, string]>(null)
-  let fullscreenElement = $state(null) as Element | null
-  let settingsMenu = $state<null | 'options' | 'speed' | 'subtitles'>(null)
-  let autoplayNotif = $state(false)
 
   // Synchronise to incoming player state changes
   const synchroniseToPlayerState = () => {
     const lastAction = new Date(playerState.lastAction).getTime()
-    if (lastLocalAction && lastLocalAction.getTime() > lastAction) return // Don't override local changes
-    const currentTimeDelta = playerState.paused ? 0 : Math.max((Date.now() - lastAction) / 1000, 0)
-    currentTime = playerState.timestamp + currentTimeDelta
+    // API quirk: If the last action locally took place after the last action from the server, ignore the server action
+    if (lastLocalAction && lastLocalAction.getTime() > lastAction) return
+    const latencyDelta = playerState.paused ? 0 : Math.max((Date.now() - lastAction) / 1000, 0)
+    currentTime = playerState.timestamp + latencyDelta
     playbackRate = playerState.speed
     if (playerState.paused) {
       paused = true
