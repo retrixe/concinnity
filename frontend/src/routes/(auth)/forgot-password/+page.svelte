@@ -1,20 +1,20 @@
 <script lang="ts">
+  import ky from '$lib/api/ky'
   import { Button, TextInput } from 'heliodor'
 
-  let usenameEmail = $state('')
+  let usernameEmail = $state('')
   let disabled = $state(false)
   let error: string | null = $state(null)
 
   const clearError = () => (error = null)
 
-  function onForgotPassword() {
+  async function onForgotPassword() {
     disabled = true
     try {
-      /* const res = await ky
-        .post(`api/login`, { json: usenameEmail })
-        .json<{ token: string; username: string }>()
-      localStorage.setItem('concinnity:token', res.token) */
-      error = ''
+      const { success } = await ky
+        .post(`api/login?user=${encodeURIComponent(usernameEmail)}`)
+        .json<{ success: boolean }>()
+      error = success ? '' : 'Failed to send reset password e-mail!'
     } catch (e: unknown) {
       error =
         e instanceof Error ? e.message : (e?.toString() ?? `Failed to send reset password e-mail!`)
@@ -32,7 +32,7 @@
 <label for="forgot-password-username-email">Username / E-mail</label>
 <TextInput
   id="forgot-password-username-email"
-  bind:value={usenameEmail}
+  bind:value={usernameEmail}
   oninput={clearError}
   error={!!error}
   {disabled}

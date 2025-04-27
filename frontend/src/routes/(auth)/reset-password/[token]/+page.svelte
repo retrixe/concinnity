@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { page } from '$app/state'
+  import ky from '$lib/api/ky'
   import { Button, TextInput } from 'heliodor'
 
+  const token = $derived(page.params.token)
   let password = $state('')
   let confirmPw = $state('')
   let disabled = $state(false)
@@ -8,14 +11,16 @@
 
   const clearError = () => (error = null)
 
-  function onResetPassword() {
+  async function onResetPassword() {
     disabled = true
     try {
       if (password !== confirmPw) {
         throw new Error(`Passwords do not match!`)
       }
-      // await ky.post(`api/register`, { json: register }).json<{ token: string; username: string }>()
-      error = ''
+      const { success } = await ky
+        .post(`api/reset-password`, { json: { token, password } })
+        .json<{ success: boolean }>()
+      error = success ? '' : 'Failed to reset password!'
     } catch (e: unknown) {
       error = e instanceof Error ? e.message : (e?.toString() ?? `Failed to reset password!`)
     }
