@@ -12,7 +12,7 @@
     disabled = true
     try {
       const { success } = await ky
-        .post(`api/login?user=${encodeURIComponent(usernameEmail)}`)
+        .post(`api/forgot-password?user=${encodeURIComponent(usernameEmail)}`)
         .json<{ success: boolean }>()
       error = success ? '' : 'Failed to send reset password e-mail!'
     } catch (e: unknown) {
