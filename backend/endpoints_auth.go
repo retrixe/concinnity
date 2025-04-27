@@ -331,10 +331,10 @@ func ForgotPasswordEndpoint(w http.ResponseWriter, r *http.Request) {
 func ForgotPasswordTokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	token := r.PathValue("token")
 	if token == "" {
-		http.Error(w, errorJson("No token provided!"), http.StatusBadRequest)
+		http.Error(w, errorJson("No password reset token provided!"), http.StatusBadRequest)
 		return
 	} else if uuid.Validate(token) != nil {
-		http.Error(w, errorJson("Invalid token provided!"), http.StatusBadRequest)
+		http.Error(w, errorJson("Invalid password reset token!"), http.StatusBadRequest)
 		return
 	}
 	var response struct {
@@ -345,7 +345,7 @@ func ForgotPasswordTokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	err := findUserByPasswordResetTokenStmt.QueryRow(token).Scan(
 		&response.UserID, &response.Username, &response.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
-		http.Error(w, errorJson("Invalid token provided!"), http.StatusBadRequest)
+		http.Error(w, errorJson("Invalid password reset token!"), http.StatusBadRequest)
 		return
 	} else if err != nil {
 		handleInternalServerError(w, err)
@@ -370,7 +370,7 @@ func ResetPasswordEndpoint(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
 		return
 	} else if data.Password == "" {
-		http.Error(w, errorJson("No token or password provided!"), http.StatusBadRequest)
+		http.Error(w, errorJson("No password provided!"), http.StatusBadRequest)
 		return
 	} else if res, _ := regexp.MatchString("^.{8,64}$", data.Password); !res {
 		http.Error(w, errorJson("Your password must be between 8 and 64 characters long!"),
@@ -389,10 +389,18 @@ func ResetPasswordEndpoint(w http.ResponseWriter, r *http.Request) {
 	err = tx.Stmt(deletePasswordResetTokenStmt).QueryRow(data.Token).Scan(
 		&token.UserID, &token.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
-		http.Error(w, errorJson("Invalid token provided!"), http.StatusBadRequest)
+		http.Error(w, errorJson("Invalid password reset token!"), http.StatusBadRequest)
 		return
 	} else if err != nil {
 		handleInternalServerError(w, err)
+		return
+	} else if token.CreatedAt.Add(10 * time.Minute).Before(time.Now().UTC()) {
+		err = tx.Commit() // Delete the token to prevent reuse.
+		if err != nil {
+			handleInternalServerError(w, err)
+			return
+		}
+		http.Error(w, errorJson("This password reset token has expired!"), http.StatusBadRequest)
 		return
 	}
 	result, err := tx.Stmt(updateUserPasswordStmt).Exec(hashedPassword, token.UserID)
