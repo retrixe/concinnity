@@ -19,6 +19,9 @@ Endpoints:
 - POST /api/login
 - POST /api/logout
 - POST /api/register
+- POST /api/forgot-password
+- GET /api/forgot-password/:token
+- POST /api/reset-password
 - GET /api/usernames?id=:id - Get usernames by ID, can accept multiple `id` query parameters
 - POST /api/room - Create a new room
 - GET /api/room/:id - Get the room's info
@@ -87,7 +90,9 @@ func main() {
 	http.HandleFunc("POST /api/login", LoginEndpoint)
 	http.HandleFunc("POST /api/logout", LogoutEndpoint)
 	http.HandleFunc("POST /api/register", RegisterEndpoint)
-	// http.HandleFunc("POST /api/forgot-password", ForgotPasswordEndpoint)
+	http.HandleFunc("POST /api/forgot-password", ForgotPasswordEndpoint)
+	http.HandleFunc("GET /api/forgot-password/{token}", ForgotPasswordTokenEndpoint)
+	http.HandleFunc("POST /api/reset-password", ResetPasswordEndpoint)
 	http.HandleFunc("GET /api/usernames", GetUsernamesEndpoint)
 	http.HandleFunc("POST /api/room", CreateRoomEndpoint)
 	http.HandleFunc("GET /api/room/{id}", GetRoomEndpoint)

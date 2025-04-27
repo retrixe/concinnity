@@ -300,6 +300,7 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func ForgotPasswordEndpoint(w http.ResponseWriter, r *http.Request) {
+	// FIXME: Rate limit this endpoint.
 	user := r.URL.Query().Get("user")
 	if user == "" {
 		http.Error(w, errorJson("No username or email provided!"), http.StatusBadRequest)
@@ -327,23 +328,85 @@ func ForgotPasswordEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("{\"success\":true}"))
 }
 
-/* func ResetPasswordEndpoint(w http.ResponseWriter, r *http.Request) {
-// Check the body for JSON containing token, password and return a success message.
-body, err := io.ReadAll(r.Body)
-if err != nil {
-	http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
-	return
+func ForgotPasswordTokenEndpoint(w http.ResponseWriter, r *http.Request) {
+	token := r.PathValue("token")
+	if token == "" {
+		http.Error(w, errorJson("No token provided!"), http.StatusBadRequest)
+		return
+	} else if uuid.Validate(token) != nil {
+		http.Error(w, errorJson("Invalid token provided!"), http.StatusBadRequest)
+		return
+	}
+	var response struct {
+		UserID    string    `json:"userId"`
+		Username  string    `json:"username"`
+		CreatedAt time.Time `json:"createdAt"`
+	}
+	err := findUserByPasswordResetTokenStmt.QueryRow(token).Scan(
+		&response.UserID, &response.Username, &response.CreatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		http.Error(w, errorJson("Invalid token provided!"), http.StatusBadRequest)
+		return
+	} else if err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
+	json.NewEncoder(w).Encode(response)
 }
-var data struct {
-	Token    string `json:"token"`
-	Password string `json:"password"`
+
+func ResetPasswordEndpoint(w http.ResponseWriter, r *http.Request) {
+	// Check the body for JSON containing token and password.
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
+		return
+	}
+	var data struct {
+		Token    uuid.UUID `json:"token"`
+		Password string    `json:"password"`
+	}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
+		return
+	} else if data.Password == "" {
+		http.Error(w, errorJson("No token or password provided!"), http.StatusBadRequest)
+		return
+	} else if res, _ := regexp.MatchString("^.{8,64}$", data.Password); !res {
+		http.Error(w, errorJson("Your password must be between 8 and 64 characters long!"),
+			http.StatusBadRequest)
+		return
+	}
+	// Delete the token and update the user's password.
+	tx, err := db.Begin()
+	if err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
+	defer tx.Rollback()
+	hashedPassword := HashPassword(data.Password, GenerateSalt())
+	var token PasswordResetToken
+	err = tx.Stmt(deletePasswordResetTokenStmt).QueryRow(data.Token).Scan(
+		&token.UserID, &token.CreatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		http.Error(w, errorJson("Invalid token provided!"), http.StatusBadRequest)
+		return
+	} else if err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
+	result, err := tx.Stmt(updateUserPasswordStmt).Exec(hashedPassword, token.UserID)
+	if err != nil {
+		handleInternalServerError(w, err)
+		return
+	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
+		handleInternalServerError(w, err) // nil err solved by Ostrich algorithm
+		return
+	}
+	err = tx.Commit()
+	if err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
+	w.Write([]byte("{\"success\":true}"))
 }
-err = json.Unmarshal(body, &data)
-if err != nil {
-	http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
-	return
-} else if data.Token == "" || data.Password == "" {
-	http.Error(w, errorJson("No token or password provided!"), http.StatusBadRequest)
-	return
-} else if res, _ := regexp.MatchString("^.{8,64}$", data.Password); !res {
-*/

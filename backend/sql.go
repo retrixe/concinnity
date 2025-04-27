@@ -70,12 +70,14 @@ var (
 	findUserByEmailStmt       *sql.Stmt
 	findUsernamesByIdStmt     *sql.Stmt
 	createUserStmt            *sql.Stmt
+	updateUserPasswordStmt    *sql.Stmt
 
 	insertTokenStmt *sql.Stmt
 	deleteTokenStmt *sql.Stmt
 
-	insertPasswordResetTokenStmt *sql.Stmt
-	// findAndDeletePasswordResetTokenStmt *sql.Stmt
+	insertPasswordResetTokenStmt        *sql.Stmt
+	findUserByPasswordResetTokenStmt    *sql.Stmt
+	deletePasswordResetTokenStmt        *sql.Stmt
 	purgeExpiredPasswordResetTokensStmt *sql.Stmt
 
 	insertRoomStmt         *sql.Stmt
@@ -110,6 +112,7 @@ func PrepareSqlStatements() {
 		findUsernamesByIdStmt = prepareQuery("SELECT id, username FROM users WHERE id = ANY($1);")
 	}
 	createUserStmt = prepareQuery("INSERT INTO users (username, password, email, id, verified) VALUES ($1, $2, $3, $4, $5);")
+	updateUserPasswordStmt = prepareQuery("UPDATE users SET password = $1 WHERE id = $2;")
 
 	insertTokenStmt = prepareQuery("INSERT INTO tokens (token, created_at, user_id) VALUES ($1, $2, $3);")
 	deleteTokenStmt = prepareQuery("DELETE FROM tokens WHERE token = $1 RETURNING user_id;")
@@ -118,8 +121,12 @@ func PrepareSqlStatements() {
 		`INSERT INTO password_reset_tokens (user_id)
 		SELECT id FROM users WHERE username = $1 OR email = $1
 		RETURNING id, user_id, created_at;`)
-	//findAndDeletePasswordResetTokenStmt = prepareQuery(
-	//	"DELETE FROM password_reset_tokens WHERE id = $1 RETURNING id, user_id, created_at;")
+	findUserByPasswordResetTokenStmt = prepareQuery(
+		`SELECT users.id, users.username, password_reset_tokens.created_at
+		FROM password_reset_tokens JOIN users ON password_reset_tokens.user_id = users.id
+		WHERE password_reset_tokens.id = $1;`)
+	deletePasswordResetTokenStmt = prepareQuery(
+		"DELETE FROM password_reset_tokens WHERE id = $1 RETURNING user_id, created_at;")
 	purgeExpiredPasswordResetTokensStmt = prepareQuery(
 		"DELETE FROM password_reset_tokens WHERE created_at < NOW() - INTERVAL '10 minutes';")
 
