@@ -148,7 +148,7 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 	var user User
 	err = findUserByNameOrEmailStmt.QueryRow(data.Username, data.Username).Scan(
 		&user.Username, &user.Password, &user.Email, &user.ID, &user.CreatedAt, &user.Verified)
-	if err != nil && errors.Is(err, sql.ErrNoRows) {
+	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, errorJson("No account with this username/email exists!"), http.StatusUnauthorized)
 		return
 	} else if err != nil {
@@ -197,7 +197,7 @@ func LogoutEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	var userID uuid.UUID
 	err := deleteTokenStmt.QueryRow(token).Scan(&userID)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, errorJson("You are not authenticated to access this resource!"),
 			http.StatusUnauthorized)
 		return
@@ -298,3 +298,52 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write([]byte("{\"success\":true,\"verified\":" + strconv.FormatBool(verified) + "}"))
 }
+
+func ForgotPasswordEndpoint(w http.ResponseWriter, r *http.Request) {
+	user := r.URL.Query().Get("user")
+	if user == "" {
+		http.Error(w, errorJson("No username or email provided!"), http.StatusBadRequest)
+		return
+	}
+	// Insert a password reset token into the database.
+	var err error
+	var token PasswordResetToken
+	if config.Database == "mysql" {
+		err = insertPasswordResetTokenStmt.QueryRow(user, user).Scan(
+			&token.ID, &token.UserID, &token.CreatedAt)
+	} else {
+		err = insertPasswordResetTokenStmt.QueryRow(user).Scan(
+			&token.ID, &token.UserID, &token.CreatedAt)
+	}
+	if errors.Is(err, sql.ErrNoRows) {
+		http.Error(w, errorJson("No account with this username/email exists!"), http.StatusUnauthorized)
+		return
+	} else if err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
+	// FIXME: Send the password reset email.
+	println(token.ID.String())
+	w.Write([]byte("{\"success\":true}"))
+}
+
+/* func ResetPasswordEndpoint(w http.ResponseWriter, r *http.Request) {
+// Check the body for JSON containing token, password and return a success message.
+body, err := io.ReadAll(r.Body)
+if err != nil {
+	http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
+	return
+}
+var data struct {
+	Token    string `json:"token"`
+	Password string `json:"password"`
+}
+err = json.Unmarshal(body, &data)
+if err != nil {
+	http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
+	return
+} else if data.Token == "" || data.Password == "" {
+	http.Error(w, errorJson("No token or password provided!"), http.StatusBadRequest)
+	return
+} else if res, _ := regexp.MatchString("^.{8,64}$", data.Password); !res {
+*/

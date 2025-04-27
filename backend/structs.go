@@ -62,3 +62,9 @@ func (c *ChatMessage) Scan(src interface{}) error {
 func (c ChatMessage) Value() (driver.Value, error) {
 	return json.Marshal(c)
 }
+
+type PasswordResetToken struct {
+	ID        uuid.UUID `json:"id"`
+	UserID    uuid.UUID `json:"userId"`
+	CreatedAt time.Time `json:"createdAt"`
+}

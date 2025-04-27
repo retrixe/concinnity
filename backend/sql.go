@@ -53,6 +53,11 @@ CREATE TABLE IF NOT EXISTS subtitles (
 	PRIMARY KEY (room_id, name));
 CREATE INDEX IF NOT EXISTS subtitles_room_id_idx ON subtitles (room_id);
 
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+
 COMMIT;`)); err != nil {
 		log.Fatalln("Failed to create tables and indexes!", err)
 	}
@@ -68,6 +73,10 @@ var (
 
 	insertTokenStmt *sql.Stmt
 	deleteTokenStmt *sql.Stmt
+
+	insertPasswordResetTokenStmt *sql.Stmt
+	// findAndDeletePasswordResetTokenStmt *sql.Stmt
+	purgeExpiredPasswordResetTokensStmt *sql.Stmt
 
 	insertRoomStmt         *sql.Stmt
 	findRoomStmt           *sql.Stmt
@@ -104,6 +113,15 @@ func PrepareSqlStatements() {
 
 	insertTokenStmt = prepareQuery("INSERT INTO tokens (token, created_at, user_id) VALUES ($1, $2, $3);")
 	deleteTokenStmt = prepareQuery("DELETE FROM tokens WHERE token = $1 RETURNING user_id;")
+
+	insertPasswordResetTokenStmt = prepareQuery(
+		`INSERT INTO password_reset_tokens (user_id)
+		SELECT id FROM users WHERE username = $1 OR email = $1
+		RETURNING id, user_id, created_at;`)
+	//findAndDeletePasswordResetTokenStmt = prepareQuery(
+	//	"DELETE FROM password_reset_tokens WHERE id = $1 RETURNING id, user_id, created_at;")
+	purgeExpiredPasswordResetTokensStmt = prepareQuery(
+		"DELETE FROM password_reset_tokens WHERE created_at < NOW() - INTERVAL '10 minutes';")
 
 	insertRoomStmt = prepareQuery("INSERT INTO rooms (id, type, target) " +
 		"VALUES ($1, $2, $3);")
@@ -159,6 +177,7 @@ func translate(query string) string {
 		query = regexp.MustCompile(`INTERVAL '(\d+) (\w+)s'`).ReplaceAllString(query, "INTERVAL $1 $2")
 		query = regexp.MustCompile(`ON CONFLICT \([^)]+\) DO UPDATE SET`).ReplaceAllString(query, "ON DUPLICATE KEY UPDATE")
 		// DELETE ... RETURNING works only with MariaDB 10.0+ (not MySQL!)
+		query = strings.ReplaceAll(query, "gen_random_uuid", "UUID") // UUID_v7() is MariaDB 11.7+ only!
 	} else {
 		query = strings.ReplaceAll(query, "MEDIUMTEXT", "TEXT")
 	}

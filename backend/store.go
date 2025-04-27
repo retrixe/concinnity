@@ -21,9 +21,12 @@ type UserConns = *xsync.MapOf[chan<- interface{}, string]
 
 var userConns *xsync.MapOf[uuid.UUID, UserConns] = xsync.NewMapOf[uuid.UUID, UserConns]()
 
-func CleanInactiveRoomsTask() {
+func PurgeExpiredDataTask() {
 	for {
 		time.Sleep(10 * time.Minute)
+		if _, err := purgeExpiredPasswordResetTokensStmt.Exec(); err != nil {
+			log.Println("Failed to purge expired password reset tokens!", err)
+		}
 		CleanInactiveRooms()
 	}
 }

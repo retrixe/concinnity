@@ -74,7 +74,7 @@ func main() {
 	db.SetMaxOpenConns(10)
 	CreateSqlTables()
 	PrepareSqlStatements()
-	go CleanInactiveRoomsTask()
+	go PurgeExpiredDataTask()
 
 	// Endpoints
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -87,6 +87,7 @@ func main() {
 	http.HandleFunc("POST /api/login", LoginEndpoint)
 	http.HandleFunc("POST /api/logout", LogoutEndpoint)
 	http.HandleFunc("POST /api/register", RegisterEndpoint)
+	// http.HandleFunc("POST /api/forgot-password", ForgotPasswordEndpoint)
 	http.HandleFunc("GET /api/usernames", GetUsernamesEndpoint)
 	http.HandleFunc("POST /api/room", CreateRoomEndpoint)
 	http.HandleFunc("GET /api/room/{id}", GetRoomEndpoint)
