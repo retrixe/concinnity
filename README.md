@@ -41,7 +41,15 @@ The backend requires the `config.json` file to be created in the `backend/` fold
   "basePath": "/",
   "secureCookies": false,
   "database": "optional: postgres (default, recommended) or mariadb",
-  "databaseUrl": "see https://pkg.go.dev/github.com/lib/pq#hdr-Connection_String_Parameters (postgres) or https://github.com/go-sql-driver/mysql?tab=readme-ov-file#dsn-data-source-name (mariadb)"
+  "databaseUrl": "see https://pkg.go.dev/github.com/lib/pq#hdr-Connection_String_Parameters (postgres) or https://github.com/go-sql-driver/mysql?tab=readme-ov-file#dsn-data-source-name (mariadb)",
+  "frontendUrl": "optional: the URL of the frontend, required for forgot password functionality",
+  "emailSettings": {
+    "_comment": "optional email settings for forgot password functionality",
+    "identity": "optional: the identity of the email sender, defaults to username",
+    "username": "the username of the email sender",
+    "password": "the password of the email sender",
+    "host": "the host of the email sender"
+  }
 }
 ```
 

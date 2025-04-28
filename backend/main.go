@@ -43,6 +43,13 @@ type Config struct {
 	SecureCookies bool   `json:"secureCookies"`
 	Database      string `json:"database"`
 	DatabaseURL   string `json:"databaseUrl"`
+	FrontendURL   string `json:"frontendUrl"`
+	EmailSettings struct {
+		Identity string `json:"identity"`
+		Username string `json:"username"`
+		Password string `json:"password"`
+		Host     string `json:"host"`
+	} `json:"emailSettings"`
 }
 
 // TODO: implement e-mail verification option
@@ -78,6 +85,9 @@ func main() {
 	CreateSqlTables()
 	PrepareSqlStatements()
 	go PurgeExpiredDataTask()
+	if !IsEmailConfigured() || config.FrontendURL == "" {
+		log.Println("Note: Email settings and frontend URL are not configured for the forgot password functionality!")
+	}
 
 	// Endpoints
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

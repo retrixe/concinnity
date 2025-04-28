@@ -118,9 +118,7 @@ func PrepareSqlStatements() {
 	deleteTokenStmt = prepareQuery("DELETE FROM tokens WHERE token = $1 RETURNING user_id;")
 
 	insertPasswordResetTokenStmt = prepareQuery(
-		`INSERT INTO password_reset_tokens (user_id)
-		SELECT id FROM users WHERE username = $1 OR email = $1
-		RETURNING id, user_id, created_at;`)
+		"INSERT INTO password_reset_tokens (user_id) VALUES ($1) RETURNING id, user_id, created_at;")
 	findUserByPasswordResetTokenStmt = prepareQuery(
 		`SELECT users.id, users.username, password_reset_tokens.created_at
 		FROM password_reset_tokens JOIN users ON password_reset_tokens.user_id = users.id

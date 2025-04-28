@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/smtp"
 	"strings"
 	"time"
 
@@ -70,4 +71,32 @@ func ComparePassword(password string, hash string) bool {
 	key := argon2.IDKey([]byte(password), salt, 1, 51200, 4, 32)
 	hashValue := encodeSplit[len(encodeSplit)-1]
 	return hashValue == base64.RawStdEncoding.EncodeToString(key)
+}
+
+func IsEmailConfigured() bool {
+	return config.EmailSettings.Username != "" &&
+		config.EmailSettings.Password != "" &&
+		config.EmailSettings.Host != ""
+}
+
+func SendHTMLEmail(email string, subject string, body string) error {
+	auth := smtp.PlainAuth(
+		config.EmailSettings.Identity,
+		config.EmailSettings.Username,
+		config.EmailSettings.Password,
+		config.EmailSettings.Host)
+	from := config.EmailSettings.Identity
+	if from == "" {
+		from = config.EmailSettings.Username
+	}
+	host := config.EmailSettings.Host
+	if !strings.Contains(host, ":") {
+		host += ":587"
+	}
+	msg := []byte("To: " + email + "\r\n" +
+		"Subject: " + subject + "\r\n" +
+		"MIME-version: 1.0;\r\nContent-Type: text/html; charset=\"UTF-8\";\r\n" +
+		"\r\n" +
+		strings.ReplaceAll(body, "\n", "\r\n") + "\r\n")
+	return smtp.SendMail(host, auth, from, []string{email}, msg)
 }

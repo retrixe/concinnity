@@ -300,22 +300,26 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func ForgotPasswordEndpoint(w http.ResponseWriter, r *http.Request) {
+	if !IsEmailConfigured() || config.FrontendURL == "" {
+		http.Error(w, errorJson("This functionality is unavailable."), http.StatusNotImplemented)
+		return
+	}
 	// FIXME: Rate limit this endpoint.
-	user := r.URL.Query().Get("user")
-	if user == "" {
+	usernameEmail := r.URL.Query().Get("user")
+	if usernameEmail == "" {
 		http.Error(w, errorJson("No username or email provided!"), http.StatusBadRequest)
 		return
 	}
-	// Insert a password reset token into the database.
-	var err error
-	var token PasswordResetToken
-	if config.Database == "mysql" {
-		err = insertPasswordResetTokenStmt.QueryRow(user, user).Scan(
-			&token.ID, &token.UserID, &token.CreatedAt)
-	} else {
-		err = insertPasswordResetTokenStmt.QueryRow(user).Scan(
-			&token.ID, &token.UserID, &token.CreatedAt)
+	tx, err := db.Begin()
+	if err != nil {
+		handleInternalServerError(w, err)
+		return
 	}
+	defer tx.Rollback()
+	// Get user info from the database.
+	var user User
+	err = tx.Stmt(findUserByNameOrEmailStmt).QueryRow(usernameEmail, usernameEmail).Scan(
+		&user.Username, &user.Password, &user.Email, &user.ID, &user.CreatedAt, &user.Verified)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, errorJson("No account with this username/email exists!"), http.StatusUnauthorized)
 		return
@@ -323,8 +327,35 @@ func ForgotPasswordEndpoint(w http.ResponseWriter, r *http.Request) {
 		handleInternalServerError(w, err)
 		return
 	}
-	// FIXME: Send the password reset email.
-	println(token.ID.String())
+	// Insert a password reset token into the database.
+	var token PasswordResetToken
+	err = tx.Stmt(insertPasswordResetTokenStmt).QueryRow(user.ID).Scan(
+		&token.ID, &token.UserID, &token.CreatedAt)
+	if err != nil {
+		handleInternalServerError(w, err) // An account was already confirmed to exist with this email.
+		return
+	}
+	err = tx.Commit()
+	if err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
+	// Send the password reset email.
+	err = SendHTMLEmail(user.Email, "Password Reset Request for Concinnity",
+		"<p>"+
+			"Hello,<br>\n<br>\n"+
+			"We received a request to reset your password. If you did not make this request, "+
+			"please ignore this email.<br>\n<br>\n"+
+			"To reset your password, please click the link below:<br>\n<br>\n"+
+			"<a href=\""+config.FrontendURL+"/reset-password/"+token.ID.String()+"\">"+
+			config.FrontendURL+"/reset-password/"+token.ID.String()+
+			"</a><br>\n<br>\n"+
+			"As a security measure, this link will expire in 10 minutes."+
+			"</p>")
+	if err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
 	w.Write([]byte("{\"success\":true}"))
 }
 
