@@ -381,6 +381,9 @@ func ForgotPasswordTokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	} else if err != nil {
 		handleInternalServerError(w, err)
 		return
+	} else if response.CreatedAt.Add(10 * time.Minute).Before(time.Now().UTC()) {
+		http.Error(w, errorJson("This password reset token has expired!"), http.StatusBadRequest)
+		return
 	}
 	json.NewEncoder(w).Encode(response)
 }
