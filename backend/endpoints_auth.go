@@ -301,7 +301,8 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 
 func ForgotPasswordEndpoint(w http.ResponseWriter, r *http.Request) {
 	if !IsEmailConfigured() || config.FrontendURL == "" {
-		http.Error(w, errorJson("This functionality is unavailable."), http.StatusNotImplemented)
+		http.Error(w, errorJson("This functionality is unavailable on this Concinnity instance."),
+			http.StatusNotImplemented)
 		return
 	}
 	usernameEmail := r.URL.Query().Get("user")

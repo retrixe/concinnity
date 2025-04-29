@@ -13,6 +13,8 @@ import (
 	_ "github.com/lib/pq"
 )
 
+const version = "0.0.1"
+
 /*
 Endpoints:
 - GET /
@@ -54,6 +56,11 @@ type Config struct {
 
 // TODO: implement e-mail verification option
 func main() {
+	if len(os.Args) > 1 && (os.Args[1] == "-v" || os.Args[1] == "--version" || os.Args[1] == "version") {
+		log.Println("concinnity version " + version)
+		return
+	}
+
 	log.SetOutput(os.Stderr)
 	configFile, err := os.ReadFile("config.json")
 	if err != nil {
