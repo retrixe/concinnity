@@ -19,12 +19,12 @@
 <h2>Verify Account</h2>
 <div class="spacer"></div>
 {#if error === ''}
-  <p class="result left-align">
+  <p>
     Verified your account <b>eslyfail</b> successfully! Redirecting you to the
     <a href="/login">login page</a> in 5s...
   </p>
 {:else if !!error}
-  <p class="result error left-align">{error}</p>
+  <p class="error">{error}</p>
 {:else}
-  <p class="left-align">Please wait while we verify your account...</p>
+  <p>Please wait while we verify your account...</p>
 {/if}

@@ -50,11 +50,12 @@
   onkeypress={e => e.key === 'Enter' && onLogin() /* eslint-disable-line */}
 />
 {#if error === ''}
-  <p class="result">Logged in successfully! You should be redirected shortly...</p>
+  <p class="center">Logged in successfully! You should be redirected shortly...</p>
 {:else if !!error}
-  <p class="result error">{error}</p>
+  <p class="center error">{error}</p>
 {/if}
 <div class="spacer"></div>
 <Button {disabled} onclick={onLogin}>Login</Button>
 <div class="spacer"></div>
-<p>Don't have an account? <a href="/register">Sign up</a></p>
+<p class="center">Don't have an account? <a href="/register">Sign up</a></p>
+<p class="center">Forgot your password? <a href="/forgot-password">Reset via e-mail</a></p>

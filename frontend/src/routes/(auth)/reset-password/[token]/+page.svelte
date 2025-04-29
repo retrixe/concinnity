@@ -42,7 +42,7 @@
 {:then tokenInfo}
   <h2>Reset Password</h2>
   <div class="spacer"></div>
-  <p class="left-align">Enter your new account password for: <b>{tokenInfo.username}</b></p>
+  <p>Enter your new account password for: <b>{tokenInfo.username}</b></p>
   <div class="spacer"></div>
   <label for="reset-password">Password</label>
   <TextInput
@@ -64,18 +64,18 @@
   onkeypress={e => e.key === 'Enter' && onResetPassword() /* eslint-disable-line */}
   />
   {#if error === ''}
-    <p class="result">
+    <p class="center">
       Reset password successfully! Redirecting you to the
       <a href="/login">login page</a> in 5s...
     </p>
   {:else if !!error}
-    <p class="result error">{error}</p>
+    <p class="center error">{error}</p>
   {/if}
   <div class="spacer"></div>
   <Button {disabled} onclick={onResetPassword}>Reset Password</Button>
 {:catch e}
   <h2>An error occurred.</h2>
-  <p class="left-align spacer">
+  <p class="spacer">
     {e instanceof Error
       ? e.message
       : ((e as unknown)?.toString() ?? `Failed to fetch reset password token info!`)}
@@ -83,4 +83,4 @@
   <hr class="spacer" />
 {/await}
 <div class="spacer"></div>
-<p>Want to try logging in? <a href="/login">Log in</a></p>
+<p class="center">Want to try logging in? <a href="/login">Log in</a></p>

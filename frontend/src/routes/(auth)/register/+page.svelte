@@ -69,15 +69,16 @@
   onkeypress={e => e.key === 'Enter' && onRegister() /* eslint-disable-line */}
 />
 {#if error === '' && !verified}
-  <p class="result">Registered successfully! Check your e-mail to verify your account.</p>
+  <p class="center">Registered successfully! Check your e-mail to verify your account.</p>
 {:else if error === ''}
-  <p class="result">
+  <p class="center">
     Registered successfully! Go to the <a href="/login">login page</a> to get started.
   </p>
 {:else if !!error}
-  <p class="result error">{error}</p>
+  <p class="center error">{error}</p>
 {/if}
 <div class="spacer"></div>
 <Button {disabled} onclick={onRegister}>Sign Up</Button>
 <div class="spacer"></div>
-<p>Already have an account? <a href="/login">Log in</a></p>
+<p class="center">Already have an account? <a href="/login">Log in</a></p>
+<p class="center">Forgot your password? <a href="/forgot-password">Reset via e-mail</a></p>

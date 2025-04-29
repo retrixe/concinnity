@@ -35,12 +35,13 @@
       font-weight: bold;
     }
 
-    :global(p) {
+    :global(.center) {
       align-self: center;
+      text-align: center;
     }
 
-    :global(.left-align) {
-      align-self: flex-start;
+    :global(.result) {
+      align-self: center;
     }
 
     :global(.spacer) {

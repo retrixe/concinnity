@@ -25,9 +25,7 @@
 
 <h2>Forgot your password?</h2>
 <div class="spacer"></div>
-<p class="left-align">
-  No worries! Enter your email address and we will send you a link to reset your password.
-</p>
+<p>No worries! Enter your email address and we will send you a link to reset your password.</p>
 <div class="spacer"></div>
 <label for="forgot-password-username-email">Username / E-mail</label>
 <TextInput
@@ -41,11 +39,11 @@
   onkeypress={e => e.key === 'Enter' && onForgotPassword() /* eslint-disable-line */}
 />
 {#if error === ''}
-  <p class="result">Sent reset link successfully! Keep an eye on your e-mail...</p>
+  <p class="center">Sent reset link successfully! Keep an eye on your e-mail...</p>
 {:else if !!error}
-  <p class="result error">{error}</p>
+  <p class="center error">{error}</p>
 {/if}
 <div class="spacer"></div>
 <Button {disabled} onclick={onForgotPassword}>Send E-mail</Button>
 <div class="spacer"></div>
-<p>Want to try logging in? <a href="/login">Log in</a></p>
+<p class="center">Want to try logging in? <a href="/login">Log in</a></p>
