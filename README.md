@@ -4,7 +4,7 @@ Watch videos together with others on the internet.
 
 ![screenshot of concinnity](https://f002.backblazeb2.com/file/retrixe-storage-public/concinnity/demo-light.jpg)
 
-This application currently supports watching locally stored files. Support for remotely hosted files and YouTube videos is planned.
+This application currently supports watching locally stored files and remotely hosted videos (over HTTP/S). Support for YouTube videos is planned.
 
 If you want to use concinnity with your friends, visit [concinnity.retrixe.xyz](https://concinnity.retrixe.xyz). Else, if you want to self-host concinnity, see the instructions below.
 
