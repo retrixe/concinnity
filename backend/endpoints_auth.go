@@ -304,7 +304,6 @@ func ForgotPasswordEndpoint(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errorJson("This functionality is unavailable."), http.StatusNotImplemented)
 		return
 	}
-	// FIXME: Rate limit this endpoint.
 	usernameEmail := r.URL.Query().Get("user")
 	if usernameEmail == "" {
 		http.Error(w, errorJson("No username or email provided!"), http.StatusBadRequest)
@@ -324,6 +323,18 @@ func ForgotPasswordEndpoint(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errorJson("No account with this username/email exists!"), http.StatusUnauthorized)
 		return
 	} else if err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
+	// Check if a password reset token was requested for this user in the last 2 minutes.
+	var lastToken PasswordResetToken
+	err = tx.Stmt(findRecentPasswordResetTokensStmt).QueryRow(user.ID).Scan(
+		&lastToken.ID, &lastToken.UserID, &lastToken.CreatedAt)
+	if err == nil {
+		http.Error(w, errorJson("A password reset token was already requested for this user in the last 2 minutes!"),
+			http.StatusTooManyRequests)
+		return
+	} else if !errors.Is(err, sql.ErrNoRows) {
 		handleInternalServerError(w, err)
 		return
 	}

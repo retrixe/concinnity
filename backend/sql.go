@@ -76,6 +76,7 @@ var (
 	deleteTokenStmt *sql.Stmt
 
 	insertPasswordResetTokenStmt        *sql.Stmt
+	findRecentPasswordResetTokensStmt   *sql.Stmt
 	findUserByPasswordResetTokenStmt    *sql.Stmt
 	deletePasswordResetTokenStmt        *sql.Stmt
 	purgeExpiredPasswordResetTokensStmt *sql.Stmt
@@ -119,6 +120,9 @@ func PrepareSqlStatements() {
 
 	insertPasswordResetTokenStmt = prepareQuery(
 		"INSERT INTO password_reset_tokens (user_id) VALUES ($1) RETURNING id, user_id, created_at;")
+	findRecentPasswordResetTokensStmt = prepareQuery(
+		`SELECT id, user_id, created_at FROM password_reset_tokens
+		WHERE created_at > NOW() - INTERVAL '2 minutes' AND user_id = $1;`)
 	findUserByPasswordResetTokenStmt = prepareQuery(
 		`SELECT users.id, users.username, password_reset_tokens.created_at
 		FROM password_reset_tokens JOIN users ON password_reset_tokens.user_id = users.id
