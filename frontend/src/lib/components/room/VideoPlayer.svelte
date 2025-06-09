@@ -203,6 +203,20 @@
     }
   }
 
+  $effect(() => {
+    try {
+      // Request video to automatically enter picture-in-picture when eligible.
+      // @ts-expect-error -- enterpictureinpicture is not yet standardised
+      navigator.mediaSession.setActionHandler('enterpictureinpicture', () => {
+        videoEl?.requestPictureInPicture().catch(console.error)
+      })
+      // @ts-expect-error -- enterpictureinpicture is not yet standardised
+      return () => navigator.mediaSession.setActionHandler('enterpictureinpicture', null)
+    } catch {
+      /* Ignore any errors */
+    }
+  })
+
   const handleFullScreenToggle = () => {
     if (fullscreenElement === fullscreenEl) {
       document.exitFullscreen().catch(console.error)
