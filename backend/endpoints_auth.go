@@ -64,8 +64,11 @@ func StatusEndpoint(w http.ResponseWriter, r *http.Request) {
 	} else {
 		usernameJson, _ := json.Marshal(user.Username)
 		userIdJson, _ := json.Marshal(user.ID)
+		emailJson, _ := json.Marshal(user.Email)
 		w.Write([]byte("{\"online\":true,\"authenticated\":true," +
-			"\"username\":" + string(usernameJson) + ",\"userId\":" + string(userIdJson) + "}"))
+			"\"username\":" + string(usernameJson) +
+			",\"userId\":" + string(userIdJson) +
+			",\"email\":" + string(emailJson) + "}"))
 	}
 }
 
