@@ -10,9 +10,9 @@ export const load: LayoutLoad = async event => {
 
   // Ignore errors trying to check for authentication state
   try {
-    const req = await ky('', { fetch }).json<{ userId?: string; username?: string }>()
-    if (req.userId && req.username) usernameCache.set(req.userId, req.username)
-    return { username: req.username, userId: req.userId }
+    const req = await ky('', { fetch }).json<{ userId?: string; username: string; email: string }>()
+    if (req.userId) usernameCache.set(req.userId, req.username)
+    return { username: req.username, userId: req.userId, email: req.email }
   } catch (e) {
     console.error(e)
   }
