@@ -234,7 +234,7 @@
   }
 
   const handleKeyboardControls = (event: KeyboardEvent) => {
-    if (event.target !== document.body) return
+    if (event.target !== document.body && event.target !== videoEl) return
     if (event.key === ' ') handlePlayPause()
     if (event.key === 'm') handleMuteToggle()
     if (event.key === 'f') handleFullScreenToggle()
