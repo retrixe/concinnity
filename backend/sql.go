@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS tokens (
 	token VARCHAR(128) NOT NULL PRIMARY KEY,
 	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-	user_id UUID NOT NULL REFERENCES users(id));
+	user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE);
 
 CREATE TABLE IF NOT EXISTS rooms (
 	id VARCHAR(24) NOT NULL PRIMARY KEY,
@@ -71,6 +71,7 @@ var (
 	findUsernamesByIdStmt     *sql.Stmt
 	createUserStmt            *sql.Stmt
 	updateUserPasswordStmt    *sql.Stmt
+	deleteUserStmt            *sql.Stmt
 
 	insertTokenStmt *sql.Stmt
 	deleteTokenStmt *sql.Stmt
@@ -114,6 +115,7 @@ func PrepareSqlStatements() {
 	}
 	createUserStmt = prepareQuery("INSERT INTO users (username, password, email, id, verified) VALUES ($1, $2, $3, $4, $5);")
 	updateUserPasswordStmt = prepareQuery("UPDATE users SET password = $1 WHERE id = $2;")
+	deleteUserStmt = prepareQuery("DELETE FROM users WHERE id = $1;")
 
 	insertTokenStmt = prepareQuery("INSERT INTO tokens (token, created_at, user_id) VALUES ($1, $2, $3);")
 	deleteTokenStmt = prepareQuery("DELETE FROM tokens WHERE token = $1 RETURNING user_id;")

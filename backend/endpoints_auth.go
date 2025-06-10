@@ -467,3 +467,84 @@ func ResetPasswordEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write([]byte("{\"success\":true}"))
 }
+
+func ChangePasswordEndpoint(w http.ResponseWriter, r *http.Request) {
+	user, token := IsAuthenticatedHTTP(w, r)
+	if token == nil {
+		return
+	}
+	// Check the body for JSON containing passwords.
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
+		return
+	}
+	var data struct {
+		CurrentPassword string `json:"currentPassword"`
+		NewPassword     string `json:"newPassword"`
+	}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
+		return
+	} else if data.CurrentPassword == "" {
+		http.Error(w, errorJson("No current password provided!"), http.StatusBadRequest)
+		return
+	} else if data.NewPassword == "" {
+		http.Error(w, errorJson("No new password provided!"), http.StatusBadRequest)
+		return
+	} else if !ComparePassword(data.CurrentPassword, user.Password) {
+		http.Error(w, errorJson("Incorrect current password!"), http.StatusUnauthorized)
+		return
+	} else if res, _ := regexp.MatchString("^.{8,64}$", data.NewPassword); !res {
+		http.Error(w, errorJson("Your password must be between 8 and 64 characters long!"),
+			http.StatusBadRequest)
+		return
+	}
+	hashedPassword := HashPassword(data.NewPassword, GenerateSalt())
+	result, err := updateUserPasswordStmt.Exec(hashedPassword, token.UserID)
+	if err != nil {
+		handleInternalServerError(w, err)
+		return
+	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
+		handleInternalServerError(w, err) // nil err solved by Ostrich algorithm
+		return
+	}
+	w.Write([]byte("{\"success\":true}"))
+}
+
+func DeleteAccountEndpoint(w http.ResponseWriter, r *http.Request) {
+	user, token := IsAuthenticatedHTTP(w, r)
+	if token == nil {
+		return
+	}
+	// Check the body for JSON containing the user's password.
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
+		return
+	}
+	var data struct {
+		CurrentPassword string `json:"currentPassword"`
+	}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
+		return
+	} else if data.CurrentPassword == "" {
+		http.Error(w, errorJson("No current password provided!"), http.StatusBadRequest)
+		return
+	} else if !ComparePassword(data.CurrentPassword, user.Password) {
+		http.Error(w, errorJson("Incorrect current password!"), http.StatusUnauthorized)
+		return
+	}
+	result, err := deleteUserStmt.Exec(token.UserID)
+	if err != nil {
+		handleInternalServerError(w, err)
+		return
+	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
+		handleInternalServerError(w, err) // nil err solved by Ostrich algorithm
+		return
+	}
+	w.Write([]byte("{\"success\":true}"))
+}
