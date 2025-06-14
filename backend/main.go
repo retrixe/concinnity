@@ -112,6 +112,7 @@ func main() {
 	http.HandleFunc("GET /api/forgot-password/{token}", ForgotPasswordTokenEndpoint)
 	http.HandleFunc("POST /api/reset-password", ResetPasswordEndpoint)
 	http.HandleFunc("POST /api/change-password", ChangePasswordEndpoint)
+	http.HandleFunc("DELETE /api/delete-account", DeleteAccountEndpoint)
 	http.HandleFunc("GET /api/usernames", GetUsernamesEndpoint)
 	http.HandleFunc("POST /api/room", CreateRoomEndpoint)
 	http.HandleFunc("GET /api/room/{id}", GetRoomEndpoint)

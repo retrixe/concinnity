@@ -535,7 +535,7 @@ func DeleteAccountEndpoint(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errorJson("No current password provided!"), http.StatusBadRequest)
 		return
 	} else if !ComparePassword(data.CurrentPassword, user.Password) {
-		http.Error(w, errorJson("Incorrect current password!"), http.StatusUnauthorized)
+		http.Error(w, errorJson("Invalid password provided!"), http.StatusUnauthorized)
 		return
 	}
 	result, err := deleteUserStmt.Exec(token.UserID)
