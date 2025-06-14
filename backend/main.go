@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 
 	"github.com/go-sql-driver/mysql"
@@ -91,6 +92,9 @@ func main() {
 	}
 	db.SetMaxOpenConns(10)
 	CreateSqlTables()
+	if slices.Contains(os.Args, "--upgrade") {
+		UpgradeSqlTables()
+	}
 	PrepareSqlStatements()
 	go PurgeExpiredDataTask()
 	if !IsEmailConfigured() || config.FrontendURL == "" {

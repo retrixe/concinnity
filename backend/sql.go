@@ -63,6 +63,19 @@ COMMIT;`)); err != nil {
 	}
 }
 
+func UpgradeSqlTables() {
+	log.Println("Upgrading database schema...")
+	if _, err := db.Exec(translate(`BEGIN;
+
+-- Upgrading from concinnity 1.0.0
+ALTER TABLE tokens DROP CONSTRAINT tokens_user_id_fkey;
+ALTER TABLE tokens ADD CONSTRAINT tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+COMMIT;`)); err != nil {
+		log.Fatalln("Failed to run database schema upgrade!", err)
+	}
+}
+
 var (
 	findUserByTokenStmt       *sql.Stmt
 	findUserByNameOrEmailStmt *sql.Stmt

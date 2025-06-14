@@ -15,10 +15,11 @@ If you want to use concinnity with your friends, visit [concinnity.retrixe.xyz](
   - Run `go build` in the `backend` folder to compile it.
   - Create a `config.json` in the same folder according to the section on [backend configuration](#backend).
   - You can now run the backend using `./concinnity` (it will run on port 8000 by default).
+  - When upgrading from an older version, you can run `./concinnity --upgrade` on the first run to upgrade the database.
 - To run the frontend on a server:
   - Run the `yarn` command in the `frontend` folder to install all dependencies.
   - Create a `.env` file in the `frontend` according to the section on [frontend configuration](#frontend).
-  - For development purposes, you can run `yarn dev` to run the application with hot reload. For a production deployment, follow the SvelteKit instructions [here](https://svelte.dev/docs/kit/building-your-app).
+  - For development purposes, you can run `yarn dev` to run the application with hot reload. [For a production deployment, follow the SvelteKit instructions here.](https://svelte.dev/docs/kit/building-your-app)
 
 ## Configuration
 
