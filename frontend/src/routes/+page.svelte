@@ -4,6 +4,7 @@
   import { page } from '$app/state'
   import ky from '$lib/api/ky'
   import { Button, TextInput } from 'heliodor'
+  import Spacer from '$lib/components/Spacer.svelte'
 
   const { username } = $derived(page.data)
 
@@ -33,12 +34,12 @@
 <div class="container">
   <div class="content">
     <h1>Get started</h1>
-    <br />
+    <Spacer size="1rem" />
     <p>
       Watch videos together with your friends using concinnity, a FOSS, lightweight and easy to use
       website.
     </p>
-    <br />
+    <Spacer size="1rem" />
     {#if username}
       <TextInput
         value={roomId}
@@ -107,14 +108,14 @@
   .content {
     margin: 1rem;
     @media screen and (min-width: 768px) {
-      width: 45%;
-      max-width: 640px;
+      width: 40rem;
+      max-width: 40rem;
     }
     p {
       font-size: 1.2rem;
     }
     :global(input) {
-      width: 250px;
+      width: 15.625rem;
     }
     :global(button) {
       font-size: 1rem;

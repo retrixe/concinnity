@@ -116,7 +116,7 @@
   }
 
   .video {
-    min-height: 280px;
+    min-height: 17.5rem;
     justify-content: center;
     align-items: center;
     text-align: center;

@@ -254,7 +254,7 @@
 >
   {#if autoplayNotif}
     <div role="presentation" class="autoplay" onclick={synchroniseToPlayerState}>
-      <h1>Autoplay was blocked.<br />Press to begin playing.</h1>
+      <h1>Autoplay was blocked.<Spacer size="0.5rem" axis="horizontal" />Press to begin playing.</h1>
     </div>
   {/if}
   <!-- svelte-ignore a11y_media_has_caption -->

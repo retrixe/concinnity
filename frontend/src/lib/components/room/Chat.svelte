@@ -157,7 +157,7 @@
       flex: 1;
     }
     @media screen and (min-width: 768px) {
-      width: 320px;
+      width: 20rem;
     }
   }
 
