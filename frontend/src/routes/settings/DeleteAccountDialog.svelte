@@ -2,6 +2,7 @@
   import { goto, invalidate } from '$app/navigation'
   import ky from '$lib/api/ky'
   import { Button, Dialog, TextInput } from 'heliodor'
+  import Spacer from '$lib/components/Spacer.svelte'
 
   const { open, onClose } = $props<{
     open: boolean
@@ -31,7 +32,7 @@
 
 <Dialog {open} {onClose}>
   <h2>Delete Account</h2>
-  <br />
+  <Spacer size="1rem" />
   <p>
     Enter your password below and press "Confirm" to delete your account.
     <span style:color="var(--error-color)">

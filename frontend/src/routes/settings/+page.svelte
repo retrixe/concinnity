@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
   import DeleteAccountDialog from './DeleteAccountDialog.svelte'
+  import Spacer from '$lib/components/Spacer.svelte'
 
   const { userId, username, email } = $derived(page.data)
 
@@ -29,7 +30,7 @@
       </div>
       <!-- <Button>Edit</Button> -->
     </div>
-    <br />
+    <Spacer size="1rem" />
     <div class="space-between">
       <div>
         <h4>Email</h4>
@@ -37,7 +38,7 @@
       </div>
       <!-- <Button>Edit</Button> -->
     </div>
-    <br />
+    <Spacer size="1rem" />
     <h4>Account ID</h4>
     <p>{userId}</p>
   </Box>
@@ -57,7 +58,7 @@
 
 <style lang="scss">
   :global(.gap-right) {
-    margin-right: 12px;
+    margin-right: 0.75rem;
   }
 
   :global(button.error) {
@@ -65,14 +66,14 @@
   }
 
   .container > :global(.content) {
-    padding: 16px;
+    padding: 1rem;
   }
 
   .container > h1,
   :global(.content) {
-    margin-top: 32px;
+    margin-top: 2rem;
     width: 100%;
-    max-width: 600px;
+    max-width: 37.5rem;
   }
 
   .space-between {
@@ -82,7 +83,7 @@
   }
 
   .container {
-    margin: 0 16px;
+    margin: 0 1rem;
     display: flex;
     flex-direction: column;
     flex-grow: 1;

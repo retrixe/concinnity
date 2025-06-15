@@ -98,7 +98,7 @@
     />
   {/if}
   {#if error}
-    <h3 class="error-banner">Error: {error}<br />Reconnecting in 10s...</h3>
+    <h3 class="error-banner">Error: {error}<Spacer size="0.5rem" axis="horizontal" />Reconnecting in 10s...</h3>
   {/if}
 </div>
 
@@ -108,7 +108,7 @@
     display: flex;
     flex-direction: column;
 
-    min-height: 280px;
+    min-height: 17.5rem;
     justify-content: center;
     align-items: center;
     text-align: center;
