@@ -114,7 +114,7 @@
       font-size: 1.2rem;
     }
     :global(input) {
-      width: 250px;
+      width: 16rem;
     }
     :global(button) {
       font-size: 1rem;

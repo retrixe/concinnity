@@ -1216,7 +1216,7 @@ __metadata:
     eslint-plugin-promise: "npm:^7.2.1"
     eslint-plugin-svelte: "npm:^3.5.1"
     globals: "npm:^16.0.0"
-    heliodor: "npm:^0.0.7"
+    heliodor: "npm:^0.0.8"
     husky: "npm:^9.1.7"
     ky: "npm:^1.8.0"
     phosphor-svelte: "npm:^3.0.1"
@@ -2332,12 +2332,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"heliodor@npm:^0.0.7":
-  version: 0.0.7
-  resolution: "heliodor@npm:0.0.7"
+"heliodor@npm:^0.0.8":
+  version: 0.0.8
+  resolution: "heliodor@npm:0.0.8"
   peerDependencies:
     svelte: ^5.0.0
-  checksum: 10c0/750cc1fe20c11fe853495a6178092b06fec43ca03e389d171b7b333f271271f8b60a85069c84daa4224002cae781663b3f0b9eeb996fde0a175109430c22f768
+  checksum: 10c0/5590442be9e980646fc080395a85130bac278c7223592bf3e1d3c106a311b23531c2f02ab019d5c899eb910c8fc9dcf5af7001f23697af6f2368078af48b9f92
   languageName: node
   linkType: hard
 

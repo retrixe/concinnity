@@ -282,9 +282,9 @@
       <Tooltip text={paused ? 'Play' : 'Pause'}>
         <Button onclick={handlePlayPause}>
           {#if paused}
-            <Play weight="bold" size="16px" />
+            <Play weight="bold" size="1rem" />
           {:else}
-            <Pause weight="bold" size="16px" />
+            <Pause weight="bold" size="1rem" />
           {/if}
         </Button>
       </Tooltip>
@@ -313,11 +313,11 @@
       <Tooltip text={muted ? 'Unmute' : 'Mute'}>
         <Button class="hide-on-mobile" onclick={handleMuteToggle}>
           {#if muted}
-            <SpeakerX weight="bold" size="16px" />
+            <SpeakerX weight="bold" size="1rem" />
           {:else if volume < 0.5}
-            <SpeakerLow weight="bold" size="16px" />
+            <SpeakerLow weight="bold" size="1rem" />
           {:else}
-            <SpeakerHigh weight="bold" size="16px" />
+            <SpeakerHigh weight="bold" size="1rem" />
           {/if}
         </Button>
       </Tooltip>
@@ -335,13 +335,13 @@
       <div style:position="relative">
         <Tooltip text="Settings">
           <Button class="settings-open-btn" onclick={handleSettingsOpen}>
-            <Gear weight="bold" size="16px" />
+            <Gear weight="bold" size="1rem" />
           </Button>
         </Tooltip>
         <div class="settings-menu" style:visibility={settingsMenu ? 'visible' : 'hidden'}>
           {#if settingsMenu == 'speed'}
             <Button onclick={handleSettingsNav('options')} class="highlight">
-              <CaretLeft weight="bold" size="16px" /> Back to options
+              <CaretLeft weight="bold" size="1rem" /> Back to options
             </Button>
             {#each [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 4] as rate (rate)}
               <Button
@@ -353,7 +353,7 @@
             {/each}
           {:else if settingsMenu == 'subtitles'}
             <Button onclick={handleSettingsNav('options')} class="highlight">
-              <CaretLeft weight="bold" size="16px" /> Back to options
+              <CaretLeft weight="bold" size="1rem" /> Back to options
             </Button>
             {#each Object.keys(subtitles) as sub (sub)}
               <Button
@@ -365,7 +365,7 @@
             {/each}
             <Button onclick={handleSubtitleUpload}>
               <span>Upload</span>
-              <Plus weight="bold" size="16px" />
+              <Plus weight="bold" size="1rem" />
             </Button>
           {:else}
             <Button onclick={synchroniseToPlayerState}>
@@ -384,31 +384,31 @@
       </div>
       <Tooltip text="Stop playback">
         <Button onclick={handleStop}>
-          <Stop weight="bold" size="16px" />
+          <Stop weight="bold" size="1rem" />
         </Button>
       </Tooltip>
       {#if Object.keys(subtitles).length}
         <Tooltip text={subtitle?.[0] ? 'Hide subtitles' : 'Show subtitles'}>
           <Button onclick={handleSubtitleToggle}>
             {#if subtitle?.[0]}
-              <Subtitles weight="bold" size="16px" />
+              <Subtitles weight="bold" size="1rem" />
             {:else}
-              <SubtitlesSlash weight="bold" size="16px" />
+              <SubtitlesSlash weight="bold" size="1rem" />
             {/if}
           </Button>
         </Tooltip>
       {/if}
       <Tooltip text="Picture-in-picture">
         <Button onclick={handlePiPToggle}>
-          <PictureInPicture weight="bold" size="16px" />
+          <PictureInPicture weight="bold" size="1rem" />
         </Button>
       </Tooltip>
       <Tooltip text={fullscreenElement === fullscreenEl ? 'Exit fullscreen' : 'Enter fullscreen'}>
         <Button onclick={handleFullScreenToggle}>
           {#if fullscreenElement === fullscreenEl}
-            <ArrowsIn weight="bold" size="16px" />
+            <ArrowsIn weight="bold" size="1rem" />
           {:else}
-            <ArrowsOut weight="bold" size="16px" />
+            <ArrowsOut weight="bold" size="1rem" />
           {/if}
         </Button>
       </Tooltip>

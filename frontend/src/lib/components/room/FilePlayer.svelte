@@ -80,7 +80,7 @@
         secondary={{ onclick: () => (menuOpen = !menuOpen) }}
       >
         {#snippet primaryChild()}Select local file{/snippet}
-        {#snippet secondaryChild()}<CaretDown weight="bold" size="16px" />{/snippet}
+        {#snippet secondaryChild()}<CaretDown weight="bold" size="1rem" />{/snippet}
         <Menu open={menuOpen} onClose={() => (menuOpen = false)}>
           <MenuItem onclick={handleStop}>Play another video</MenuItem>
         </Menu>

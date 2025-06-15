@@ -73,7 +73,12 @@
         target="_blank"
         rel="noopener noreferrer"
       >
-        <GitHubImage className="github-image" viewBox="0 0 98 96" height="28" width="28" />
+        <GitHubImage
+          className="github-image"
+          viewBox="0 0 98 96"
+          height="1.75rem"
+          width="1.75rem"
+        />
       </TopBarLink>
     {/if}
   {:else}

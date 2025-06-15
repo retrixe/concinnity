@@ -86,7 +86,7 @@
       secondary={{ onclick: handleOpenMenu }}
     >
       {#snippet primaryChild()}Select local file{/snippet}
-      {#snippet secondaryChild()}<CaretDown weight="bold" size="16px" />{/snippet}
+      {#snippet secondaryChild()}<CaretDown weight="bold" size="1rem" />{/snippet}
       <Menu open={menuOpen} onClose={handleOpenMenu}>
         <MenuItem onclick={handleOpenRemoteFileDialog}>Remote file (HTTP/S)</MenuItem>
       </Menu>

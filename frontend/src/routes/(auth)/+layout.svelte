@@ -24,7 +24,7 @@
     padding: 1.5rem;
     margin: 1.5rem;
     width: 100%;
-    max-width: 400px;
+    max-width: 25rem;
 
     :global(.error) {
       color: var(--error-color);
