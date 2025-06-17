@@ -196,8 +196,10 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	connId := RoomConnID{UserID: user.ID, ClientID: clientId}
 	members, _ := roomMembers.LoadOrStore(room.ID, xsync.NewMapOf[RoomConnID, chan<- interface{}]())
+	previousConnectionExisted := false
 	if oldWriteChannel, loaded := members.LoadAndStore(connId, writeChannel); loaded {
 		oldWriteChannel <- WsInternalClientReconnect
+		previousConnectionExisted = true
 	}
 	defer members.Compute(connId, func(value chan<- interface{}, loaded bool) (chan<- interface{}, bool) {
 		return value, value == writeChannel // Delete only if this is the current i.e. right connection
@@ -232,21 +234,24 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	})()
 
 	// Send chat message: user joined/reconnected
-	chatMsg := ChatMessage{UserID: uuid.Nil}
-	if authMessage.Reconnect {
-		chatMsg.Message = user.ID.String() + " reconnected"
-	} else {
-		chatMsg.Message = user.ID.String() + " joined"
+	// If not a reconnect, OR reconnect + no previous connection
+	if !authMessage.Reconnect || (!previousConnectionExisted && authMessage.Reconnect) {
+		chatMsg := ChatMessage{UserID: uuid.Nil}
+		if authMessage.Reconnect {
+			chatMsg.Message = user.ID.String() + " reconnected"
+		} else {
+			chatMsg.Message = user.ID.String() + " joined"
+		}
+		chatMsg.ID, chatMsg.Timestamp, err = InsertChatMessage(room.ID, nil, chatMsg.Message)
+		if err != nil {
+			wsInternalError(c, err)
+			return
+		}
+		members.Range(func(connId RoomConnID, write chan<- interface{}) bool {
+			write <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
+			return true
+		})
 	}
-	chatMsg.ID, chatMsg.Timestamp, err = InsertChatMessage(room.ID, nil, chatMsg.Message)
-	if err != nil {
-		wsInternalError(c, err)
-		return
-	}
-	members.Range(func(connId RoomConnID, write chan<- interface{}) bool {
-		write <- ChatMessageOutgoing{Type: "chat", Data: []ChatMessage{chatMsg}}
-		return true
-	})
 
 	// Read all messages
 	var closeStatus websocket.StatusCode = -1
@@ -322,10 +327,9 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			members.Range(func(connId RoomConnID, write chan<- interface{}) bool {
-				if write == writeChannel {
-					return true // Skip current session
+				if write != writeChannel { // Skip current session
+					write <- playerStateData
 				}
-				write <- playerStateData
 				return true
 			})
 		} else if msgData.Type == "typing" {
@@ -341,10 +345,10 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 				Timestamp: incoming.Timestamp,
 			}
 			members.Range(func(connId RoomConnID, write chan<- interface{}) bool {
-				if write != writeChannel {
+				if write != writeChannel { // Skip current session
 					write <- outgoingData
 				}
-				return true // Skip current session
+				return true
 			})
 		} else if msgData.Type == "ping" {
 			var pingData PingPongMessageBi
@@ -363,7 +367,7 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	if silentlyDisconnect.Load() {
 		return
 	}
-	chatMsg = ChatMessage{UserID: uuid.Nil}
+	chatMsg := ChatMessage{UserID: uuid.Nil}
 	if closeStatus == websocket.StatusNormalClosure || closeStatus == websocket.StatusGoingAway {
 		chatMsg.Message = user.ID.String() + " left"
 	} else {
