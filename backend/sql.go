@@ -65,11 +65,15 @@ COMMIT;`)); err != nil {
 
 func UpgradeSqlTables() {
 	log.Println("Upgrading database schema...")
+	tokenFKeyName := "tokens_user_id_fkey"
+	if config.Database == "mysql" {
+		tokenFKeyName = "tokens_ibfk_1" // MySQL uses different names for foreign keys
+	}
 	if _, err := db.Exec(translate(`BEGIN;
 
 -- Upgrading from concinnity 1.0.0
-ALTER TABLE tokens DROP CONSTRAINT tokens_user_id_fkey;
-ALTER TABLE tokens ADD CONSTRAINT tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+ALTER TABLE tokens DROP CONSTRAINT ` + tokenFKeyName + `;
+ALTER TABLE tokens ADD CONSTRAINT ` + tokenFKeyName + ` FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
 
 COMMIT;`)); err != nil {
 		log.Fatalln("Failed to run database schema upgrade!", err)
