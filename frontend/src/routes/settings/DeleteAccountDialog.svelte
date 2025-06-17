@@ -30,9 +30,8 @@
 </script>
 
 <Dialog {open} {onClose}>
-  <h2>Delete Account</h2>
-  <br />
-  <p>
+  <h2 class="gutter-bottom">Delete Account</h2>
+  <p class="gutter-bottom">
     Enter your password below and press "Confirm" to delete your account.
     <span style:color="var(--error-color)">
       This will delete your Concinnity data permanently and cannot be undone.
@@ -41,6 +40,7 @@
   <label for="delete-account-password">Current Password</label>
   <TextInput
     id="delete-account-password"
+    class="gutter-bottom"
     bind:value={currentPassword}
     oninput={clearError}
     error={!!error}
@@ -49,13 +49,12 @@
     placeholder="Enter your password"
   />
   {#if error}
-    <p class="error">{error}</p>
+    <p class="gutter-bottom error">{error}</p>
   {:else if error === ''}
-    <p>
+    <p class="gutter-bottom">
       Account deleted successfully! You will be redirected to the <a href="/">homepage</a> shortly...
     </p>
   {/if}
-  <div style:margin-top="1rem"></div>
   <Button class="delete-account-btn" onclick={handleDeleteAccount}>Confirm</Button>
 </Dialog>
 
@@ -64,12 +63,16 @@
     color: var(--error-color);
   }
 
+  :global(.gutter-bottom) {
+    margin-bottom: 1rem !important;
+  }
+
   :global(.delete-account-btn) {
     align-self: flex-end;
   }
 
   label {
-    padding: 0.5rem 0rem;
+    padding-bottom: 0.5rem;
     font-weight: bold;
   }
 </style>

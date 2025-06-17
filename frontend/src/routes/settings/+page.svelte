@@ -29,7 +29,7 @@
       </div>
       <!-- <Button>Edit</Button> -->
     </div>
-    <br />
+    <hr />
     <div class="space-between">
       <div>
         <h4>Email</h4>
@@ -37,15 +37,13 @@
       </div>
       <!-- <Button>Edit</Button> -->
     </div>
-    <br />
+    <hr />
     <h4>Account ID</h4>
     <p>{userId}</p>
   </Box>
 
-  <Box class="content">
-    <Button class="gap-right" onclick={() => (currentDialog = 'changePassword')}>
-      Change Password
-    </Button>
+  <Box class="content row-buttons">
+    <Button onclick={() => (currentDialog = 'changePassword')}>Change Password</Button>
     <Button class="error" onclick={() => (currentDialog = 'deleteAccount')}>Delete Account</Button>
   </Box>
 </div>
@@ -56,23 +54,12 @@
 />
 
 <style lang="scss">
-  :global(.gap-right) {
-    margin-right: 12px;
-  }
-
   :global(button.error) {
     background-color: var(--error-color) !important;
   }
 
-  .container > :global(.content) {
-    padding: 16px;
-  }
-
-  .container > h1,
-  :global(.content) {
-    margin-top: 32px;
-    width: 100%;
-    max-width: 600px;
+  hr {
+    margin: 16px 0;
   }
 
   .space-between {
@@ -81,11 +68,27 @@
     align-items: center;
   }
 
+  .container > :global(.content) {
+    padding: 1rem;
+  }
+
+  .container > :global(.row-buttons) {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .container > :global(*) {
+    width: 100%;
+    max-width: 600px;
+  }
+
   .container {
-    margin: 0 16px;
+    margin: 2rem 1rem;
+    gap: 32px;
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
     align-items: center;
   }
 </style>
