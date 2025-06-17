@@ -199,14 +199,14 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	if oldWriteChannel, loaded := members.LoadAndStore(connId, writeChannel); loaded {
 		oldWriteChannel <- WsInternalClientReconnect
 	}
-	defer members.Delete(connId)
+	defer members.Compute(connId, func(value chan<- interface{}, loaded bool) (chan<- interface{}, bool) {
+		return value, value == writeChannel // Delete only if this is the current i.e. right connection
+	})
 	connections, _ := userConns.LoadOrStore(user.ID, xsync.NewMapOf[chan<- interface{}, string]())
 	connections.Store(writeChannel, authMessage.Token)
 	defer userConns.Compute(user.ID, func(value UserConns, loaded bool) (UserConns, bool) {
-		if value.Delete(writeChannel); value.Size() == 0 {
-			return value, true
-		}
-		return value, false
+		value.Delete(writeChannel)
+		return value, value.Size() == 0 // Delete user if no connections left
 	})
 
 	// Create write thread
