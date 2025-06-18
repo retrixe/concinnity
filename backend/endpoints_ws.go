@@ -17,7 +17,6 @@ import (
 	"github.com/coder/websocket"
 	"github.com/coder/websocket/wsjson"
 	"github.com/google/uuid"
-	"github.com/puzpuzpuz/xsync/v3"
 )
 
 type AuthMessageIncoming struct {
@@ -195,21 +194,9 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 		clientId = rand.Text()
 	}
 	connId := RoomConnID{UserID: user.ID, ClientID: clientId}
-	members, _ := roomMembers.LoadOrStore(room.ID, xsync.NewMapOf[RoomConnID, chan<- interface{}]())
-	previousConnectionExisted := false
-	if oldWriteChannel, loaded := members.LoadAndStore(connId, writeChannel); loaded {
-		oldWriteChannel <- WsInternalClientReconnect
-		previousConnectionExisted = true
-	}
-	defer members.Compute(connId, func(value chan<- interface{}, loaded bool) (chan<- interface{}, bool) {
-		return value, value == writeChannel // Delete only if this is the current i.e. right connection
-	})
-	connections, _ := userConns.LoadOrStore(user.ID, xsync.NewMapOf[chan<- interface{}, string]())
-	connections.Store(writeChannel, authMessage.Token)
-	defer userConns.Compute(user.ID, func(value UserConns, loaded bool) (UserConns, bool) {
-		value.Delete(writeChannel)
-		return value, value.Size() == 0 // Delete user if no connections left
-	})
+	members, previousConnectionExisted :=
+		RegisterConnection(room.ID, connId, authMessage.Token, writeChannel)
+	defer UnregisterConnection(room.ID, connId, members, writeChannel)
 
 	// Create write thread
 	var silentlyDisconnect atomic.Bool
