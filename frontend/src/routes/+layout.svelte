@@ -59,7 +59,7 @@
     <TopBarLink href="/">concinnity</TopBarLink>
   </TopBarTitle>
   {#if username}
-    <span>{username}</span>
+    <TopBarLink highlighted href="/settings">{username}</TopBarLink>
     <TopBarDivider />
     <TopBarLink href="/" onclick={logout}>Sign Out</TopBarLink>
   {:else if page.url.pathname !== '/login' && page.url.pathname !== '/register'}
@@ -113,10 +113,5 @@
         filter: brightness(0) invert(1);
       }
     }
-  }
-
-  span {
-    font-weight: bold;
-    color: var(--link-color);
   }
 </style>
