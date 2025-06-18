@@ -20,7 +20,7 @@
     "lint": "yarn check && eslint --cache --cache-strategy content --cache-location .svelte-kit/ ."
   },
   "dependencies": {
-    "heliodor": "^0.0.9",
+    "heliodor": "^0.0.10",
     "ky": "^1.8.0",
     "phosphor-svelte": "^3.0.1",
     "remarkable": "^2.0.1"

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Box, Button, Toast } from 'heliodor'
-  import { Check } from 'phosphor-svelte'
+  import { Box, Button, IconButton, Toast } from 'heliodor'
+  import { Check, X } from 'phosphor-svelte'
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
   import DeleteAccountDialog from './DeleteAccountDialog.svelte'
@@ -17,7 +17,8 @@
 
   let successMessage: string | null = $state(null)
 
-  // TODO: Add change password functionality with dialog
+  const handleDismissToast = () => (successMessage = null)
+
   // TODO: Add change username functionality with dialog
   // TODO: Add change email functionality with dialog
 </script>
@@ -64,14 +65,12 @@
 />
 
 {#if successMessage !== null}
-  <Toast
-    message={successMessage}
-    duration={3000}
-    onclose={() => (successMessage = null)}
-    color="success"
-  >
-    {#snippet icon(color)}
-      <Check {color} weight="bold" size="1.5rem" />
+  <Toast message={successMessage} duration={3000} onclose={handleDismissToast} color="success">
+    {#snippet icon()}<Check weight="bold" size="1.5rem" />{/snippet}
+    {#snippet footer()}
+      <IconButton onclick={handleDismissToast} aria-label="Close">
+        <X weight="thin" size="1.5rem" />
+      </IconButton>
     {/snippet}
   </Toast>
 {/if}
