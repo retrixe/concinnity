@@ -1,8 +1,10 @@
 <script lang="ts">
-  import { Box, Button } from 'heliodor'
+  import { Box, Button, Toast } from 'heliodor'
+  import { Check } from 'phosphor-svelte'
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
   import DeleteAccountDialog from './DeleteAccountDialog.svelte'
+  import ChangePasswordDialog from './ChangePasswordDialog.svelte'
 
   const { userId, username, email } = $derived(page.data)
 
@@ -12,6 +14,8 @@
 
   let currentDialog: 'changeUsername' | 'changeEmail' | 'changePassword' | 'deleteAccount' | null =
     $state(null)
+
+  let successMessage: string | null = $state(null)
 
   // TODO: Add change password functionality with dialog
   // TODO: Add change username functionality with dialog
@@ -52,6 +56,25 @@
   open={currentDialog === 'deleteAccount'}
   onClose={() => (currentDialog = null)}
 />
+
+<ChangePasswordDialog
+  open={currentDialog === 'changePassword'}
+  onClose={() => (currentDialog = null)}
+  onSuccess={() => (successMessage = 'Password changed successfully!')}
+/>
+
+{#if successMessage !== null}
+  <Toast
+    message={successMessage}
+    duration={3000}
+    onclose={() => (successMessage = null)}
+    color="success"
+  >
+    {#snippet icon(color)}
+      <Check {color} weight="bold" size="1.5rem" />
+    {/snippet}
+  </Toast>
+{/if}
 
 <style lang="scss">
   hr {
