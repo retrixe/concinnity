@@ -116,9 +116,6 @@
     :global(input) {
       width: 16rem;
     }
-    :global(button) {
-      font-size: 1rem;
-    }
     h4 {
       padding-top: 1rem;
     }

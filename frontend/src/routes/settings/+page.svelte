@@ -44,7 +44,7 @@
 
   <Box class="content row-buttons">
     <Button onclick={() => (currentDialog = 'changePassword')}>Change Password</Button>
-    <Button class="error" onclick={() => (currentDialog = 'deleteAccount')}>Delete Account</Button>
+    <Button color="error" onclick={() => (currentDialog = 'deleteAccount')}>Delete Account</Button>
   </Box>
 </div>
 
@@ -54,10 +54,6 @@
 />
 
 <style lang="scss">
-  :global(button.error) {
-    background-color: var(--error-color) !important;
-  }
-
   hr {
     margin: 16px 0;
   }

@@ -9,15 +9,18 @@
   }>()
 
   let currentPassword = $state('')
-  let disabled = $state(false)
+  let abortController: AbortController | null = $state(null)
+  let disabled = $derived(!!abortController)
   let error: string | null = $state(null)
 
   const clearError = () => (error = null)
 
   async function handleDeleteAccount() {
-    disabled = true
+    abortController = new AbortController()
     try {
-      await ky.delete(`api/delete-account`, { json: { currentPassword } }).json()
+      await ky
+        .delete(`api/delete-account`, { json: { currentPassword }, signal: abortController.signal })
+        .json()
       error = ''
       // Don't bother cleaning up the timeout, what if the user closes the dialog?
       localStorage.removeItem('concinnity:token')
@@ -25,11 +28,19 @@
     } catch (e: unknown) {
       error = e instanceof Error ? e.message : (e?.toString() ?? `Failed to delete account!`)
     }
-    disabled = false
+    abortController = null
+  }
+
+  function handleClose() {
+    currentPassword = ''
+    abortController?.abort()
+    abortController = null
+    error = null
+    onClose()
   }
 </script>
 
-<Dialog {open} {onClose}>
+<Dialog {open} onClose={handleClose}>
   <h2 class="gutter-bottom">Delete Account</h2>
   <p class="gutter-bottom">
     Enter your password below and press "Confirm" to delete your account.
