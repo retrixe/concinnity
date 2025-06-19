@@ -142,6 +142,26 @@
     subtitle = subtitle ? [!subtitle[0], subtitle[1]] : [true, Object.keys(subtitles)[0]]
   }
 
+  // Ensure subtitles are displayed when added and disabled when removed.
+  // Maybe this isn't even needed now that we have the {#key} block? But it doesn't hurt to have it.
+  // Firefox is oddly weird when removing subtitles, so we need to ensure they are disabled.
+  const handleSubtitleTrackAdded = (ev: TrackEvent) => {
+    if (ev.track?.kind === 'subtitles') ev.track.mode = 'showing'
+  }
+
+  const handleSubtitleTrackRemoved = (ev: TrackEvent) => {
+    if (ev.track?.kind === 'subtitles') ev.track.mode = 'disabled'
+  }
+
+  $effect(() => {
+    videoEl?.textTracks.addEventListener('addtrack', handleSubtitleTrackAdded)
+    videoEl?.textTracks.addEventListener('removetrack', handleSubtitleTrackRemoved)
+    return () => {
+      videoEl?.textTracks.removeEventListener('addtrack', handleSubtitleTrackAdded)
+      videoEl?.textTracks.removeEventListener('removetrack', handleSubtitleTrackRemoved)
+    }
+  })
+
   // If there weren't subtitles before, but there are now, then use the first subtitle in the list.
   let subtitleCount = 0
   $effect(() => {
@@ -169,8 +189,9 @@
 
   const subtitleUrl = $derived.by(() => {
     if (!subtitle?.[0]) return null
-    const subs = subtitles[subtitle[1]]
-    return subs ? URL.createObjectURL(new Blob([srt2webvtt(subs)], { type: 'text/plain' })) : null
+    const rawSubs = subtitles[subtitle[1]]
+    const subs = rawSubs && (/^.?WEBVTT/.test(rawSubs) ? rawSubs : srt2webvtt(rawSubs))
+    return subs ? URL.createObjectURL(new Blob([subs], { type: 'text/plain' })) : null
   })
 
   const handleSubtitleUpload = async () => {
@@ -271,7 +292,10 @@
     playsinline
   >
     {#if subtitleUrl}
-      <track kind="subtitles" src={subtitleUrl} label={subtitle?.[1] ?? 'N/A'} default />
+      <!-- Ensure subtitles are recreated when switching between them. -->
+      {#key subtitleUrl}
+        <track kind="subtitles" src={subtitleUrl} label={subtitle?.[1] ?? 'N/A'} default />
+      {/key}
     {/if}
   </video>
   {#if controlsVisible || settingsMenu}
