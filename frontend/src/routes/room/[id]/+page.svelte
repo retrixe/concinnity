@@ -68,8 +68,10 @@
         }, 5000)
         typingIndicators.set(message.userId, [message.timestamp, timeoutId])
       } else if (isIncomingChatMessage(message)) {
-        // TODO (low): Replace messages.length with IDs
-        const newMessages = message.data.slice(message.data.length === 1 ? 0 : messages.length)
+        const lastKnownId = messages[messages.length - 1]?.id ?? -1
+        const newMessagesIdx =
+          lastKnownId === -1 ? -1 : message.data.findLastIndex(({ id }) => id === lastKnownId)
+        const newMessages = message.data.slice(newMessagesIdx + 1)
         if (newMessages.length === 0) return
         for (const message of newMessages) {
           const typingIndicator = typingIndicators.get(message.userId)
