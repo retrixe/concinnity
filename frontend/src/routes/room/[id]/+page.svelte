@@ -40,6 +40,7 @@
 
   let ws: WebSocket | null = $state(null)
   let wsError: string | null = $state(null)
+  let pongDeadline = 0
   const wsInitialConnect = $derived((ws === null && !wsError) || roomInfo === null)
 
   const clientId = Math.random().toString(36).substring(2)
@@ -103,7 +104,9 @@
         if (visibilityState !== 'visible') unreadMessageCount += newMessages.length
       } else if (isIncomingSubtitleMessage(message)) {
         message.data.forEach(name => (subtitles[name] = null))
-      } else if (message.type !== MessageType.Pong) {
+      } else if (message.type === MessageType.Pong) {
+        pongDeadline = Date.now() + 30000 // Reset pong deadline to 30 seconds from now
+      } else {
         console.warn('Unhandled message type!', message)
       }
     } catch (e) {
@@ -119,16 +122,23 @@
     connect(id, clientId, { onMessage, onClose })
       .then(socket => {
         ws = socket
+        pongDeadline = Date.now() + 30000 // Reset pong deadline upon connect
       })
       .catch((e: unknown) => {
         if (e instanceof Error) wsError = e.message
       })
-    const interval = setInterval(() => {
-      if (ws?.readyState === WebSocket.OPEN)
-        ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }))
+    const pingInterval = setInterval(() => {
+      if (ws?.readyState === WebSocket.OPEN) {
+        if (Date.now() > pongDeadline) {
+          // TODO: Set wsError and handle simulaneous WebSockets
+          ws.close(4408, 'Connection timed out!')
+        } else {
+          ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }))
+        }
+      }
     }, 10000)
     return () => {
-      clearInterval(interval)
+      clearInterval(pingInterval)
       ws?.close()
       typingIndicators.forEach(([, timeoutId]) => clearTimeout(timeoutId))
     }
@@ -149,6 +159,7 @@
         try {
           ws = await connect(id, clientId, { onMessage, onClose }, true)
           wsError = null
+          pongDeadline = Date.now() + 30000 // Reset pong deadline upon connect
         } catch (e: unknown) {
           if (e instanceof Error) wsError = e.message
           timeout = setTimeout(reconnect, 10000)
