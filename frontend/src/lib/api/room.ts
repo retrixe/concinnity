@@ -35,7 +35,7 @@ export const initialPlayerState: PlayerState = {
   lastAction: new Date(0).toISOString(),
 }
 
-interface Handlers {
+export interface WSHandlers {
   onClose?: (this: WebSocket, ev: CloseEvent) => void
   onError?: (this: WebSocket, ev: Event) => void
   onMessage?: (this: WebSocket, ev: MessageEvent) => void
@@ -44,7 +44,7 @@ interface Handlers {
 export function connect(
   id: string,
   clientId: string,
-  handlers: Handlers,
+  handlers: WSHandlers,
   reconnect = false,
 ): Promise<WebSocket> {
   return new Promise((resolve, reject) => {

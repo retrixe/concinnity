@@ -16,6 +16,7 @@
     RoomType,
     type ChatMessage,
     type GenericMessage,
+    type WSHandlers,
     type PlayerState,
     type RoomInfo,
   } from '$lib/api/room'
@@ -23,6 +24,7 @@
   import { SvelteMap } from 'svelte/reactivity'
 
   const systemUUID = '00000000-0000-0000-0000-000000000000'
+  const timeout = 30000
 
   const id = page.params.id
 
@@ -45,7 +47,9 @@
 
   const clientId = Math.random().toString(36).substring(2)
 
-  const onMessage = (event: MessageEvent) => {
+  const onMessage: WSHandlers['onMessage'] = function (event: MessageEvent) {
+    // This sounds counterintuitive, but we don't want to handle messages if ws.close() was called.
+    if (this.readyState === WebSocket.CLOSING || this.readyState === WebSocket.CLOSED) return
     try {
       if (typeof event.data !== 'string') throw new Error('Invalid message data type!')
       const message = JSON.parse(event.data) as GenericMessage
@@ -105,7 +109,7 @@
       } else if (isIncomingSubtitleMessage(message)) {
         message.data.forEach(name => (subtitles[name] = null))
       } else if (message.type === MessageType.Pong) {
-        pongDeadline = Date.now() + 30000 // Reset pong deadline to 30 seconds from now
+        pongDeadline = Date.now() + timeout // Reset pong deadline
       } else {
         console.warn('Unhandled message type!', message)
       }
@@ -114,7 +118,8 @@
     }
   }
 
-  const onClose = (event: CloseEvent) => {
+  const onClose: WSHandlers['onClose'] = function (event: CloseEvent) {
+    if (this !== ws) return
     wsError = event.reason || `WebSocket closed with code: ${event.code}`
   }
 
@@ -122,7 +127,7 @@
     connect(id, clientId, { onMessage, onClose })
       .then(socket => {
         ws = socket
-        pongDeadline = Date.now() + 30000 // Reset pong deadline upon connect
+        pongDeadline = Date.now() + timeout // Reset pong deadline upon connect
       })
       .catch((e: unknown) => {
         if (e instanceof Error) wsError = e.message
@@ -130,8 +135,8 @@
     const pingInterval = setInterval(() => {
       if (ws?.readyState === WebSocket.OPEN) {
         if (Date.now() > pongDeadline) {
-          // TODO: Set wsError and handle simulaneous WebSockets
           ws.close(4408, 'Connection timed out!')
+          wsError = 'Connection timed out!'
         } else {
           ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }))
         }
@@ -149,26 +154,27 @@
   })
 
   // Reconnect if there's an error and the page is visible
+  // TODO: Add Room not found! to this list.
   const isError = $derived(
     wsError && wsError !== 'You are not authenticated to access this resource!',
   ) // We don't care if the error message changed for this $effect, and don't reconnect if not authed.
   $effect(() => {
     if (isError && visibilityState === 'visible') {
-      let timeout = -1
+      let reconnectTimeout = -1
       const reconnect = async () => {
         try {
           ws = await connect(id, clientId, { onMessage, onClose }, true)
           wsError = null
-          pongDeadline = Date.now() + 30000 // Reset pong deadline upon connect
+          pongDeadline = Date.now() + timeout // Reset pong deadline upon connect
         } catch (e: unknown) {
           if (e instanceof Error) wsError = e.message
-          timeout = setTimeout(reconnect, 10000)
+          reconnectTimeout = setTimeout(reconnect, 10000)
         }
       }
       // TODO (low): Implement exponential backoff
-      if (wsInitialConnect) timeout = setTimeout(reconnect, 10000)
+      if (wsInitialConnect) reconnectTimeout = setTimeout(reconnect, 10000)
       else reconnect() // eslint-disable-line @typescript-eslint/no-floating-promises
-      return () => clearTimeout(timeout)
+      return () => clearTimeout(reconnectTimeout)
     }
   })
 
