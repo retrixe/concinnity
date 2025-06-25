@@ -17,11 +17,12 @@
   interface Props {
     error: string | null
     connecting: boolean
+    reconnecting: number
     transientVideo: File | null
   }
 
   const id = page.params.id
-  let { error, connecting, transientVideo = $bindable(null) }: Props = $props()
+  let { error, connecting, reconnecting, transientVideo = $bindable(null) }: Props = $props()
 
   let menuOpen = $state(false)
   let remoteFileUrl = $state<string | null>(null)
@@ -71,8 +72,10 @@
   {#if error}
     <h1>
       Error encountered!
-      {#if error !== 'You are not authenticated to access this resource!'}
-        Reconnecting in 10s...
+      {#if reconnecting === 0}
+        Reconnecting...
+      {:else if reconnecting > 0}
+        Reconnecting in {reconnecting}s...
       {/if}
     </h1>
     <h2>{error}</h2>

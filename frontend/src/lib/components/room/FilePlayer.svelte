@@ -9,6 +9,7 @@
 
   interface Props {
     error: string | null
+    reconnecting: number
     roomInfo: RoomInfo
     playerState: PlayerState
     subtitles: Record<string, string | null>
@@ -20,6 +21,7 @@
   const id = page.params.id
   let {
     error,
+    reconnecting,
     roomInfo,
     playerState,
     subtitles = $bindable(),
@@ -98,7 +100,14 @@
     />
   {/if}
   {#if error}
-    <h3 class="error-banner">Error: {error}<br />Reconnecting in 10s...</h3>
+    <h3 class="error-banner">
+      Error: {error}
+      {#if reconnecting === 0}
+        <br />Reconnecting...
+      {:else if reconnecting > 0}
+        <br />Reconnecting in {reconnecting}s...
+      {/if}
+    </h3>
   {/if}
 </div>
 

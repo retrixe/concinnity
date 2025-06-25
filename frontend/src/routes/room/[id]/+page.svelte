@@ -43,6 +43,7 @@
   let ws: WebSocket | null = $state(null)
   let wsError: string | null = $state(null)
   let pongDeadline = 0
+  let reconnectWait = $state(0)
   const wsInitialConnect = $derived((ws === null && !wsError) || roomInfo === null)
 
   const clientId = Math.random().toString(36).substring(2)
@@ -158,23 +159,28 @@
   const isError = $derived(
     wsError && wsError !== 'You are not authenticated to access this resource!',
   ) // We don't care if the error message changed for this $effect, and don't reconnect if not authed.
+  const reconnecting = $derived(isError ? reconnectWait : -1)
   $effect(() => {
     if (isError && visibilityState === 'visible') {
-      let reconnectTimeout = -1
-      const reconnect = async () => {
+      let reconnectInterval = -1
+      const reconnect = (isInterval: boolean) => async () => {
+        if (isInterval && --reconnectWait > 0) return // Decrement 1 second every interval
         try {
           ws = await connect(id, clientId, { onMessage, onClose }, true)
           wsError = null
           pongDeadline = Date.now() + timeout // Reset pong deadline upon connect
         } catch (e: unknown) {
           if (e instanceof Error) wsError = e.message
-          reconnectTimeout = setTimeout(reconnect, 10000)
+          reconnectWait = 10 // TODO (low): Implement exponential backoff
+          if (!isInterval) reconnectInterval = setInterval(reconnect(true), 1000)
         }
       }
-      // TODO (low): Implement exponential backoff
-      if (wsInitialConnect) reconnectTimeout = setTimeout(reconnect, 10000)
-      else reconnect() // eslint-disable-line @typescript-eslint/no-floating-promises
-      return () => clearTimeout(reconnectTimeout)
+      // TODO (low): Don't reset this whole thing when the page is made visible, maybe?
+      if (wsInitialConnect) {
+        reconnectWait = 10
+        reconnectInterval = setInterval(reconnect(true), 1000)
+      } else reconnect(false)() // eslint-disable-line @typescript-eslint/no-floating-promises
+      return () => clearInterval(reconnectInterval)
     }
   })
 
@@ -207,7 +213,7 @@
 </svelte:head>
 <div class="container room" bind:this={containerEl}>
   {#if !roomInfo || roomInfo.type === RoomType.None}
-    <RoomLanding bind:transientVideo error={wsError} connecting={wsInitialConnect} />
+    <RoomLanding bind:transientVideo error={wsError} {reconnecting} connecting={wsInitialConnect} />
   {:else if roomInfo.type === RoomType.LocalFile || roomInfo.type === RoomType.RemoteFile}
     {#key roomInfo.target}
       <FilePlayer
@@ -217,11 +223,12 @@
         bind:subtitles
         {onPlayerStateChange}
         error={wsError}
+        {reconnecting}
         fullscreenEl={containerEl}
       />
     {/key}
   {:else}
-    <RoomLanding bind:transientVideo error="Invalid room type!" connecting={false} />
+    <RoomLanding bind:transientVideo error="Invalid room type!" {reconnecting} connecting={false} />
   {/if}
   <Chat
     disabled={wsError !== null || ws === null}
