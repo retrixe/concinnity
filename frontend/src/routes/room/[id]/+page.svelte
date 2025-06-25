@@ -155,9 +155,10 @@
   })
 
   // Reconnect if there's an error and the page is visible
-  // TODO: Add Room not found! to this list.
   const isError = $derived(
-    wsError && wsError !== 'You are not authenticated to access this resource!',
+    wsError &&
+      wsError !== 'You are not authenticated to access this resource!' &&
+      wsError !== 'Room not found!',
   ) // We don't care if the error message changed for this $effect, and don't reconnect if not authed.
   const reconnecting = $derived(isError ? reconnectWait : -1)
   $effect(() => {
