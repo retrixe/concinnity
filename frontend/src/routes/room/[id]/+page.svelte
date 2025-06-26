@@ -161,14 +161,14 @@
       wsError !== 'Room not found!',
   ) // We don't care if the error message changed for this $effect, and don't reconnect if not authed.
   $effect(() => {
+    // I previously thought we shouldn't reset this thing between visibility changes, but it may be useful...
     if (isError && visibilityState === 'visible') {
       let reconnectInterval = -1
-      // Start with 10 seconds if initial connect, else 0
-      // TODO (low): Don't reset this whole thing when the page is made visible?
+      // Start with 5 seconds if initial connect, else 0
       let reconnectAttempts = wsInitialConnect ? 1 : 0
-      reconnecting = wsInitialConnect ? 10 : 0
+      reconnecting = wsInitialConnect ? 5 : 0
       const reconnect = async () => {
-        // During intervals, decrement reconnecting till 0, and if already 0, don't reconnect.
+        // During intervals, decrement reconnecting till 0. If already 0, don't reconnect.
         if (reconnectAttempts > 0 && (reconnecting === 0 || --reconnecting > 0)) return
         try {
           ws = await connect(id, clientId, { onMessage, onClose }, true)
@@ -176,9 +176,10 @@
           pongDeadline = Date.now() + timeout // Reset pong deadline upon connect
         } catch (e: unknown) {
           if (e instanceof Error) wsError = e.message
-          reconnecting = 10 // TODO (low): Implement exponential backoff
           if (reconnectAttempts === 0) reconnectInterval = setInterval(reconnect, 1000)
           reconnectAttempts++
+          // Exponential backoff 5 * (2^n-1), max 30 seconds
+          reconnecting = Math.min(30, 5 * Math.pow(2, reconnectAttempts - 1))
         }
       }
       if (wsInitialConnect) {
