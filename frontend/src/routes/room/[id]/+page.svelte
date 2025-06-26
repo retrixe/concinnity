@@ -43,7 +43,7 @@
   let ws: WebSocket | null = $state(null)
   let wsError: string | null = $state(null)
   let pongDeadline = 0
-  let reconnectWait = $state(0)
+  let reconnecting = $state(-1)
   const wsInitialConnect = $derived((ws === null && !wsError) || roomInfo === null)
 
   const clientId = Math.random().toString(36).substring(2)
@@ -160,28 +160,36 @@
       wsError !== 'You are not authenticated to access this resource!' &&
       wsError !== 'Room not found!',
   ) // We don't care if the error message changed for this $effect, and don't reconnect if not authed.
-  const reconnecting = $derived(isError ? reconnectWait : -1)
   $effect(() => {
     if (isError && visibilityState === 'visible') {
       let reconnectInterval = -1
-      const reconnect = (isInterval: boolean) => async () => {
-        if (isInterval && --reconnectWait > 0) return // Decrement 1 second every interval
+      // Start with 10 seconds if initial connect, else 0
+      // TODO (low): Don't reset this whole thing when the page is made visible?
+      let reconnectAttempts = wsInitialConnect ? 1 : 0
+      reconnecting = wsInitialConnect ? 10 : 0
+      const reconnect = async () => {
+        // During intervals, decrement reconnecting till 0, and if already 0, don't reconnect.
+        if (reconnectAttempts > 0 && (reconnecting === 0 || --reconnecting > 0)) return
         try {
           ws = await connect(id, clientId, { onMessage, onClose }, true)
           wsError = null
           pongDeadline = Date.now() + timeout // Reset pong deadline upon connect
         } catch (e: unknown) {
           if (e instanceof Error) wsError = e.message
-          reconnectWait = 10 // TODO (low): Implement exponential backoff
-          if (!isInterval) reconnectInterval = setInterval(reconnect(true), 1000)
+          reconnecting = 10 // TODO (low): Implement exponential backoff
+          if (reconnectAttempts === 0) reconnectInterval = setInterval(reconnect, 1000)
+          reconnectAttempts++
         }
       }
-      // TODO (low): Don't reset this whole thing when the page is made visible, maybe?
       if (wsInitialConnect) {
-        reconnectWait = 10
-        reconnectInterval = setInterval(reconnect(true), 1000)
-      } else reconnect(false)() // eslint-disable-line @typescript-eslint/no-floating-promises
-      return () => clearInterval(reconnectInterval)
+        reconnectInterval = setInterval(reconnect, 1000)
+      } else {
+        reconnect() // eslint-disable-line @typescript-eslint/no-floating-promises
+      }
+      return () => {
+        reconnecting = -1
+        clearInterval(reconnectInterval)
+      }
     }
   })
 
