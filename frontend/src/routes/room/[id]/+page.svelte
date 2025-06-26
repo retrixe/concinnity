@@ -159,7 +159,7 @@
     wsError &&
       wsError !== 'You are not authenticated to access this resource!' &&
       wsError !== 'Room not found!',
-  ) // We don't care if the error message changed for this $effect, and don't reconnect if not authed.
+  ) // Error messages changing shouldn't affect this $effect, and some errors are not recoverable.
   $effect(() => {
     // I previously thought we shouldn't reset this thing between visibility changes, but it may be useful...
     if (isError && visibilityState === 'visible') {
