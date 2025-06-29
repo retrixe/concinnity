@@ -183,10 +183,10 @@ func CreateRoomSubtitleEndpoint(w http.ResponseWriter, r *http.Request) {
 		result, err = insertSubtitleStmt.Exec(r.PathValue("id"), r.URL.Query().Get("name"), body)
 	}
 	if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Class() == "23503" {
-		http.Error(w, errorJson("Room does not exist!"), http.StatusConflict)
+		http.Error(w, errorJson("Room does not exist!"), http.StatusNotFound)
 		return
 	} else if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1452 {
-		http.Error(w, errorJson("Room does not exist!"), http.StatusConflict)
+		http.Error(w, errorJson("Room does not exist!"), http.StatusNotFound)
 		return
 	} else if err != nil {
 		handleInternalServerError(w, err)
