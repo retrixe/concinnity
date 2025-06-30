@@ -5,6 +5,8 @@
   import { page } from '$app/state'
   import DeleteAccountDialog from './DeleteAccountDialog.svelte'
   import ChangePasswordDialog from './ChangePasswordDialog.svelte'
+  import ChangeUsernameDialog from './ChangeUsernameDialog.svelte'
+  import ChangeEmailDialog from './ChangeEmailDialog.svelte'
 
   const { userId, username, email } = $derived(page.data)
 
@@ -18,9 +20,6 @@
   let successMessage: string | null = $state(null)
 
   const handleDismissToast = () => (successMessage = null)
-
-  // TODO: Add change username functionality with dialog
-  // TODO: Add change email functionality with dialog
 </script>
 
 <div class="container">
@@ -32,7 +31,7 @@
         <h4>Username</h4>
         <h2>{username}</h2>
       </div>
-      <!-- <Button>Edit</Button> -->
+      <Button onclick={() => (currentDialog = 'changeUsername')}>Edit</Button>
     </div>
     <hr />
     <div class="space-between">
@@ -40,7 +39,7 @@
         <h4>Email</h4>
         <p>{email}</p>
       </div>
-      <!-- <Button>Edit</Button> -->
+      <Button onclick={() => (currentDialog = 'changeEmail')}>Edit</Button>
     </div>
     <hr />
     <h4>Account ID</h4>
@@ -62,6 +61,18 @@
   open={currentDialog === 'changePassword'}
   onClose={() => (currentDialog = null)}
   onSuccess={() => (successMessage = 'Password changed successfully!')}
+/>
+
+<ChangeEmailDialog
+  open={currentDialog === 'changeEmail'}
+  onClose={() => (currentDialog = null)}
+  onSuccess={() => (successMessage = 'E-mail changed successfully!')}
+/>
+
+<ChangeUsernameDialog
+  open={currentDialog === 'changeUsername'}
+  onClose={() => (currentDialog = null)}
+  onSuccess={() => (successMessage = 'Username changed successfully!')}
 />
 
 {#if successMessage !== null}
