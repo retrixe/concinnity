@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
@@ -249,7 +250,7 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errorJson("No username, e-mail or password provided!"), http.StatusBadRequest)
 		return
 	} else if data.Username == "system" { // Reserve this name to use in chat.
-		http.Error(w, errorJson("An account with this e-mail already exists!"), http.StatusConflict)
+		http.Error(w, errorJson("An account with this username already exists!"), http.StatusConflict)
 		return
 	} else if res, _ := regexp.MatchString("^[a-z0-9_]{4,16}$", data.Username); !res {
 		http.Error(w, errorJson("Username should be 4-16 characters long, and "+
@@ -540,6 +541,114 @@ func DeleteAccountEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	result, err := deleteUserStmt.Exec(token.UserID)
 	if err != nil {
+		handleInternalServerError(w, err)
+		return
+	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
+		handleInternalServerError(w, err) // nil err solved by Ostrich algorithm
+		return
+	}
+	w.Write([]byte("{\"success\":true}"))
+}
+
+func ChangeUsernameEndpoint(w http.ResponseWriter, r *http.Request) {
+	user, token := IsAuthenticatedHTTP(w, r)
+	if token == nil {
+		return
+	}
+	// Check the body for JSON containing password and new username.
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
+		return
+	}
+	var data struct {
+		CurrentPassword string `json:"currentPassword"`
+		NewUsername     string `json:"newUsername"`
+	}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
+		return
+	} else if data.CurrentPassword == "" {
+		http.Error(w, errorJson("No current password provided!"), http.StatusBadRequest)
+		return
+	} else if data.NewUsername == "" {
+		http.Error(w, errorJson("No new username provided!"), http.StatusBadRequest)
+		return
+	} else if !ComparePassword(data.CurrentPassword, user.Password) {
+		http.Error(w, errorJson("Incorrect current password!"), http.StatusUnauthorized)
+		return
+	} else if res, _ := regexp.MatchString("^[a-z0-9_]{4,16}$", data.NewUsername); !res {
+		http.Error(w, errorJson("Username should be 4-16 characters long, and "+
+			"contain lowercase alphanumeric characters or _ only!"), http.StatusBadRequest)
+		return
+	} else if data.NewUsername == user.Username {
+		http.Error(w, errorJson("The new username must be different from the current username!"),
+			http.StatusBadRequest)
+		return
+	}
+	result, err := updateUserUsernameStmt.Exec(data.NewUsername, token.UserID)
+	if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23505" {
+		http.Error(w, errorJson("An account with this username already exists!"), http.StatusConflict)
+		return
+	} else if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
+		http.Error(w, errorJson("An account with this username already exists!"), http.StatusConflict)
+		return
+	} else if err != nil {
+		handleInternalServerError(w, err)
+		return
+	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
+		handleInternalServerError(w, err) // nil err solved by Ostrich algorithm
+		return
+	}
+	w.Write([]byte("{\"success\":true}"))
+}
+
+func ChangeEmailEndpoint(w http.ResponseWriter, r *http.Request) {
+	user, token := IsAuthenticatedHTTP(w, r)
+	if token == nil {
+		return
+	}
+	// Check the body for JSON containing password and new email.
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
+		return
+	}
+	var data struct {
+		CurrentPassword string `json:"currentPassword"`
+		NewEmail        string `json:"newEmail"`
+	}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		http.Error(w, errorJson("Unable to read body!"), http.StatusBadRequest)
+		return
+	} else if data.CurrentPassword == "" {
+		http.Error(w, errorJson("No current password provided!"), http.StatusBadRequest)
+		return
+	} else if data.NewEmail == "" {
+		http.Error(w, errorJson("No new e-mail provided!"), http.StatusBadRequest)
+		return
+	} else if !ComparePassword(data.CurrentPassword, user.Password) {
+		http.Error(w, errorJson("Incorrect current password!"), http.StatusUnauthorized)
+		return
+	} else if res, _ := regexp.MatchString("^\\S+@\\S+\\.\\S+$", data.NewEmail); !res {
+		http.Error(w, errorJson("Invalid e-mail entered!"), http.StatusBadRequest)
+		return
+	} else if data.NewEmail == user.Email {
+		http.Error(w, errorJson("The new e-mail must be different from the current e-mail!"),
+			http.StatusBadRequest)
+		return
+	}
+	// Check if an account with this email already exists.
+	result, err := updateUserEmailStmt.Exec(data.NewEmail, token.UserID)
+	if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23505" {
+		http.Error(w, errorJson("An account with this e-mail already exists!"), http.StatusConflict)
+		return
+	} else if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
+		http.Error(w, errorJson("An account with this e-mail already exists!"), http.StatusConflict)
+		return
+	} else if err != nil {
 		handleInternalServerError(w, err)
 		return
 	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {

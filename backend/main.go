@@ -26,6 +26,8 @@ Endpoints:
 - GET /api/forgot-password/:token
 - POST /api/reset-password
 - POST /api/change-password
+- POST /api/change-username
+- POST /api/change-email
 - DELETE /api/delete-account
 - GET /api/usernames?id=:id - Get usernames by ID, can accept multiple `id` query parameters
 - POST /api/room - Create a new room
@@ -83,8 +85,8 @@ func main() {
 		dsn.ParseTime = true
 		dsn.Params = map[string]string{"time_zone": "'+00:00'"} // dsn.Loc is already UTC
 		config.DatabaseURL = dsn.FormatDSN()
-	} else if config.Database == "mysql" {
-		log.Fatalln("MySQL is not supported!")
+	} else if config.Database != "postgres" {
+		log.Fatalln("Unsupported database \"" + config.Database + "\" specified in config!")
 	}
 	db, err = sql.Open(config.Database, config.DatabaseURL)
 	if err != nil {
@@ -116,6 +118,8 @@ func main() {
 	http.HandleFunc("GET /api/forgot-password/{token}", ForgotPasswordTokenEndpoint)
 	http.HandleFunc("POST /api/reset-password", ResetPasswordEndpoint)
 	http.HandleFunc("POST /api/change-password", ChangePasswordEndpoint)
+	http.HandleFunc("POST /api/change-username", ChangeUsernameEndpoint)
+	http.HandleFunc("POST /api/change-email", ChangeEmailEndpoint)
 	http.HandleFunc("DELETE /api/delete-account", DeleteAccountEndpoint)
 	http.HandleFunc("GET /api/usernames", GetUsernamesEndpoint)
 	http.HandleFunc("POST /api/room", CreateRoomEndpoint)

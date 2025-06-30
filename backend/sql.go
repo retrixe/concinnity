@@ -88,6 +88,8 @@ var (
 	findUsernamesByIdStmt     *sql.Stmt
 	createUserStmt            *sql.Stmt
 	updateUserPasswordStmt    *sql.Stmt
+	updateUserUsernameStmt    *sql.Stmt
+	updateUserEmailStmt       *sql.Stmt
 	deleteUserStmt            *sql.Stmt
 
 	insertTokenStmt *sql.Stmt
@@ -132,6 +134,8 @@ func PrepareSqlStatements() {
 	}
 	createUserStmt = prepareQuery("INSERT INTO users (username, password, email, id, verified) VALUES ($1, $2, $3, $4, $5);")
 	updateUserPasswordStmt = prepareQuery("UPDATE users SET password = $1 WHERE id = $2;")
+	updateUserUsernameStmt = prepareQuery("UPDATE users SET username = $1 WHERE id = $2;")
+	updateUserEmailStmt = prepareQuery("UPDATE users SET email = $1 WHERE id = $2;")
 	deleteUserStmt = prepareQuery("DELETE FROM users WHERE id = $1;")
 
 	insertTokenStmt = prepareQuery("INSERT INTO tokens (token, created_at, user_id) VALUES ($1, $2, $3);")
