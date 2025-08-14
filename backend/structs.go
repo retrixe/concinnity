@@ -24,6 +24,13 @@ type Token struct {
 	UserID    uuid.UUID `json:"userId"`
 }
 
+type Avatar struct {
+	Hash      string    `json:"hash"`
+	Data      []byte    `json:"data"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	UserID    uuid.UUID `json:"userId"`
+}
+
 type Room struct {
 	ID         string    `json:"id"`
 	CreatedAt  time.Time `json:"createdAt"`

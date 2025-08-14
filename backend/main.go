@@ -122,6 +122,7 @@ func main() {
 	http.HandleFunc("POST /api/change-email", ChangeEmailEndpoint)
 	http.HandleFunc("DELETE /api/delete-account", DeleteAccountEndpoint)
 	http.HandleFunc("GET /api/usernames", GetUsernamesEndpoint)
+	http.HandleFunc("GET /api/avatar/{hash}", GetAvatarEndpoint)
 	http.HandleFunc("POST /api/room", CreateRoomEndpoint)
 	http.HandleFunc("GET /api/room/{id}", GetRoomEndpoint)
 	http.HandleFunc("PATCH /api/room/{id}", UpdateRoomEndpoint)

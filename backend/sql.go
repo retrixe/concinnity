@@ -26,6 +26,12 @@ CREATE TABLE IF NOT EXISTS tokens (
 	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 	user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE);
 
+CREATE TABLE IF NOT EXISTS avatars (
+  hash VARCHAR(64) NOT NULL PRIMARY KEY,
+	data LONGBLOB NOT NULL,
+	updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE);
+
 CREATE TABLE IF NOT EXISTS rooms (
 	id VARCHAR(24) NOT NULL PRIMARY KEY,
 	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -101,6 +107,9 @@ var (
 	deletePasswordResetTokenStmt        *sql.Stmt
 	purgeExpiredPasswordResetTokensStmt *sql.Stmt
 
+	findAvatarByHashStmt *sql.Stmt
+	// insertAvatarStmt     *sql.Stmt
+
 	insertRoomStmt         *sql.Stmt
 	findRoomStmt           *sql.Stmt
 	findRoomModifyTimeStmt *sql.Stmt // MySQL specific, complementing updateRoomStmt
@@ -154,6 +163,9 @@ func PrepareSqlStatements() {
 		"DELETE FROM password_reset_tokens WHERE id = $1 RETURNING user_id, created_at;")
 	purgeExpiredPasswordResetTokensStmt = prepareQuery(
 		"DELETE FROM password_reset_tokens WHERE created_at < NOW() - INTERVAL '10 minutes';")
+
+	findAvatarByHashStmt = prepareQuery("SELECT hash, data, updated_at, user_id FROM avatars WHERE hash = $1;")
+	// insertAvatarStmt = prepareQuery("INSERT INTO avatars (hash, data, user_id) VALUES ($1, $2, $3);")
 
 	insertRoomStmt = prepareQuery("INSERT INTO rooms (id, type, target) " +
 		"VALUES ($1, $2, $3);")
@@ -211,6 +223,7 @@ func translate(query string) string {
 		// DELETE ... RETURNING works only with MariaDB 10.0+ (not MySQL!)
 		query = strings.ReplaceAll(query, "gen_random_uuid", "UUID") // UUID_v7() is MariaDB 11.7+ only!
 	} else {
+		query = strings.ReplaceAll(query, "LONGBLOB", "BYTEA")
 		query = strings.ReplaceAll(query, "MEDIUMTEXT", "TEXT")
 	}
 	return query

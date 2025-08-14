@@ -1,14 +1,45 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
+
+func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
+	// This endpoint does not require authentication
+	if len(r.PathValue("hash")) != 64 {
+		http.Error(w, errorJson("Invalid avatar hash!"), http.StatusBadRequest)
+		return
+	} else if r.URL.Query().Get("size") != "" &&
+		r.URL.Query().Get("size") != "256" &&
+		r.URL.Query().Get("size") != "4096" {
+		http.Error(w, errorJson("Invalid size parameter! Supported sizes: 256, 4096"),
+			http.StatusBadRequest)
+		return
+	}
+	// Retrieve avatar from the database
+	var avatar Avatar
+	err := findAvatarByHashStmt.QueryRow(r.PathValue("hash")).Scan(
+		&avatar.Hash, &avatar.Data, &avatar.UpdatedAt, &avatar.UserID)
+	if errors.Is(err, sql.ErrNoRows) {
+		http.Error(w, errorJson("Avatar not found!"), http.StatusNotFound)
+		return
+	} else if err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
+	// TODO: If ?size=256, downscale the avatar
+	// Return the avatar
+	w.Header().Set("Content-Type", "image/webp")
+	http.ServeContent(w, r, avatar.Hash+".webp", avatar.UpdatedAt, bytes.NewReader(avatar.Data))
+}
 
 func GetUsernamesEndpoint(w http.ResponseWriter, r *http.Request) {
 	_, token := IsAuthenticatedHTTP(w, r)
