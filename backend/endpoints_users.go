@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/HugoSmits86/nativewebp"
+	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
@@ -35,10 +37,31 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 		handleInternalServerError(w, err)
 		return
 	}
-	// TODO: If ?size=256, downscale the avatar
+	// If ?size=256, downscale the avatar
+	avatarData := avatar.Data
+	if r.URL.Query().Get("size") == "256" {
+		// Decode original image
+		originalImage, err := nativewebp.Decode(bytes.NewReader(avatarData))
+		if err != nil {
+			http.Error(w, errorJson("Failed to decode avatar image!"), http.StatusUnprocessableEntity)
+			return
+		}
+		// Resize image
+		resizedImage := imaging.Resize(originalImage, 256, 0, imaging.Lanczos)
+		// Encode image
+		newDataWriter := new(bytes.Buffer)
+		err = nativewebp.Encode(newDataWriter, resizedImage, &nativewebp.Options{
+			UseExtendedFormat: true,
+		})
+		if err != nil {
+			http.Error(w, errorJson("Failed to encode avatar image!"), http.StatusInternalServerError)
+			return
+		}
+		avatarData = newDataWriter.Bytes()
+	}
 	// Return the avatar
 	w.Header().Set("Content-Type", "image/webp")
-	http.ServeContent(w, r, avatar.Hash+".webp", avatar.UpdatedAt, bytes.NewReader(avatar.Data))
+	http.ServeContent(w, r, avatar.Hash+".webp", avatar.UpdatedAt, bytes.NewReader(avatarData))
 }
 
 func GetUsernamesEndpoint(w http.ResponseWriter, r *http.Request) {
