@@ -75,6 +75,10 @@ func UpgradeSqlTables() {
 	if config.Database == "mysql" {
 		tokenFKeyName = "tokens_ibfk_1" // MySQL uses different names for foreign keys
 	}
+	avatarFKeyName := "users_avatar_fkey"
+	if config.Database == "mysql" {
+		avatarFKeyName = "users_ibfk_1"
+	}
 	if _, err := db.Exec(translate(`BEGIN;
 
 -- Upgrading from concinnity 1.0.0
@@ -84,7 +88,7 @@ ALTER TABLE tokens ADD CONSTRAINT ` + tokenFKeyName + ` FOREIGN KEY (user_id) RE
 -- Upgrading from concinnity 1.0.1
 ALTER TABLE users
   ADD COLUMN avatar VARCHAR(64) NULL DEFAULT NULL,
-	ADD CONSTRAINT FOREIGN KEY (avatar) REFERENCES avatars(hash) ON DELETE RESTRICT;
+	ADD CONSTRAINT ` + avatarFKeyName + ` FOREIGN KEY (avatar) REFERENCES avatars(hash) ON DELETE RESTRICT;
 
 COMMIT;`)); err != nil {
 		log.Fatalln("Failed to run database schema upgrade!", err)

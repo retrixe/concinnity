@@ -16,7 +16,7 @@ type User struct {
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"createdAt"`
 	Verified  bool      `json:"verified"`
-	Avatar    string    `json:"avatar"`
+	Avatar    *string   `json:"avatar"`
 }
 
 type Token struct {
