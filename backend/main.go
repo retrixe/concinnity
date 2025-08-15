@@ -86,6 +86,7 @@ func main() {
 		dsn.MultiStatements = true
 		dsn.ParseTime = true
 		dsn.Params = map[string]string{"time_zone": "'+00:00'"} // dsn.Loc is already UTC
+		dsn.ClientFoundRows = true
 		config.DatabaseURL = dsn.FormatDSN()
 	} else if config.Database != "postgres" {
 		log.Fatalln("Unsupported database \"" + config.Database + "\" specified in config!")
