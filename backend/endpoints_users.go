@@ -151,7 +151,7 @@ func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 		_, err := deleteAvatarStmt.Exec(*user.Avatar)
 		if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23503" {
 			// Do nothing
-		} else if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
+		} else if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1451 {
 			// Do nothing
 		} else if err != nil {
 			handleInternalServerError(w, err)
