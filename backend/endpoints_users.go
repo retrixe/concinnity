@@ -14,6 +14,7 @@ import (
 
 	"github.com/HugoSmits86/nativewebp"
 	"github.com/disintegration/imaging"
+	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
@@ -71,7 +72,7 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
-	_, token := IsAuthenticatedHTTP(w, r)
+	user, token := IsAuthenticatedHTTP(w, r)
 	if token == nil {
 		return
 	}
@@ -140,9 +141,14 @@ func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 		handleInternalServerError(w, err) // nil err solved by Ostrich algorithm
 		return
 	}
-	// TODO: Delete old avatar
-	/* if user.Avatar != nil {
-		_, err := tx.Stmt(deleteAvatarStmt).Exec(*user.Avatar)
+	// Commit the transaction
+	if err := tx.Commit(); err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
+	// Delete old avatar
+	if user.Avatar != nil {
+		_, err := deleteAvatarStmt.Exec(*user.Avatar)
 		if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23503" {
 			// Do nothing
 		} else if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
@@ -151,11 +157,6 @@ func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 			handleInternalServerError(w, err)
 			return
 		}
-	} */
-	// Commit the transaction
-	if err := tx.Commit(); err != nil {
-		handleInternalServerError(w, err)
-		return
 	}
 
 	w.Write([]byte("{\"success\":true}"))

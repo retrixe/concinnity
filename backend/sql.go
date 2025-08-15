@@ -119,7 +119,7 @@ var (
 
 	findAvatarByHashStmt *sql.Stmt
 	insertAvatarStmt     *sql.Stmt
-	// deleteAvatarStmt     *sql.Stmt
+	deleteAvatarStmt     *sql.Stmt
 
 	insertRoomStmt         *sql.Stmt
 	findRoomStmt           *sql.Stmt
@@ -182,7 +182,7 @@ func PrepareSqlStatements() {
 	} else {
 		insertAvatarStmt = prepareQuery("INSERT INTO avatars (hash, data) VALUES ($1, $2) ON CONFLICT (hash) DO NOTHING;")
 	}
-	// deleteAvatarStmt = prepareQuery("DELETE FROM avatars WHERE hash = $1;")
+	deleteAvatarStmt = prepareQuery("DELETE FROM avatars WHERE hash = $1;")
 
 	insertRoomStmt = prepareQuery("INSERT INTO rooms (id, type, target) " +
 		"VALUES ($1, $2, $3);")
