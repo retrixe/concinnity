@@ -162,7 +162,7 @@ func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("{\"success\":true}"))
 }
 
-func GetUsernamesEndpoint(w http.ResponseWriter, r *http.Request) {
+func GetUserProfilesEndpoint(w http.ResponseWriter, r *http.Request) {
 	_, token := IsAuthenticatedHTTP(w, r)
 	if token == nil {
 		return
@@ -191,9 +191,9 @@ func GetUsernamesEndpoint(w http.ResponseWriter, r *http.Request) {
 			mysqlArr[i] = id
 		}
 		rows, err = prepareQuery(
-			"SELECT id, username FROM users WHERE id IN (" + placeholders + ");").Query(mysqlArr...)
+			"SELECT id, username, avatar FROM users WHERE id IN (" + placeholders + ");").Query(mysqlArr...)
 	} else {
-		rows, err = findUsernamesByIdStmt.Query(pq.Array(requestedIds))
+		rows, err = findUserProfilesByIdStmt.Query(pq.Array(requestedIds))
 	}
 	if err != nil {
 		handleInternalServerError(w, err)
@@ -201,15 +201,15 @@ func GetUsernamesEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer rows.Close()
-	usernames := make(map[string]string)
+	usernames := make(map[string]UserProfile)
 	for rows.Next() {
 		var id uuid.UUID
-		var username string
-		if err = rows.Scan(&id, &username); err != nil {
+		var userProfile UserProfile
+		if err = rows.Scan(&id, &userProfile.Username, &userProfile.Avatar); err != nil {
 			handleInternalServerError(w, err)
 			return
 		}
-		usernames[id.String()] = username
+		usernames[id.String()] = userProfile
 	}
 	if rows.Err() != nil {
 		handleInternalServerError(w, err)

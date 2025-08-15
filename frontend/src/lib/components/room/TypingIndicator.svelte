@@ -1,9 +1,10 @@
 <script lang="ts">
-  import usernameCache from '$lib/state/usernameCache.svelte'
+  import userProfileCache from '$lib/state/userProfileCache.svelte'
 
   const { typingUsers }: { typingUsers: string[] } = $props()
 
-  const getUsername = (userId: string) => usernameCache.get(userId) ?? userId.split('-')[0] // UUID
+  const getUsername = (userId: string) =>
+    userProfileCache.get(userId)?.username ?? userId.split('-')[0] // UUID
 </script>
 
 <p class="typing-indicator">

@@ -100,7 +100,7 @@ var (
 	findUserByNameOrEmailStmt *sql.Stmt
 	findUserByUsernameStmt    *sql.Stmt
 	findUserByEmailStmt       *sql.Stmt
-	findUsernamesByIdStmt     *sql.Stmt
+	findUserProfilesByIdStmt  *sql.Stmt
 	createUserStmt            *sql.Stmt
 	updateUserPasswordStmt    *sql.Stmt
 	updateUserUsernameStmt    *sql.Stmt
@@ -150,7 +150,7 @@ func PrepareSqlStatements() {
 	findUserByEmailStmt = prepareQuery("SELECT username, password, email, id, created_at, verified, avatar FROM users " +
 		"WHERE email = $1 LIMIT 1;")
 	if config.Database != "mysql" {
-		findUsernamesByIdStmt = prepareQuery("SELECT id, username FROM users WHERE id = ANY($1);")
+		findUserProfilesByIdStmt = prepareQuery("SELECT id, username, avatar FROM users WHERE id = ANY($1);")
 	}
 	createUserStmt = prepareQuery("INSERT INTO users (username, password, email, id, verified) VALUES ($1, $2, $3, $4, $5);")
 	updateUserPasswordStmt = prepareQuery("UPDATE users SET password = $1 WHERE id = $2;")

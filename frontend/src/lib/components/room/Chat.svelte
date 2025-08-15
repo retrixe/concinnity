@@ -7,7 +7,7 @@
   import type { Plugin } from 'remarkable/lib'
   import ky from '$lib/api/ky'
   import type { ChatMessage } from '$lib/api/room'
-  import usernameCache from '$lib/state/usernameCache.svelte'
+  import userProfileCache, { type UserProfile } from '$lib/state/userProfileCache.svelte'
   import TypingIndicator from './TypingIndicator.svelte'
   import type { SvelteMap } from 'svelte/reactivity'
 
@@ -44,8 +44,8 @@
       .map(({ userId, message }) => (userId === systemUUID ? message.split(' ')[0] : userId))
       .concat(typingUsers)
       .reduce((set, userId) => {
-        if (untrack(() => !usernameCache.has(userId)) /* Ignore changes to usernameCache */) {
-          usernameCache.set(userId, null)
+        if (untrack(() => !userProfileCache.has(userId)) /* Ignore changes to usernameCache */) {
+          userProfileCache.set(userId, null)
           set.add(userId)
         }
         return set
@@ -57,14 +57,17 @@
       .values()
       .map(id => `id=${id}`)
       .reduce((acc, val) => `${acc}&${val}`)
-    ky(`api/usernames?${query}`)
-      .json<Record<string, string>>()
+    ky(`api/profiles?${query}`)
+      .json<Record<string, UserProfile>>()
       .then(data => {
-        for (const [userId, username] of Object.entries(data)) usernameCache.set(userId, username)
+        for (const [userId, profile] of Object.entries(data)) {
+          userProfileCache.set(userId, profile)
+        }
       })
       .catch((e: unknown) => console.error('Failed to retrieve usernames!', e))
   })
-  const getUsername = (userId: string) => usernameCache.get(userId) ?? userId.split('-')[0] // UUID
+  const getUsername = (userId: string) =>
+    userProfileCache.get(userId)?.username ?? userId.split('-')[0] // UUID
   const replaceLeadingUUID = (message: string) => {
     const uuid = message.slice(0, message.indexOf(' '))
     return message.replace(uuid, getUsername(uuid))

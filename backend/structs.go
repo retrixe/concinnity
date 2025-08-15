@@ -19,6 +19,11 @@ type User struct {
 	Avatar    *string   `json:"avatar"`
 }
 
+type UserProfile struct {
+	Username string  `json:"username"`
+	Avatar   *string `json:"avatar"`
+}
+
 type Token struct {
 	CreatedAt time.Time `json:"createdAt"`
 	Token     string    `json:"token"`

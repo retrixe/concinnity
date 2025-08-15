@@ -29,7 +29,9 @@ Endpoints:
 - POST /api/change-username
 - POST /api/change-email
 - DELETE /api/delete-account
-- GET /api/usernames?id=:id - Get usernames by ID, can accept multiple `id` query parameters
+- GET /api/profiles?id=:id - Get profiles by ID, can accept multiple `id` query parameters
+- POST /api/avatar
+- GET /api/avatar/:id
 - POST /api/room - Create a new room
 - GET /api/room/:id - Get the room's info
 - PATCH /api/room/:id - Update the room's info
@@ -121,7 +123,7 @@ func main() {
 	http.HandleFunc("POST /api/change-username", ChangeUsernameEndpoint)
 	http.HandleFunc("POST /api/change-email", ChangeEmailEndpoint)
 	http.HandleFunc("DELETE /api/delete-account", DeleteAccountEndpoint)
-	http.HandleFunc("GET /api/usernames", GetUsernamesEndpoint)
+	http.HandleFunc("GET /api/profiles", GetUserProfilesEndpoint)
 	http.HandleFunc("POST /api/avatar", ChangeAvatarEndpoint)
 	http.HandleFunc("GET /api/avatar/{hash}", GetAvatarEndpoint)
 	http.HandleFunc("POST /api/room", CreateRoomEndpoint)

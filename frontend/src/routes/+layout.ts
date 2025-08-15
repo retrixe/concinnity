@@ -1,5 +1,5 @@
 import ky from '$lib/api/ky'
-import usernameCache from '$lib/state/usernameCache.svelte'
+import userProfileCache from '$lib/state/userProfileCache.svelte'
 import type { LayoutLoad } from './$types'
 
 export const load: LayoutLoad = async event => {
@@ -10,9 +10,14 @@ export const load: LayoutLoad = async event => {
 
   // Ignore errors trying to check for authentication state
   try {
-    const req = await ky('', { fetch }).json<{ userId?: string; username: string; email: string }>()
-    if (req.userId) usernameCache.set(req.userId, req.username)
-    return { username: req.username, userId: req.userId, email: req.email }
+    const req = await ky('', { fetch }).json<{
+      userId?: string
+      username: string
+      email: string
+      avatar: string | null
+    }>()
+    if (req.userId) userProfileCache.set(req.userId, { username: req.username, avatar: req.avatar })
+    return { username: req.username, userId: req.userId, email: req.email, avatar: req.avatar }
   } catch (e) {
     console.error(e)
   }
