@@ -105,6 +105,7 @@ var (
 	updateUserPasswordStmt    *sql.Stmt
 	updateUserUsernameStmt    *sql.Stmt
 	updateUserEmailStmt       *sql.Stmt
+	updateUserAvatarStmt      *sql.Stmt
 	deleteUserStmt            *sql.Stmt
 
 	insertTokenStmt *sql.Stmt
@@ -117,7 +118,8 @@ var (
 	purgeExpiredPasswordResetTokensStmt *sql.Stmt
 
 	findAvatarByHashStmt *sql.Stmt
-	// insertAvatarStmt     *sql.Stmt
+	insertAvatarStmt     *sql.Stmt
+	// deleteAvatarStmt     *sql.Stmt
 
 	insertRoomStmt         *sql.Stmt
 	findRoomStmt           *sql.Stmt
@@ -154,6 +156,7 @@ func PrepareSqlStatements() {
 	updateUserPasswordStmt = prepareQuery("UPDATE users SET password = $1 WHERE id = $2;")
 	updateUserUsernameStmt = prepareQuery("UPDATE users SET username = $1 WHERE id = $2;")
 	updateUserEmailStmt = prepareQuery("UPDATE users SET email = $1 WHERE id = $2;")
+	updateUserAvatarStmt = prepareQuery("UPDATE users SET avatar = $1 WHERE id = $2;")
 	deleteUserStmt = prepareQuery("DELETE FROM users WHERE id = $1;")
 
 	insertTokenStmt = prepareQuery("INSERT INTO tokens (token, created_at, user_id) VALUES ($1, $2, $3);")
@@ -174,7 +177,12 @@ func PrepareSqlStatements() {
 		"DELETE FROM password_reset_tokens WHERE created_at < NOW() - INTERVAL '10 minutes';")
 
 	findAvatarByHashStmt = prepareQuery("SELECT hash, data, created_at FROM avatars WHERE hash = $1;")
-	// insertAvatarStmt = prepareQuery("INSERT INTO avatars (hash, data, user_id) VALUES ($1, $2, $3);")
+	if config.Database == "mysql" {
+		insertAvatarStmt = prepareQuery("INSERT IGNORE INTO avatars (hash, data) VALUES (?, ?);")
+	} else {
+		insertAvatarStmt = prepareQuery("INSERT INTO avatars (hash, data) VALUES ($1, $2) ON CONFLICT (hash) DO NOTHING;")
+	}
+	// deleteAvatarStmt = prepareQuery("DELETE FROM avatars WHERE hash = $1;")
 
 	insertRoomStmt = prepareQuery("INSERT INTO rooms (id, type, target) " +
 		"VALUES ($1, $2, $3);")

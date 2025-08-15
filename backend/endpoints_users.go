@@ -2,9 +2,13 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"image"
+	"io"
 	"net/http"
 	"strings"
 
@@ -64,6 +68,97 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Return the avatar
 	w.Header().Set("Content-Type", "image/webp")
 	http.ServeContent(w, r, avatar.Hash+".webp", avatar.CreatedAt, bytes.NewReader(avatarData.Bytes()))
+}
+
+func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
+	_, token := IsAuthenticatedHTTP(w, r)
+	if token == nil {
+		return
+	}
+	// Read the body
+	var data []byte = nil
+	var hash string = ""
+	if r.Body != nil {
+		avatarData := new(bytes.Buffer)
+		if n, err := io.CopyN(avatarData, r.Body, 1024*1024*16); err != nil && !errors.Is(err, io.EOF) {
+			handleInternalServerError(w, err)
+			return
+		} else if n == 1024*1024*16 { // 16 MB limit
+			http.Error(w, errorJson("Avatar data too large! Maximum size is 16 MB."), http.StatusBadRequest)
+			return
+		} else if n > 0 {
+			// Decode the image
+			originalImage, _, err := image.Decode(avatarData)
+			if err != nil {
+				http.Error(w, errorJson("Failed to decode avatar image! Supported formats: WebP, PNG, JPEG"),
+					http.StatusBadRequest)
+				return
+			}
+			// Crop the image
+			croppedImage := originalImage
+			if originalImage.Bounds().Dx() != originalImage.Bounds().Dy() {
+				res := min(originalImage.Bounds().Dx(), originalImage.Bounds().Dy(), 4096)
+				croppedImage = imaging.Fill(originalImage, res, res, imaging.Center, imaging.Lanczos)
+			} else if originalImage.Bounds().Dx() > 4096 || originalImage.Bounds().Dy() > 4096 {
+				croppedImage = imaging.Resize(originalImage, 4096, 4096, imaging.Lanczos)
+			}
+			// Encode the image
+			avatarData.Reset()
+			err = nativewebp.Encode(avatarData, croppedImage, &nativewebp.Options{
+				UseExtendedFormat: true,
+			})
+			if err != nil {
+				handleInternalServerError(w, err)
+				return
+			}
+			data = avatarData.Bytes()
+			hashBytes := sha256.Sum256(data)
+			hash = hex.EncodeToString(hashBytes[:])
+		}
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
+	defer tx.Rollback()
+
+	// Insert new avatar (ignore if avatar already exists)
+	if hash != "" {
+		if _, err := tx.Stmt(insertAvatarStmt).Exec(hash, data); err != nil {
+			handleInternalServerError(w, err)
+			return
+		}
+	}
+	// Update user avatar
+	avatarHash := sql.NullString{Valid: hash != "", String: hash}
+	if result, err := tx.Stmt(updateUserAvatarStmt).Exec(avatarHash, token.UserID); err != nil {
+		handleInternalServerError(w, err)
+		return
+	} else if rows, err := result.RowsAffected(); err != nil || rows != 1 {
+		handleInternalServerError(w, err) // nil err solved by Ostrich algorithm
+		return
+	}
+	// TODO: Delete old avatar
+	/* if user.Avatar != nil {
+		_, err := tx.Stmt(deleteAvatarStmt).Exec(*user.Avatar)
+		if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23503" {
+			// Do nothing
+		} else if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
+			// Do nothing
+		} else if err != nil {
+			handleInternalServerError(w, err)
+			return
+		}
+	} */
+	// Commit the transaction
+	if err := tx.Commit(); err != nil {
+		handleInternalServerError(w, err)
+		return
+	}
+
+	w.Write([]byte("{\"success\":true}"))
 }
 
 func GetUsernamesEndpoint(w http.ResponseWriter, r *http.Request) {
