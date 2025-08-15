@@ -202,10 +202,11 @@ func JoinRoomEndpoint(w http.ResponseWriter, r *http.Request) {
 	var silentlyDisconnect atomic.Bool
 	go (func() {
 		for msg := range writeChannel {
-			if msg == WsInternalAuthDisconnect {
+			switch msg {
+			case WsInternalAuthDisconnect:
 				wsError(c, "You are not authenticated to access this resource!", 4401)
 				return
-			} else if msg == WsInternalClientReconnect {
+			case WsInternalClientReconnect:
 				silentlyDisconnect.Store(true) // Don't notify other clients of a disconnect.
 				wsError(c, "You reconnected from the same client instance!", 4401)
 				return
