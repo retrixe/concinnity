@@ -29,7 +29,7 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Retrieve avatar from the database
 	var avatar Avatar
 	err := findAvatarByHashStmt.QueryRow(r.PathValue("hash")).Scan(
-		&avatar.Hash, &avatar.Data, &avatar.UpdatedAt, &avatar.UserID)
+		&avatar.Hash, &avatar.Data, &avatar.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, errorJson("Avatar not found!"), http.StatusNotFound)
 		return
@@ -47,7 +47,10 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// Resize image
-		resizedImage := imaging.Resize(originalImage, 256, 0, imaging.Lanczos)
+		resizedImage := originalImage
+		if originalImage.Bounds().Dx() > 256 || originalImage.Bounds().Dy() > 256 {
+			resizedImage = imaging.Resize(originalImage, 256, 256, imaging.Lanczos)
+		}
 		// Encode image
 		newDataWriter := new(bytes.Buffer)
 		err = nativewebp.Encode(newDataWriter, resizedImage, &nativewebp.Options{
@@ -61,7 +64,7 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	// Return the avatar
 	w.Header().Set("Content-Type", "image/webp")
-	http.ServeContent(w, r, avatar.Hash+".webp", avatar.UpdatedAt, bytes.NewReader(avatarData))
+	http.ServeContent(w, r, avatar.Hash+".webp", avatar.CreatedAt, bytes.NewReader(avatarData))
 }
 
 func GetUsernamesEndpoint(w http.ResponseWriter, r *http.Request) {

@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS users (
 	email VARCHAR(319) NOT NULL UNIQUE,
 	id UUID NOT NULL PRIMARY KEY,
 	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-	verified BOOLEAN NOT NULL DEFAULT FALSE);
+	verified BOOLEAN NOT NULL DEFAULT FALSE,
+	avatar VARCHAR(64) NULL DEFAULT NULL REFERENCES avatars(hash) ON DELETE RESTRICT);
 
 CREATE TABLE IF NOT EXISTS tokens (
 	token VARCHAR(128) NOT NULL PRIMARY KEY,
@@ -29,8 +30,7 @@ CREATE TABLE IF NOT EXISTS tokens (
 CREATE TABLE IF NOT EXISTS avatars (
   hash VARCHAR(64) NOT NULL PRIMARY KEY,
 	data LONGBLOB NOT NULL,
-	updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-	user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE);
+	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
 
 CREATE TABLE IF NOT EXISTS rooms (
 	id VARCHAR(24) NOT NULL PRIMARY KEY,
@@ -81,6 +81,11 @@ func UpgradeSqlTables() {
 ALTER TABLE tokens DROP CONSTRAINT ` + tokenFKeyName + `;
 ALTER TABLE tokens ADD CONSTRAINT ` + tokenFKeyName + ` FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
 
+-- Upgrading from concinnity 1.0.1
+ALTER TABLE users
+  ADD COLUMN avatar VARCHAR(64) NULL DEFAULT NULL,
+	ADD CONSTRAINT FOREIGN KEY (avatar) REFERENCES avatars(hash) ON DELETE RESTRICT;
+
 COMMIT;`)); err != nil {
 		log.Fatalln("Failed to run database schema upgrade!", err)
 	}
@@ -130,13 +135,13 @@ var (
 
 func PrepareSqlStatements() {
 	findUserByTokenStmt = prepareQuery("SELECT username, password, email, id, users.created_at " +
-		"AS user_created_at, verified, token, tokens.created_at AS token_created_at FROM tokens " +
+		"AS user_created_at, verified, avatar, token, tokens.created_at AS token_created_at FROM tokens " +
 		"JOIN users ON tokens.user_id = users.id WHERE token = $1;")
-	findUserByNameOrEmailStmt = prepareQuery("SELECT username, password, email, id, created_at, verified FROM users " +
+	findUserByNameOrEmailStmt = prepareQuery("SELECT username, password, email, id, created_at, verified, avatar FROM users " +
 		"WHERE username = $1 OR email = $2 LIMIT 1;")
-	findUserByUsernameStmt = prepareQuery("SELECT username, password, email, id, created_at, verified FROM users " +
+	findUserByUsernameStmt = prepareQuery("SELECT username, password, email, id, created_at, verified, avatar FROM users " +
 		"WHERE username = $1 LIMIT 1;")
-	findUserByEmailStmt = prepareQuery("SELECT username, password, email, id, created_at, verified FROM users " +
+	findUserByEmailStmt = prepareQuery("SELECT username, password, email, id, created_at, verified, avatar FROM users " +
 		"WHERE email = $1 LIMIT 1;")
 	if config.Database != "mysql" {
 		findUsernamesByIdStmt = prepareQuery("SELECT id, username FROM users WHERE id = ANY($1);")
@@ -164,7 +169,7 @@ func PrepareSqlStatements() {
 	purgeExpiredPasswordResetTokensStmt = prepareQuery(
 		"DELETE FROM password_reset_tokens WHERE created_at < NOW() - INTERVAL '10 minutes';")
 
-	findAvatarByHashStmt = prepareQuery("SELECT hash, data, updated_at, user_id FROM avatars WHERE hash = $1;")
+	findAvatarByHashStmt = prepareQuery("SELECT hash, data, created_at FROM avatars WHERE hash = $1;")
 	// insertAvatarStmt = prepareQuery("INSERT INTO avatars (hash, data, user_id) VALUES ($1, $2, $3);")
 
 	insertRoomStmt = prepareQuery("INSERT INTO rooms (id, type, target) " +

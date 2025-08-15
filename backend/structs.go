@@ -16,6 +16,7 @@ type User struct {
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"createdAt"`
 	Verified  bool      `json:"verified"`
+	Avatar    string    `json:"avatar"`
 }
 
 type Token struct {
@@ -27,8 +28,7 @@ type Token struct {
 type Avatar struct {
 	Hash      string    `json:"hash"`
 	Data      []byte    `json:"data"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	UserID    uuid.UUID `json:"userId"`
+	CreatedAt time.Time `json:"updatedAt"`
 }
 
 type Room struct {

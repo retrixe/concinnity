@@ -44,6 +44,7 @@ func IsAuthenticated(token string) (*User, *Token, error) {
 		&user.ID,
 		&user.CreatedAt,
 		&user.Verified,
+		&user.Avatar,
 		&token,
 		&tokenCreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -93,7 +94,7 @@ func LoginEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	var user User
 	err = findUserByNameOrEmailStmt.QueryRow(data.Username, data.Username).Scan(
-		&user.Username, &user.Password, &user.Email, &user.ID, &user.CreatedAt, &user.Verified)
+		&user.Username, &user.Password, &user.Email, &user.ID, &user.CreatedAt, &user.Verified, &user.Avatar)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, errorJson("No account with this username/email exists!"), http.StatusUnauthorized)
 		return
@@ -209,7 +210,7 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Check if an account with this username or email already exists.
 	var u User
 	err = findUserByEmailStmt.QueryRow(data.Email).Scan(
-		&u.Username, &u.Password, &u.Email, &u.ID, &u.CreatedAt, &u.Verified)
+		&u.Username, &u.Password, &u.Email, &u.ID, &u.CreatedAt, &u.Verified, &u.Avatar)
 	if err == nil {
 		http.Error(w, errorJson("An account with this e-mail already exists!"), http.StatusConflict)
 		return
@@ -218,7 +219,7 @@ func RegisterEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = findUserByUsernameStmt.QueryRow(data.Username).Scan(
-		&u.Username, &u.Password, &u.Email, &u.ID, &u.CreatedAt, &u.Verified)
+		&u.Username, &u.Password, &u.Email, &u.ID, &u.CreatedAt, &u.Verified, &u.Avatar)
 	if err == nil {
 		http.Error(w, errorJson("An account with this username already exists!"), http.StatusConflict)
 		return
@@ -265,7 +266,7 @@ func ForgotPasswordEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Get user info from the database.
 	var user User
 	err = tx.Stmt(findUserByNameOrEmailStmt).QueryRow(usernameEmail, usernameEmail).Scan(
-		&user.Username, &user.Password, &user.Email, &user.ID, &user.CreatedAt, &user.Verified)
+		&user.Username, &user.Password, &user.Email, &user.ID, &user.CreatedAt, &user.Verified, &user.Avatar)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, errorJson("No account with this username/email exists!"), http.StatusUnauthorized)
 		return
