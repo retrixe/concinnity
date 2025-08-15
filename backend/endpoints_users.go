@@ -38,10 +38,10 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// If ?size=256, downscale the avatar
-	avatarData := avatar.Data
+	avatarData := bytes.NewBuffer(avatar.Data)
 	if r.URL.Query().Get("size") == "256" {
 		// Decode original image
-		originalImage, err := nativewebp.Decode(bytes.NewReader(avatarData))
+		originalImage, err := nativewebp.Decode(avatarData)
 		if err != nil {
 			http.Error(w, errorJson("Failed to decode avatar image!"), http.StatusUnprocessableEntity)
 			return
@@ -50,21 +50,20 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 		resizedImage := originalImage
 		if originalImage.Bounds().Dx() > 256 || originalImage.Bounds().Dy() > 256 {
 			resizedImage = imaging.Resize(originalImage, 256, 256, imaging.Lanczos)
+			// Encode image
+			avatarData.Reset()
+			err = nativewebp.Encode(avatarData, resizedImage, &nativewebp.Options{
+				UseExtendedFormat: true,
+			})
+			if err != nil {
+				handleInternalServerError(w, err)
+				return
+			}
 		}
-		// Encode image
-		newDataWriter := new(bytes.Buffer)
-		err = nativewebp.Encode(newDataWriter, resizedImage, &nativewebp.Options{
-			UseExtendedFormat: true,
-		})
-		if err != nil {
-			http.Error(w, errorJson("Failed to encode avatar image!"), http.StatusInternalServerError)
-			return
-		}
-		avatarData = newDataWriter.Bytes()
 	}
 	// Return the avatar
 	w.Header().Set("Content-Type", "image/webp")
-	http.ServeContent(w, r, avatar.Hash+".webp", avatar.CreatedAt, bytes.NewReader(avatarData))
+	http.ServeContent(w, r, avatar.Hash+".webp", avatar.CreatedAt, bytes.NewReader(avatarData.Bytes()))
 }
 
 func GetUsernamesEndpoint(w http.ResponseWriter, r *http.Request) {
