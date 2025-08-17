@@ -171,7 +171,7 @@
       width: 100%;
     }
     .spacer {
-      height: 1rem;
+      height: 0.5rem;
     }
     @media screen and (width < 768px) {
       flex: 1;
@@ -187,16 +187,24 @@
     overflow-y: scroll;
     margin-bottom: 1rem;
     > h5 {
-      margin-top: 0.5rem;
+      margin-top: 1rem;
     }
   }
 
   .message-group {
-    margin-top: 0.5rem;
+    margin-top: 1rem;
     display: flex;
     gap: 1rem;
     > img {
       border-radius: 50%;
+    }
+    > img,
+    > :global(svg) {
+      min-height: 32px;
+      min-width: 32px;
+    }
+    > div {
+      min-width: 0;
     }
   }
 
