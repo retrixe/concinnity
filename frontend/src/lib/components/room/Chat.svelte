@@ -5,11 +5,13 @@
   // @ts-expect-error -- breaks `yarn preview` to import directly
   import { linkify } from 'remarkable/dist/cjs/linkify.js'
   import type { Plugin } from 'remarkable/lib'
+  import { User } from 'phosphor-svelte'
   import ky from '$lib/api/ky'
   import type { ChatMessage } from '$lib/api/room'
   import userProfileCache, { type UserProfile } from '$lib/state/userProfileCache.svelte'
   import TypingIndicator from './TypingIndicator.svelte'
   import type { SvelteMap } from 'svelte/reactivity'
+  import { PUBLIC_BACKEND_URL } from '$env/static/public'
 
   const systemUUID = '00000000-0000-0000-0000-000000000000'
 
@@ -68,6 +70,9 @@
   })
   const getUsername = (userId: string) =>
     userProfileCache.get(userId)?.username ?? userId.split('-')[0] // UUID
+  const getAvatarUrl = (userId: string) =>
+    userProfileCache.get(userId)?.avatar &&
+    `${PUBLIC_BACKEND_URL}/api/avatar/${userProfileCache.get(userId)?.avatar}?size=256`
   const replaceLeadingUUID = (message: string) => {
     const uuid = message.slice(0, message.indexOf(' '))
     return message.replace(uuid, getUsername(uuid))
@@ -111,14 +116,26 @@
           {replaceLeadingUUID(messageGroup.messages[0])} — {parseTimestamp(messageGroup.timestamp)}
         </h5>
       {:else}
-        <div>
-          <h4>{getUsername(messageGroup.userId)} — {parseTimestamp(messageGroup.timestamp)}</h4>
-          {#each messageGroup.messages as message, i (i)}
-            <div class="message-content">
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html remarkable.render(message)}
-            </div>
-          {/each}
+        <div class="message-group">
+          {#if getAvatarUrl(messageGroup.userId)}
+            <img
+              src={getAvatarUrl(messageGroup.userId)}
+              alt={`Avatar of ${getUsername(messageGroup.userId)}`}
+              height="32"
+              width="32"
+            />
+          {:else}
+            <User size={32} />
+          {/if}
+          <div>
+            <h4>{getUsername(messageGroup.userId)} — {parseTimestamp(messageGroup.timestamp)}</h4>
+            {#each messageGroup.messages as message, i (i)}
+              <div class="message-content">
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                {@html remarkable.render(message)}
+              </div>
+            {/each}
+          </div>
         </div>
       {/if}
     {/each}
@@ -169,21 +186,30 @@
     white-space: pre-line;
     overflow-y: scroll;
     margin-bottom: 1rem;
-    h4,
-    h5,
-    .message-content {
+    > h5 {
       margin-top: 0.5rem;
     }
-    .message-content {
-      &,
-      :global(blockquote) {
-        display: flex;
-        flex-direction: column;
-      }
-      :global(blockquote) {
-        padding-left: 1rem;
-        border-left: 4px solid gray;
-      }
+  }
+
+  .message-group {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 1rem;
+    > img {
+      border-radius: 50%;
+    }
+  }
+
+  .message-content {
+    margin-top: 0.5rem;
+    &,
+    :global(blockquote) {
+      display: flex;
+      flex-direction: column;
+    }
+    :global(blockquote) {
+      padding-left: 1rem;
+      border-left: 4px solid gray;
     }
   }
 </style>
