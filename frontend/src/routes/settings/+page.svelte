@@ -1,14 +1,15 @@
 <script lang="ts">
   import { Box, Button, IconButton, Toast } from 'heliodor'
-  import { Check, X } from 'phosphor-svelte'
+  import { Check, User, X } from 'phosphor-svelte'
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
+  import { PUBLIC_BACKEND_URL } from '$env/static/public'
   import DeleteAccountDialog from './DeleteAccountDialog.svelte'
   import ChangePasswordDialog from './ChangePasswordDialog.svelte'
   import ChangeUsernameDialog from './ChangeUsernameDialog.svelte'
   import ChangeEmailDialog from './ChangeEmailDialog.svelte'
 
-  const { userId, username, email } = $derived(page.data)
+  const { userId, username, email, avatar } = $derived(page.data)
 
   $effect(() => {
     if (!username) goto('/login', { replaceState: true }).catch(console.error)
@@ -26,6 +27,13 @@
   <h1>Account Settings</h1>
 
   <Box class="content">
+    <div class="profile-container">
+      {#if typeof avatar === 'string'}
+        <img src={`${PUBLIC_BACKEND_URL}/api/avatar/${avatar}`} alt="User Avatar" class="avatar" />
+      {:else}
+        <User size="192px" />
+      {/if}
+    </div>
     <div class="space-between">
       <div>
         <h4>Username</h4>
@@ -119,5 +127,21 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+  }
+
+  .profile-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 32px;
+    > :global(svg) {
+      border: 1px solid var(--divider-color);
+      border-radius: 50%;
+    }
+  }
+
+  .avatar {
+    border-radius: 50%;
+    width: 192px;
+    height: 192px;
   }
 </style>
