@@ -8,6 +8,8 @@
   import ChangePasswordDialog from './ChangePasswordDialog.svelte'
   import ChangeUsernameDialog from './ChangeUsernameDialog.svelte'
   import ChangeEmailDialog from './ChangeEmailDialog.svelte'
+  import ClearAvatarDialog from './ClearAvatarDialog.svelte'
+  import { openFileOrFiles } from '$lib/utils/openFile'
 
   const { userId, username, email, avatar } = $derived(page.data)
 
@@ -15,12 +17,36 @@
     if (!username) goto('/login', { replaceState: true }).catch(console.error)
   })
 
-  let currentDialog: 'changeUsername' | 'changeEmail' | 'changePassword' | 'deleteAccount' | null =
-    $state(null)
+  let currentDialog:
+    | 'clearAvatar'
+    | 'changeUsername'
+    | 'changeEmail'
+    | 'changePassword'
+    | 'deleteAccount'
+    | null = $state(null)
 
   let successMessage: string | null = $state(null)
 
   const handleDismissToast = () => (successMessage = null)
+
+  const handleChangeAvatar = async () => {
+    const file = await openFileOrFiles({
+      multiple: false,
+      types: [
+        {
+          description: 'JPEG/PNG images',
+          accept: {
+            'image/png': ['.png'],
+            'image/jpeg': ['.jpeg', '.jpg'],
+            'image/jpg': ['.jpg', '.jpeg'],
+          },
+        },
+      ],
+    })
+    // TODO: Post the request
+    // TODO: Show a toast if error or success
+    console.log(file)
+  }
 </script>
 
 <div class="container">
@@ -34,8 +60,14 @@
         <User size="15rem" />
       {/if}
       <div class="profile-buttons">
-        <IconButton><Pencil size="1.5rem" /></IconButton>
-        <IconButton><Trash color="var(--error-color)" size="1.5rem" /></IconButton>
+        <IconButton onclick={handleChangeAvatar}>
+          <Pencil size="1.5rem" />
+        </IconButton>
+        {#if avatar}
+          <IconButton onclick={() => (currentDialog = 'clearAvatar')}>
+            <Trash color="var(--error-color)" size="1.5rem" />
+          </IconButton>
+        {/if}
       </div>
     </div>
     <div class="space-between">
@@ -63,6 +95,12 @@
     <Button color="error" onclick={() => (currentDialog = 'deleteAccount')}>Delete Account</Button>
   </Box>
 </div>
+
+<ClearAvatarDialog
+  open={currentDialog === 'clearAvatar'}
+  onClose={() => (currentDialog = null)}
+  onSuccess={() => (successMessage = 'Avatar cleared successfully!')}
+/>
 
 <DeleteAccountDialog
   open={currentDialog === 'deleteAccount'}
