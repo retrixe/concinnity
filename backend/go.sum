@@ -1,7 +1,5 @@
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
-github.com/HugoSmits86/nativewebp v1.2.0 h1:XJtXeTg7FsOi9VB1elQYZy3n6VjYLqofSr3gGRLUOp4=
-github.com/HugoSmits86/nativewebp v1.2.0/go.mod h1:YNQuWenlVmSUUASVNhTDwf4d7FwYQGbGhklC8p72Vr8=
 github.com/coder/websocket v1.8.13-0.20241204191143-11bda985bf5f h1:7Yh9WzYAcDbxlUUEDma4nVMi5p4adbQxiuhtbV/MtDw=
 github.com/coder/websocket v1.8.13-0.20241204191143-11bda985bf5f/go.mod h1:LNVeNrXQZfe5qhS9ALED3uA+l5pPqvwXg3CKoDBB2gs=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/HugoSmits86/nativewebp"
 	"github.com/disintegration/imaging"
 	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
@@ -43,10 +42,10 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// If ?size=256, downscale the avatar
-	avatarData := bytes.NewBuffer(avatar.Data)
+	data := avatar.Data
 	if r.URL.Query().Get("size") == "256" {
 		// Decode original image
-		originalImage, err := nativewebp.Decode(avatarData)
+		originalImage, err := DecodeAVIF(avatar.Data)
 		if err != nil {
 			http.Error(w, errorJson("Failed to decode avatar image!"), http.StatusUnprocessableEntity)
 			return
@@ -56,10 +55,7 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 		if originalImage.Bounds().Dx() > 256 || originalImage.Bounds().Dy() > 256 {
 			resizedImage = imaging.Resize(originalImage, 256, 256, imaging.Lanczos)
 			// Encode image
-			avatarData.Reset()
-			err = nativewebp.Encode(avatarData, resizedImage, &nativewebp.Options{
-				UseExtendedFormat: true,
-			})
+			data, err = EncodeAVIF(resizedImage)
 			if err != nil {
 				handleInternalServerError(w, err)
 				return
@@ -67,8 +63,8 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	// Return the avatar
-	w.Header().Set("Content-Type", "image/webp")
-	http.ServeContent(w, r, avatar.Hash+".webp", avatar.CreatedAt, bytes.NewReader(avatarData.Bytes()))
+	w.Header().Set("Content-Type", "image/avif")
+	http.ServeContent(w, r, avatar.Hash+".avif", avatar.CreatedAt, bytes.NewReader(data))
 }
 
 func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +87,7 @@ func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 			// Decode the image
 			originalImage, _, err := image.Decode(avatarData)
 			if err != nil {
-				http.Error(w, errorJson("Failed to decode avatar image! Supported formats: WebP, PNG, JPEG"),
+				http.Error(w, errorJson("Failed to decode avatar image! Supported formats: PNG, JPEG"),
 					http.StatusBadRequest)
 				return
 			}
@@ -104,15 +100,11 @@ func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 				croppedImage = imaging.Resize(originalImage, 4096, 4096, imaging.Lanczos)
 			}
 			// Encode the image
-			avatarData.Reset()
-			err = nativewebp.Encode(avatarData, croppedImage, &nativewebp.Options{
-				UseExtendedFormat: true,
-			})
+			data, err = EncodeAVIF(croppedImage)
 			if err != nil {
 				handleInternalServerError(w, err)
 				return
 			}
-			data = avatarData.Bytes()
 			hashBytes := sha256.Sum256(data)
 			hash = hex.EncodeToString(hashBytes[:])
 		}

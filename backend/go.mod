@@ -3,7 +3,6 @@ module github.com/retrixe/concinnity
 go 1.24
 
 require (
-	github.com/HugoSmits86/nativewebp v1.2.0
 	github.com/coder/websocket v1.8.13-0.20241204191143-11bda985bf5f
 	github.com/disintegration/imaging v1.6.2
 	github.com/go-sql-driver/mysql v1.8.1

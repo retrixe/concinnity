@@ -5,9 +5,13 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"image"
+	"image/png"
 	"log"
 	"net/http"
 	"net/smtp"
+	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -99,4 +103,63 @@ func SendHTMLEmail(email string, subject string, body string) error {
 		"\r\n" +
 		strings.ReplaceAll(body, "\n", "\r\n") + "\r\n")
 	return smtp.SendMail(host, auth, from, []string{email}, msg)
+}
+
+func DecodeAVIF(data []byte) (image.Image, error) {
+	// Create a temporary file containing the AVIF data
+	file, err := os.CreateTemp(os.TempDir(), "concinnity-*.avif")
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(file.Name())
+	if _, err := file.Write(data); err != nil {
+		return nil, err
+	} else if err := file.Close(); err != nil {
+		return nil, err
+	}
+
+	// Decode to PNG and read back the data
+	defer os.Remove(file.Name() + ".png")
+	if err := exec.Command("avifdec", "--png-compress", "0", file.Name(), file.Name()+".png").Run(); err != nil {
+		return nil, err
+	}
+	file, err = os.Open(file.Name() + ".png")
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	img, err := png.Decode(file)
+	if err != nil {
+		return nil, err
+	}
+	return img, nil
+}
+
+func EncodeAVIF(image image.Image) ([]byte, error) {
+	// Create a temporary file to encode the image to PNG
+	file, err := os.CreateTemp(os.TempDir(), "concinnity-*.png")
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(file.Name())
+	encoder := png.Encoder{CompressionLevel: png.NoCompression}
+	if err := encoder.Encode(file, image); err != nil {
+		return nil, err
+	} else if err := file.Close(); err != nil {
+		return nil, err
+	}
+
+	// Encode to AVIF using avifenc
+	defer os.Remove(file.Name() + ".avif")
+	// Anecdotal samples:
+	// - Quality wise, 80 can be visually lacking with some images, 85 is fine, 90 is almost perfect
+	// - File size wise, 85 sits midway between 80-90 for similar quality to 90
+	if err := exec.Command("avifenc", "-q", "85", file.Name(), file.Name()+".avif").Run(); err != nil {
+		return nil, err
+	}
+	data, err := os.ReadFile(file.Name() + ".avif")
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
