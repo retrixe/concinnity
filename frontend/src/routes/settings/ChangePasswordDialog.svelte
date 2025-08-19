@@ -91,7 +91,7 @@
   {#if error}
     <p class="gutter-bottom error">{error}</p>
   {/if}
-  <Button class="change-password-btn" onclick={handleChangePassword}>Submit</Button>
+  <Button class="change-password-btn" {disabled} onclick={handleChangePassword}>Submit</Button>
 </Dialog>
 
 <style lang="scss">

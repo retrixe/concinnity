@@ -77,7 +77,7 @@
   {#if error}
     <p class="gutter-bottom error">{error}</p>
   {/if}
-  <Button class="change-username-btn" onclick={handleChangeUsername}>Submit</Button>
+  <Button class="change-username-btn" {disabled} onclick={handleChangeUsername}>Submit</Button>
 </Dialog>
 
 <style lang="scss">

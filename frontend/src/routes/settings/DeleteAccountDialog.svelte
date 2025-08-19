@@ -66,7 +66,7 @@
       Account deleted successfully! You will be redirected to the <a href="/">homepage</a> shortly...
     </p>
   {/if}
-  <Button class="delete-account-btn" onclick={handleDeleteAccount}>Confirm</Button>
+  <Button class="delete-account-btn" {disabled} onclick={handleDeleteAccount}>Confirm</Button>
 </Dialog>
 
 <style lang="scss">
