@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Box, Button, IconButton, Toast } from 'heliodor'
-  import { Check, User, X } from 'phosphor-svelte'
+  import { Check, Pencil, Trash, User, X } from 'phosphor-svelte'
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
   import { PUBLIC_BACKEND_URL } from '$env/static/public'
@@ -31,8 +31,12 @@
       {#if typeof avatar === 'string'}
         <img src={`${PUBLIC_BACKEND_URL}/api/avatar/${avatar}`} alt="User Avatar" class="avatar" />
       {:else}
-        <User size="192px" />
+        <User size="15rem" />
       {/if}
+      <div class="profile-buttons">
+        <IconButton><Pencil size="1.5rem" /></IconButton>
+        <IconButton><Trash color="var(--error-color)" size="1.5rem" /></IconButton>
+      </div>
     </div>
     <div class="space-between">
       <div>
@@ -130,18 +134,32 @@
   }
 
   .profile-container {
-    display: flex;
+    display: grid;
     justify-content: center;
-    margin-bottom: 32px;
+    margin: 32px 0;
+    gap: 1rem;
     > :global(svg) {
       border: 1px solid var(--divider-color);
-      border-radius: 50%;
     }
   }
 
+  .profile-container > :global(svg),
   .avatar {
+    grid-area: 1 / 1;
     border-radius: 50%;
-    width: 192px;
-    height: 192px;
+    width: 15rem;
+    height: 15rem;
+  }
+
+  .profile-buttons {
+    grid-area: 1 / 1;
+    place-self: end;
+
+    display: flex;
+    gap: 4px;
+    border: 1px solid var(--divider-color);
+    border-radius: 0.5rem;
+    background-color: var(--surface-color);
+    box-shadow: 0 0 1rem rgba(0, 0, 0, 0.2);
   }
 </style>
