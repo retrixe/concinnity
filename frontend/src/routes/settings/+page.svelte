@@ -1,15 +1,16 @@
 <script lang="ts">
   import { Box, Button, IconButton, Toast } from 'heliodor'
-  import { Check, Pencil, Trash, User, X } from 'phosphor-svelte'
-  import { goto } from '$app/navigation'
+  import { Check, Pencil, Trash, User, X, XCircle } from 'phosphor-svelte'
+  import { goto, invalidate } from '$app/navigation'
   import { page } from '$app/state'
   import { PUBLIC_BACKEND_URL } from '$env/static/public'
+  import { openFileOrFiles } from '$lib/utils/openFile'
+  import ky from '$lib/api/ky'
   import DeleteAccountDialog from './DeleteAccountDialog.svelte'
   import ChangePasswordDialog from './ChangePasswordDialog.svelte'
   import ChangeUsernameDialog from './ChangeUsernameDialog.svelte'
   import ChangeEmailDialog from './ChangeEmailDialog.svelte'
   import ClearAvatarDialog from './ClearAvatarDialog.svelte'
-  import { openFileOrFiles } from '$lib/utils/openFile'
 
   const { userId, username, email, avatar } = $derived(page.data)
 
@@ -25,9 +26,11 @@
     | 'deleteAccount'
     | null = $state(null)
 
-  let successMessage: string | null = $state(null)
+  let toastMessage: [boolean, string] | null = $state(null)
 
-  const handleDismissToast = () => (successMessage = null)
+  const handleDismissToast = () => (toastMessage = null)
+
+  let avatarAbortController: AbortController | null = $state(null)
 
   const handleChangeAvatar = async () => {
     const file = await openFileOrFiles({
@@ -43,9 +46,21 @@
         },
       ],
     })
-    // TODO: Post the request
-    // TODO: Show a toast if error or success
-    console.log(file)
+    if (!file) return
+    // Post the request
+    avatarAbortController = new AbortController()
+    try {
+      await ky.post(`api/avatar`, { body: file, signal: avatarAbortController.signal }).json()
+      // If successful, show a toast
+      await invalidate('app:auth')
+      toastMessage = [true, 'Avatar changed successfully!']
+    } catch (e: unknown) {
+      toastMessage = [
+        false,
+        e instanceof Error ? e.message : (e?.toString() ?? `Failed to clear avatar!`),
+      ]
+    }
+    avatarAbortController = null
   }
 </script>
 
@@ -60,11 +75,14 @@
         <User size="15rem" />
       {/if}
       <div class="profile-buttons">
-        <IconButton onclick={handleChangeAvatar}>
+        <IconButton onclick={handleChangeAvatar} disabled={!!avatarAbortController}>
           <Pencil size="1.5rem" />
         </IconButton>
         {#if avatar}
-          <IconButton onclick={() => (currentDialog = 'clearAvatar')}>
+          <IconButton
+            onclick={() => (currentDialog = 'clearAvatar')}
+            disabled={!!avatarAbortController}
+          >
             <Trash color="var(--error-color)" size="1.5rem" />
           </IconButton>
         {/if}
@@ -99,7 +117,7 @@
 <ClearAvatarDialog
   open={currentDialog === 'clearAvatar'}
   onClose={() => (currentDialog = null)}
-  onSuccess={() => (successMessage = 'Avatar cleared successfully!')}
+  onSuccess={() => (toastMessage = [true, 'Avatar cleared successfully!'])}
 />
 
 <DeleteAccountDialog
@@ -110,24 +128,35 @@
 <ChangePasswordDialog
   open={currentDialog === 'changePassword'}
   onClose={() => (currentDialog = null)}
-  onSuccess={() => (successMessage = 'Password changed successfully!')}
+  onSuccess={() => (toastMessage = [true, 'Password changed successfully!'])}
 />
 
 <ChangeEmailDialog
   open={currentDialog === 'changeEmail'}
   onClose={() => (currentDialog = null)}
-  onSuccess={() => (successMessage = 'E-mail changed successfully!')}
+  onSuccess={() => (toastMessage = [true, 'E-mail changed successfully!'])}
 />
 
 <ChangeUsernameDialog
   open={currentDialog === 'changeUsername'}
   onClose={() => (currentDialog = null)}
-  onSuccess={() => (successMessage = 'Username changed successfully!')}
+  onSuccess={() => (toastMessage = [true, 'Username changed successfully!'])}
 />
 
-{#if successMessage !== null}
-  <Toast message={successMessage} duration={3000} onclose={handleDismissToast} color="success">
-    {#snippet icon()}<Check weight="bold" size="1.5rem" />{/snippet}
+{#if toastMessage !== null}
+  <Toast
+    message={toastMessage[1]}
+    duration={3000}
+    onclose={handleDismissToast}
+    color={toastMessage[0] ? 'success' : 'error'}
+  >
+    {#snippet icon()}
+      {#if toastMessage?.[0]}
+        <Check weight="bold" size="1.5rem" />
+      {:else}
+        <XCircle weight="bold" size="1.5rem" />
+      {/if}
+    {/snippet}
     {#snippet footer()}
       <IconButton onclick={handleDismissToast} aria-label="Close">
         <X weight="thin" size="1.5rem" />
