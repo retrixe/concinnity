@@ -33,6 +33,7 @@
     subtitles: Record<string, string | null>
     fullscreenEl: Element
     onStop: () => void
+    customActions: Record<string, () => void>
   }
   const id = page.params.id
   const {
@@ -43,6 +44,7 @@
     subtitles = $bindable(), // TODO: Remove the bindables and rework how this data flow works...
     fullscreenEl,
     onStop: handleStop,
+    customActions,
   }: Props = $props()
 
   let videoEl = $state(null) as HTMLVideoElement | null
@@ -74,13 +76,8 @@
       autoplayNotif = false
     } else {
       const promise = videoEl?.play()
-      promise
-        ?.then(() => {
-          autoplayNotif = false
-        })
-        .catch(() => {
-          autoplayNotif = true
-        })
+      autoplayNotif = false
+      promise?.catch(() => (autoplayNotif = true))
     }
   }
   $effect(synchroniseToPlayerState)
@@ -392,6 +389,11 @@
               <Plus weight="bold" size="1rem" />
             </Button>
           {:else}
+            {#each Object.keys(customActions) as action (action)}
+              <Button onclick={customActions[action]}>
+                <span>{action}</span>
+              </Button>
+            {/each}
             <Button onclick={synchroniseToPlayerState}>
               <span>Sync to others</span>
             </Button>

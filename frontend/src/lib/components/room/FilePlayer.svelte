@@ -30,11 +30,18 @@
     fullscreenEl,
   }: Props = $props()
 
-  let video = $state<File | null>(null)
-  const target = $derived(roomInfo.target.substring(roomInfo.target.indexOf(':') + 1))
-  const src = $derived(
-    roomInfo.type === RoomType.RemoteFile ? target : video ? URL.createObjectURL(video) : null,
+  let currentVideo = $state<File | string | null>(
+    roomInfo.type === RoomType.RemoteFile
+      ? roomInfo.target.substring(roomInfo.target.indexOf(':') + 1)
+      : null,
   )
+  const src = $derived(
+    currentVideo && typeof currentVideo !== 'string'
+      ? URL.createObjectURL(currentVideo)
+      : currentVideo,
+  )
+
+  const target = $derived(roomInfo.target.substring(roomInfo.target.indexOf(':') + 1))
   const name = $derived(
     roomInfo.type === RoomType.RemoteFile
       ? decodeURIComponent(target.substring(target.lastIndexOf('/') + 1))
@@ -44,14 +51,14 @@
   // If transientVideo matches up with the target, play it, else discard it
   $effect(() => {
     if (roomInfo.type === RoomType.LocalFile && transientVideo !== null) {
-      if (video === null && name === transientVideo.name) video = transientVideo
+      if (currentVideo === null && name === transientVideo.name) currentVideo = transientVideo
       transientVideo = null
     }
   })
 
   const handleSelectVideo = async () => {
     try {
-      video =
+      currentVideo =
         (await openFileOrFiles({
           types: [
             // .mkv is not supported by Firefox (so far, tested on Linux + Chrome / Firefox)
@@ -97,6 +104,7 @@
       bind:subtitles
       onStop={handleStop}
       {fullscreenEl}
+      customActions={{ 'Change video file': () => (currentVideo = null) }}
     />
   {/if}
   {#if error}
