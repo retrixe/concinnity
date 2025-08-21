@@ -86,9 +86,11 @@ ALTER TABLE tokens DROP CONSTRAINT ` + tokenFKeyName + `;
 ALTER TABLE tokens ADD CONSTRAINT ` + tokenFKeyName + ` FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
 
 -- Upgrading from concinnity 1.0.1
+-- [#Postgres] ALTER TABLE users DROP CONSTRAINT IF EXISTS ` + avatarFKeyName + `;
 ALTER TABLE users
-  ADD COLUMN avatar VARCHAR(64) NULL DEFAULT NULL,
-	ADD CONSTRAINT ` + avatarFKeyName + ` FOREIGN KEY (avatar) REFERENCES avatars(hash) ON DELETE RESTRICT;
+  ADD COLUMN IF NOT EXISTS avatar VARCHAR(64) NULL DEFAULT NULL,
+-- [#Postgres]	ADD CONSTRAINT ` + avatarFKeyName + ` FOREIGN KEY (avatar) REFERENCES avatars(hash) ON DELETE RESTRICT;
+-- [#MySQL]	    ADD CONSTRAINT FOREIGN KEY IF NOT EXISTS ` + avatarFKeyName + ` (avatar) REFERENCES avatars(hash) ON DELETE RESTRICT;
 -- [#Postgres] ALTER TABLE rooms ALTER COLUMN target TYPE VARCHAR(1024);
 -- [#MySQL]    ALTER TABLE rooms MODIFY COLUMN target VARCHAR(1024) NOT NULL;
 
@@ -241,8 +243,11 @@ func translate(query string) string {
 		query = regexp.MustCompile(`ON CONFLICT \([^)]+\) DO UPDATE SET`).ReplaceAllString(query, "ON DUPLICATE KEY UPDATE")
 		// DELETE ... RETURNING works only with MariaDB 10.0+ (not MySQL!)
 		query = strings.ReplaceAll(query, "gen_random_uuid", "UUID") // UUID_v7() is MariaDB 11.7+ only!
+		// ADD COLUMN IF NOT EXISTS works only with MariaDB 10.0+ (not MySQL!)
+		// ADD CONSTRAINT IF NOT EXISTS works only with MariaDB 10.0+ (not MySQL!)
 		query = strings.ReplaceAll(query, "-- [#MySQL]", "")
 	} else {
+		// ADD CONSTRAINT IF NOT EXISTS is unsupported by PostgreSQL.
 		query = strings.ReplaceAll(query, "LONGBLOB", "BYTEA")
 		query = strings.ReplaceAll(query, "MEDIUMTEXT", "TEXT")
 		query = strings.ReplaceAll(query, "-- [#Postgres]", "")
