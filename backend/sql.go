@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS rooms (
 	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 	modified_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 	type VARCHAR(24) NOT NULL, /* local_file, remote_file */
-	target VARCHAR(200) NOT NULL, /* carries information like file name, YouTube ID, etc */
+	target VARCHAR(1024) NOT NULL, /* carries information like file name, YouTube ID, etc */
 	paused BOOLEAN NOT NULL DEFAULT TRUE,
 	speed DECIMAL NOT NULL DEFAULT 1,
 	timestamp DECIMAL NOT NULL DEFAULT 0,
@@ -89,6 +89,8 @@ ALTER TABLE tokens ADD CONSTRAINT ` + tokenFKeyName + ` FOREIGN KEY (user_id) RE
 ALTER TABLE users
   ADD COLUMN avatar VARCHAR(64) NULL DEFAULT NULL,
 	ADD CONSTRAINT ` + avatarFKeyName + ` FOREIGN KEY (avatar) REFERENCES avatars(hash) ON DELETE RESTRICT;
+-- [#Postgres] ALTER TABLE rooms ALTER COLUMN target TYPE VARCHAR(1024);
+-- [#MySQL]    ALTER TABLE rooms MODIFY COLUMN target VARCHAR(1024) NOT NULL;
 
 COMMIT;`)); err != nil {
 		log.Fatalln("Failed to run database schema upgrade!", err)
@@ -239,9 +241,11 @@ func translate(query string) string {
 		query = regexp.MustCompile(`ON CONFLICT \([^)]+\) DO UPDATE SET`).ReplaceAllString(query, "ON DUPLICATE KEY UPDATE")
 		// DELETE ... RETURNING works only with MariaDB 10.0+ (not MySQL!)
 		query = strings.ReplaceAll(query, "gen_random_uuid", "UUID") // UUID_v7() is MariaDB 11.7+ only!
+		query = strings.ReplaceAll(query, "-- [#MySQL]", "")
 	} else {
 		query = strings.ReplaceAll(query, "LONGBLOB", "BYTEA")
 		query = strings.ReplaceAll(query, "MEDIUMTEXT", "TEXT")
+		query = strings.ReplaceAll(query, "-- [#Postgres]", "")
 	}
 	return query
 }
