@@ -5,7 +5,7 @@
   import { openFileOrFiles } from '$lib/utils/openFile'
   import { CaretDown } from 'phosphor-svelte'
   import VideoPlayer from './VideoPlayer.svelte'
-  import { DropdownButton, Menu, MenuItem } from 'heliodor'
+  import { Button, Dialog, DropdownButton, Menu, MenuItem, TextInput } from 'heliodor'
 
   interface Props {
     error: string | null
@@ -40,14 +40,12 @@
       ? URL.createObjectURL(currentVideo)
       : currentVideo,
   )
-
   const target = $derived(roomInfo.target.substring(roomInfo.target.indexOf(':') + 1))
   const name = $derived(
     roomInfo.type === RoomType.RemoteFile
       ? decodeURIComponent(target.substring(target.lastIndexOf('/') + 1))
       : target,
   )
-  let menuOpen = $state(false)
   // If transientVideo matches up with the target, play it, else discard it
   $effect(() => {
     if (roomInfo.type === RoomType.LocalFile && transientVideo !== null) {
@@ -55,6 +53,9 @@
       transientVideo = null
     }
   })
+
+  let menuOpen = $state(false)
+  let remoteFileUrl: string | null = $state(null)
 
   const handleSelectVideo = async () => {
     try {
@@ -67,6 +68,13 @@
         })) ?? null
     } catch (e: unknown) {
       console.error('Failed to select local file!', e)
+    }
+  }
+
+  const handlePlayRemoteFile = () => {
+    if (remoteFileUrl) {
+      currentVideo = remoteFileUrl
+      remoteFileUrl = null
     }
   }
 
@@ -91,9 +99,21 @@
         {#snippet primaryChild()}Select local file{/snippet}
         {#snippet secondaryChild()}<CaretDown weight="bold" size="1rem" />{/snippet}
         <Menu open={menuOpen} onClose={() => (menuOpen = false)}>
-          <MenuItem onclick={handleStop}>Play another video</MenuItem>
+          <MenuItem onclick={() => (remoteFileUrl = '')}>Play from remote URL</MenuItem>
+          <MenuItem onclick={handleStop}>Stop playing this video</MenuItem>
         </Menu>
       </DropdownButton>
+      <Dialog open={remoteFileUrl !== null} onClose={() => (remoteFileUrl = null)}>
+        <h2>Enter URL of remote file</h2>
+        <!-- eslint-disable @typescript-eslint/no-non-null-assertion -->
+        <TextInput
+          bind:value={remoteFileUrl!}
+          type="url"
+          placeholder="e.g. https://retrixe.xyz/example.mp4"
+        />
+        <!-- eslint-enable @typescript-eslint/no-non-null-assertion -->
+        <Button onclick={handlePlayRemoteFile}>Play</Button>
+      </Dialog>
     </div>
   {:else}
     <VideoPlayer
@@ -154,5 +174,10 @@
     @media screen and (min-width: 768px) {
       flex: 1;
     }
+  }
+
+  :global(.dialog-content) {
+    color: var(--color);
+    gap: 1rem;
   }
 </style>
