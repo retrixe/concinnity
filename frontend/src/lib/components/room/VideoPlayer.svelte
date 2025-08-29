@@ -170,16 +170,17 @@
 
   // In case the subtitles are replaced at the parent component, we use $effect here
   $effect(() => {
-    if (subtitle?.[0] && !subtitles[subtitle[1]]) {
+    if (subtitle?.[0] && subtitles[subtitle[1]] === null) {
       const name = subtitle[1]
-      subtitles[name] = ''
+      subtitles[name] = '' // Loading state
       ky(`api/room/${id}/subtitle?name=${encodeURIComponent(name)}`)
         .text()
         .then(text => (subtitles[name] = text))
         .catch((e: unknown) => {
-          alert('Failed to retrieve subtitles!')
+          alert('Failed to retrieve subtitles!\nSubtitles have been switched off.')
           console.error('Failed to retrieve subtitles!', e)
-          subtitles[name] = null
+          subtitles[name] = null // Set the subtitles as missing
+          subtitle = [false, name] // Disable subtitles
         })
     }
   })
