@@ -12,6 +12,7 @@ import (
 	"net/smtp"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -135,7 +136,7 @@ func DecodeAVIF(data []byte) (image.Image, error) {
 	return img, nil
 }
 
-func EncodeAVIF(image image.Image) ([]byte, error) {
+func EncodeAVIF(image image.Image, quality int) ([]byte, error) {
 	// Create a temporary file to encode the image to PNG
 	file, err := os.CreateTemp(os.TempDir(), "concinnity-*.png")
 	if err != nil {
@@ -151,11 +152,14 @@ func EncodeAVIF(image image.Image) ([]byte, error) {
 
 	// Encode to AVIF using avifenc
 	defer os.Remove(file.Name() + ".avif")
-	// Anecdotal samples:
-	// - Quality wise, 80 can be visually lacking with some images, 85 is fine, 90 is almost perfect
-	// - File size wise, 85 sits midway between 80-90 for similar quality to 90
-	if err := exec.Command("avifenc", "-q", "85", file.Name(), file.Name()+".avif").Run(); err != nil {
-		return nil, err
+	if quality == 100 {
+		if err := exec.Command("avifenc", "-l", file.Name(), file.Name()+".avif").Run(); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := exec.Command("avifenc", "-q", strconv.Itoa(quality), file.Name(), file.Name()+".avif").Run(); err != nil {
+			return nil, err
+		}
 	}
 	data, err := os.ReadFile(file.Name() + ".avif")
 	if err != nil {

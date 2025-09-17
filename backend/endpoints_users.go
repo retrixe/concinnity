@@ -18,6 +18,11 @@ import (
 	"github.com/lib/pq"
 )
 
+// Anecdotal samples:
+// - Quality wise, 80 can be visually lacking with some images, 85 is fine, 90 is almost perfect
+// - File size wise, 85 sits midway between 80-90 for similar quality to 90
+const AVIF_QUALITY = 85
+
 func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 	// This endpoint does not require authentication
 	if len(r.PathValue("hash")) != 64 {
@@ -41,7 +46,7 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 		handleInternalServerError(w, err)
 		return
 	}
-	// If ?size=256, downscale the avatar
+	// If ?size=256, downscale the avatar, otherwise for 4096, return the original lossless image
 	data := avatar.Data
 	if r.URL.Query().Get("size") == "256" {
 		// Decode original image
@@ -55,7 +60,7 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 		if originalImage.Bounds().Dx() > 256 || originalImage.Bounds().Dy() > 256 {
 			resizedImage = imaging.Resize(originalImage, 256, 256, imaging.Lanczos)
 			// Encode image
-			data, err = EncodeAVIF(resizedImage)
+			data, err = EncodeAVIF(resizedImage, AVIF_QUALITY)
 			if err != nil {
 				handleInternalServerError(w, err)
 				return
@@ -100,7 +105,7 @@ func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 				croppedImage = imaging.Resize(originalImage, 4096, 4096, imaging.Lanczos)
 			}
 			// Encode the image
-			data, err = EncodeAVIF(croppedImage)
+			data, err = EncodeAVIF(croppedImage, 100)
 			if err != nil {
 				handleInternalServerError(w, err)
 				return
