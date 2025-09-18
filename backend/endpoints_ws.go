@@ -88,7 +88,7 @@ type SubtitleMessageOutgoing struct {
 type UserProfileUpdateMessageOutgoing struct {
 	Type string      `json:"type"` // user_profile_update
 	ID   uuid.UUID   `json:"id"`
-	Data interface{} `json:"data"`
+	Data interface{} `json:"data"` // Partial User struct
 }
 
 const (
