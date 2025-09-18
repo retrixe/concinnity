@@ -43,8 +43,8 @@ type Room struct {
 	Type       string    `json:"type"`
 	Target     string    `json:"target"`
 
-	Chat      []ChatMessage `json:"chat,omitempty"`
-	Subtitles []string      `json:"subtitles,omitempty"`
+	Chat      []ChatMessage `json:"chat,omitempty"`      // Omitted in WebSocket room info
+	Subtitles []string      `json:"subtitles,omitempty"` // Omitted in WebSocket room info
 
 	Paused     bool      `json:"paused"`
 	Speed      float64   `json:"speed"`
@@ -54,7 +54,6 @@ type Room struct {
 
 type ChatMessage struct {
 	ID        int       `json:"id"`
-	RoomID    string    `json:"roomId,omitempty"`
 	UserID    uuid.UUID `json:"userId"`
 	Message   string    `json:"message"`
 	Timestamp time.Time `json:"timestamp"`
