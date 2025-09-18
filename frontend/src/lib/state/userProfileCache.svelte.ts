@@ -1,9 +1,5 @@
 import { SvelteMap } from 'svelte/reactivity'
-
-export interface UserProfile {
-  username: string
-  avatar: string | null
-}
+import type { UserProfile } from '$lib/api/room'
 
 const userProfileCache = new SvelteMap<string, UserProfile | null>()
 

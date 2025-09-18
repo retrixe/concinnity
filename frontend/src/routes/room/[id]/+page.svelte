@@ -12,6 +12,7 @@
     isIncomingRoomInfoMessage,
     isIncomingSubtitleMessage,
     isIncomingTypingIndicator,
+    isIncomingUserProfileUpdateMessage,
     MessageType,
     RoomType,
     type ChatMessage,
@@ -22,6 +23,7 @@
   } from '$lib/api/room'
   import * as soundEffects from '$lib/utils/soundEffects'
   import { SvelteMap } from 'svelte/reactivity'
+  import userProfileCache from '$lib/state/userProfileCache.svelte'
 
   const systemUUID = '00000000-0000-0000-0000-000000000000'
   const timeout = 30000
@@ -109,6 +111,11 @@
         if (visibilityState !== 'visible') unreadMessageCount += newMessages.length
       } else if (isIncomingSubtitleMessage(message)) {
         message.data.forEach(name => (subtitles[name] = null))
+      } else if (isIncomingUserProfileUpdateMessage(message)) {
+        const existing = userProfileCache.get(message.id)
+        if (existing) {
+          userProfileCache.set(message.id, { ...existing, ...message.data })
+        }
       } else if (message.type === MessageType.Pong) {
         pongDeadline = Date.now() + timeout // Reset pong deadline
       } else {

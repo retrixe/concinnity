@@ -13,6 +13,11 @@ export interface ChatMessage {
   timestamp: string
 }
 
+export interface UserProfile {
+  username: string
+  avatar: string | null
+}
+
 export interface RoomInfo {
   id: string
   createdAt: string
@@ -97,6 +102,7 @@ export enum MessageType {
   PlayerState = 'player_state',
   Subtitle = 'subtitle',
   Pong = 'pong',
+  UserProfileUpdate = 'user_profile_update',
 }
 
 export interface GenericMessage {
@@ -129,6 +135,12 @@ export interface IncomingSubtitleMessage extends GenericMessage {
   data: string[]
 }
 
+export interface IncomingUserProfileUpdateMessage extends GenericMessage {
+  type: MessageType.UserProfileUpdate
+  id: string
+  data: Partial<UserProfile>
+}
+
 export const isIncomingChatMessage = (message: GenericMessage): message is IncomingChatMessage =>
   message.type === MessageType.Chat && Array.isArray((message as IncomingChatMessage).data)
 
@@ -147,3 +159,7 @@ export const isIncomingRoomInfoMessage = (
 export const isIncomingSubtitleMessage = (
   message: GenericMessage,
 ): message is IncomingSubtitleMessage => message.type === MessageType.Subtitle
+
+export const isIncomingUserProfileUpdateMessage = (
+  message: GenericMessage,
+): message is IncomingUserProfileUpdateMessage => message.type === MessageType.UserProfileUpdate
