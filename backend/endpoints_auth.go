@@ -156,9 +156,9 @@ func LogoutEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	// Disconnect existing sessions
 	if conns, ok := userConns.Load(userID); ok {
-		conns.Range(func(key chan<- interface{}, value string) bool {
-			if value == token {
-				key <- WsInternalAuthDisconnect
+		conns.Range(func(conn chan<- interface{}, connInfo UserConnInfo) bool {
+			if connInfo.Token == token {
+				conn <- WsInternalAuthDisconnect
 			}
 			return true
 		})
@@ -558,6 +558,10 @@ func ChangeUsernameEndpoint(w http.ResponseWriter, r *http.Request) {
 		handleInternalServerError(w, err) // nil err solved by Ostrich algorithm
 		return
 	}
+
+	propagateUserProfileUpdate(user.ID, struct {
+		Username string `json:"username"`
+	}{Username: data.NewUsername})
 	w.Write([]byte("{\"success\":true}"))
 }
 

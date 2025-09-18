@@ -85,6 +85,12 @@ type SubtitleMessageOutgoing struct {
 	Data []string `json:"data"`
 }
 
+type UserProfileUpdateMessageOutgoing struct {
+	Type string      `json:"type"` // user_profile_update
+	ID   uuid.UUID   `json:"id"`
+	Data interface{} `json:"data"`
+}
+
 const (
 	WsInternalAuthDisconnect = iota
 	WsInternalClientReconnect

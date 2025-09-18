@@ -156,6 +156,13 @@ func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	hashOrNil := &hash
+	if hash == "" {
+		hashOrNil = nil
+	}
+	propagateUserProfileUpdate(user.ID, struct {
+		Avatar *string `json:"avatar"`
+	}{Avatar: hashOrNil})
 	w.Write([]byte("{\"success\":true}"))
 }
 
@@ -214,4 +221,26 @@ func GetUserProfilesEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(usernames)
+}
+
+func propagateUserProfileUpdate(userID uuid.UUID, update interface{}) {
+	if conns, ok := userConns.Load(userID); ok {
+		rooms := make(map[string]struct{})
+		conns.Range(func(_ chan<- interface{}, connInfo UserConnInfo) bool {
+			rooms[connInfo.RoomID] = struct{}{}
+			return true
+		})
+		for roomID := range rooms {
+			if users, ok := roomMembers.Load(roomID); ok {
+				users.Range(func(_ RoomConnID, conn chan<- interface{}) bool {
+					conn <- UserProfileUpdateMessageOutgoing{
+						Type: "user_profile_update",
+						ID:   userID,
+						Data: update,
+					}
+					return true
+				})
+			}
+		}
+	}
 }

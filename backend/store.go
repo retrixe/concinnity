@@ -14,11 +14,16 @@ type RoomConnID struct {
 	ClientID string
 }
 
+type UserConnInfo struct {
+	RoomID string
+	Token  string
+}
+
 type RoomMembers = *xsync.MapOf[RoomConnID, chan<- interface{}]
 
 var roomMembers *xsync.MapOf[string, RoomMembers] = xsync.NewMapOf[string, RoomMembers]()
 
-type UserConns = *xsync.MapOf[chan<- interface{}, string]
+type UserConns = *xsync.MapOf[chan<- interface{}, UserConnInfo]
 
 var userConns *xsync.MapOf[uuid.UUID, UserConns] = xsync.NewMapOf[uuid.UUID, UserConns]()
 
@@ -30,8 +35,8 @@ func RegisterConnection(
 	if previousConnectionExisted {
 		oldWriteChannel <- WsInternalClientReconnect
 	}
-	connections, _ := userConns.LoadOrStore(connId.UserID, xsync.NewMapOf[chan<- interface{}, string]())
-	connections.Store(writeChannel, userToken)
+	connections, _ := userConns.LoadOrStore(connId.UserID, xsync.NewMapOf[chan<- interface{}, UserConnInfo]())
+	connections.Store(writeChannel, UserConnInfo{RoomID: roomId, Token: userToken})
 	if os.Getenv("CONCINNITY_DEBUG_CONNECTIONS") == "true" {
 		log.Printf("C: Client ID: %s | Room %s members: %v\n", connId.ClientID, roomId, members.Size())
 		log.Printf("C: Client ID: %s | User connections: %v\n", connId.ClientID, connections.Size())
