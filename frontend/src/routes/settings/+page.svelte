@@ -37,11 +37,16 @@
       multiple: false,
       types: [
         {
-          description: 'JPEG/PNG images',
+          description: 'Images',
           accept: {
             'image/png': ['.png'],
             'image/jpeg': ['.jpeg', '.jpg'],
             'image/jpg': ['.jpg', '.jpeg'],
+            'image/gif': ['.gif'],
+            'image/webp': ['.webp'],
+            'image/avif': ['.avif'],
+            'image/bmp': ['.bmp'],
+            'image/tiff': ['.tiff', '.tif'],
           },
         },
       ],
