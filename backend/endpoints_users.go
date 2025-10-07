@@ -18,6 +18,14 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
+
+	_ "golang.org/x/image/bmp"
+	_ "golang.org/x/image/tiff"
+	_ "golang.org/x/image/webp"
 )
 
 // Anecdotal samples:
@@ -103,7 +111,7 @@ func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 			// Decode the image
 			originalImage, _, err := image.Decode(avatarData)
 			if err != nil {
-				http.Error(w, errorJson("Failed to decode avatar image! Supported formats: PNG, JPEG"),
+				http.Error(w, errorJson("Failed to decode avatar image! Supported formats: PNG, JPEG, GIF, WebP, BMP, TIFF"),
 					http.StatusBadRequest)
 				return
 			}
