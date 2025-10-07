@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"image"
 	"image/png"
+	"io"
 	"log"
 	"net/http"
 	"net/smtp"
@@ -106,14 +107,25 @@ func SendHTMLEmail(email string, subject string, body string) error {
 	return smtp.SendMail(host, auth, from, []string{email}, msg)
 }
 
-func DecodeAVIF(data []byte) (image.Image, error) {
+func init() {
+	// For the future, animated AVIF = ????ftypavis
+	image.RegisterFormat("avif", "????ftypavif", DecodeAVIF, func(reader io.Reader) (image.Config, error) {
+		img, err := DecodeAVIF(reader)
+		if err != nil {
+			return image.Config{}, err
+		}
+		return image.Config{ColorModel: img.ColorModel(), Width: img.Bounds().Dx(), Height: img.Bounds().Dy()}, nil
+	})
+}
+
+func DecodeAVIF(reader io.Reader) (image.Image, error) {
 	// Create a temporary file containing the AVIF data
 	file, err := os.CreateTemp(os.TempDir(), "concinnity-*.avif")
 	if err != nil {
 		return nil, err
 	}
 	defer os.Remove(file.Name())
-	if _, err := file.Write(data); err != nil {
+	if _, err := io.Copy(file, reader); err != nil {
 		return nil, err
 	} else if err := file.Close(); err != nil {
 		return nil, err

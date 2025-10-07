@@ -63,7 +63,7 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("size") == "256" {
 		size := 256
 		// Decode original image
-		originalImage, err := DecodeAVIF(avatar.Data)
+		originalImage, err := DecodeAVIF(bytes.NewReader(avatar.Data))
 		if err != nil {
 			http.Error(w, errorJson("Failed to decode avatar image!"), http.StatusUnprocessableEntity)
 			return
@@ -111,7 +111,7 @@ func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 			// Decode the image
 			originalImage, _, err := image.Decode(avatarData)
 			if err != nil {
-				http.Error(w, errorJson("Failed to decode avatar image! Supported formats: PNG, JPEG, GIF, WebP, BMP, TIFF"),
+				http.Error(w, errorJson("Failed to decode avatar image! Supported formats: PNG, JPEG, GIF, WebP, AVIF, BMP, TIFF"),
 					http.StatusBadRequest)
 				return
 			}
