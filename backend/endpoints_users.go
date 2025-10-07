@@ -10,6 +10,8 @@ import (
 	"image"
 	"io"
 	"net/http"
+	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/disintegration/imaging"
@@ -23,19 +25,20 @@ import (
 // - File size wise, 85 sits midway between 80-90 for similar quality to 90
 const AVIF_QUALITY = 85
 
+var VALID_AVATAR_SIZES = []string{"", "256", "4096"}
+
 func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 	// This endpoint does not require authentication
 	if len(r.PathValue("hash")) != 64 {
 		http.Error(w, errorJson("Invalid avatar hash!"), http.StatusBadRequest)
 		return
-	} else if r.URL.Query().Get("size") != "" &&
-		r.URL.Query().Get("size") != "256" &&
-		r.URL.Query().Get("size") != "4096" {
+	} else if !slices.Contains(VALID_AVATAR_SIZES, r.URL.Query().Get("size")) {
 		http.Error(w, errorJson("Invalid size parameter! Supported sizes: 256, 4096"),
 			http.StatusBadRequest)
 		return
 	}
 	// Retrieve avatar from the database
+	// Assumptions: Every avatar is 1:1 aspect ratio, 4096x4096 max resolution, AVIF format
 	var avatar Avatar
 	err := findAvatarByHashStmt.QueryRow(r.PathValue("hash")).Scan(
 		&avatar.Hash, &avatar.Data, &avatar.CreatedAt)
@@ -48,7 +51,9 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	// If ?size=256, downscale the avatar, otherwise for 4096, return the original lossless image
 	data := avatar.Data
+	// if size, err := strconv.Atoi(r.URL.Query().Get("size")); err == nil && size < 4096 {
 	if r.URL.Query().Get("size") == "256" {
+		size := 256
 		// Decode original image
 		originalImage, err := DecodeAVIF(avatar.Data)
 		if err != nil {
@@ -57,8 +62,8 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 		// Resize image
 		resizedImage := originalImage
-		if originalImage.Bounds().Dx() > 256 || originalImage.Bounds().Dy() > 256 {
-			resizedImage = imaging.Resize(originalImage, 256, 256, imaging.Lanczos)
+		if originalImage.Bounds().Dx() > size {
+			resizedImage = imaging.Resize(originalImage, size, size, imaging.Lanczos)
 			// Encode image
 			data, err = EncodeAVIF(resizedImage, AVIF_QUALITY)
 			if err != nil {
@@ -72,6 +77,10 @@ func GetAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 	http.ServeContent(w, r, avatar.Hash+".avif", avatar.CreatedAt, bytes.NewReader(data))
 }
 
+const MAX_AVATAR_SIZE_MB = 16
+const MAX_AVATAR_SIZE = 1024 * 1024 * MAX_AVATAR_SIZE_MB
+const MAX_AVATAR_RES = 4096
+
 func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 	user, token := IsAuthenticatedHTTP(w, r)
 	if token == nil {
@@ -82,11 +91,13 @@ func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 	var hash string = ""
 	if r.Body != nil {
 		avatarData := new(bytes.Buffer)
-		if n, err := io.CopyN(avatarData, r.Body, 1024*1024*16); err != nil && !errors.Is(err, io.EOF) {
+		if n, err := io.CopyN(avatarData, r.Body, MAX_AVATAR_SIZE); err != nil && !errors.Is(err, io.EOF) {
 			handleInternalServerError(w, err)
 			return
-		} else if n == 1024*1024*16 { // 16 MB limit
-			http.Error(w, errorJson("Avatar data too large! Maximum size is 16 MB."), http.StatusBadRequest)
+		} else if n == MAX_AVATAR_SIZE {
+			http.Error(w,
+				errorJson("Avatar data too large! Maximum size is "+strconv.Itoa(MAX_AVATAR_SIZE_MB)+" MB."),
+				http.StatusBadRequest)
 			return
 		} else if n > 0 {
 			// Decode the image
@@ -99,9 +110,9 @@ func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 			// Crop the image
 			croppedImage := originalImage
 			if originalImage.Bounds().Dx() != originalImage.Bounds().Dy() {
-				res := min(originalImage.Bounds().Dx(), originalImage.Bounds().Dy(), 4096)
+				res := min(originalImage.Bounds().Dx(), originalImage.Bounds().Dy(), MAX_AVATAR_RES)
 				croppedImage = imaging.Fill(originalImage, res, res, imaging.Center, imaging.Lanczos)
-			} else if originalImage.Bounds().Dx() > 4096 || originalImage.Bounds().Dy() > 4096 {
+			} else if originalImage.Bounds().Dx() > MAX_AVATAR_RES {
 				croppedImage = imaging.Resize(originalImage, 4096, 4096, imaging.Lanczos)
 			}
 			// Encode the image
