@@ -105,7 +105,7 @@ func ChangeAvatarEndpoint(w http.ResponseWriter, r *http.Request) {
 				croppedImage = imaging.Resize(originalImage, 4096, 4096, imaging.Lanczos)
 			}
 			// Encode the image
-			data, err = EncodeAVIF(croppedImage, 100)
+			data, err = EncodeAVIF(croppedImage, AVIF_QUALITY)
 			if err != nil {
 				handleInternalServerError(w, err)
 				return
