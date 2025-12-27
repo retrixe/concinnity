@@ -47,7 +47,7 @@
   error={!!error}
   {disabled}
   type="password"
-  onkeypress={e => e.key === 'Enter' && onLogin() /* eslint-disable-line */}
+  onkeypress={e => e.key === 'Enter' && onLogin()}
 />
 {#if error === ''}
   <p class="center">Logged in successfully! You should be redirected shortly...</p>

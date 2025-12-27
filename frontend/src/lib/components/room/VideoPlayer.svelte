@@ -41,6 +41,7 @@
     name,
     playerState,
     onPlayerStateChange,
+    // eslint-disable-next-line @typescript-eslint/no-useless-default-assignment
     subtitles = $bindable(), // TODO: Remove the bindables and rework how this data flow works...
     fullscreenEl,
     onStop: handleStop,

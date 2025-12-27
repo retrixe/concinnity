@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { assets } from '$app/paths'
+  import { asset } from '$app/paths'
   import { page } from '$app/state'
   import type { Snippet } from 'svelte'
   import type { LayoutData } from './$types'
@@ -42,11 +42,11 @@
   <meta property="og:type" content="website" />
   <meta property="og:title" content={title} />
   <meta property="og:url" content={page.url.origin + page.url.pathname} />
-  <meta property="og:image" content={image ?? assets + '/favicon.png'} />
+  <meta property="og:image" content={image ?? asset('/favicon.png')} />
   <meta property="og:description" content={description} />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:card" content={imageLarge ? 'summary_large_image' : 'summary'} />
-  <meta name="twitter:image:src" content={image ?? assets + '/favicon.png'} />
+  <meta name="twitter:image:src" content={image ?? asset('/favicon.png')} />
   <meta name="twitter:description" content={description} />
   <meta name="Description" content={description} />
   {#if noIndex}

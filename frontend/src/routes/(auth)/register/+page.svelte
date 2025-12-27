@@ -66,7 +66,7 @@
   error={!!error}
   {disabled}
   type="password"
-  onkeypress={e => e.key === 'Enter' && onRegister() /* eslint-disable-line */}
+  onkeypress={e => e.key === 'Enter' && onRegister()}
 />
 {#if error === '' && !verified}
   <p class="center">Registered successfully! Check your e-mail to verify your account.</p>

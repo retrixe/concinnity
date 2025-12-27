@@ -1,3 +1,4 @@
+import { defineConfig, globalIgnores } from 'eslint/config'
 import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
 import sveltePlugin from 'eslint-plugin-svelte'
@@ -9,17 +10,8 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import globals from 'globals'
 import svelteConfig from './svelte.config.js'
 
-export default tseslint.config(
-  {
-    ignores: [
-      '.pnp.cjs',
-      '.pnp.loader.mjs',
-      '.yarn',
-      '.svelte-kit',
-      '.prettierrc.cjs',
-      '*.config.{mjs,js}',
-    ],
-  },
+export default defineConfig(
+  globalIgnores(['node_modules', '.yarn', '.svelte-kit', '.prettierrc.cjs', '*.config.{mjs,js}']),
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
@@ -77,6 +69,8 @@ export default tseslint.config(
       'n/no-unsupported-features/node-builtins': 'off',
       'n/no-unsupported-features/es-syntax': 'off',
       'import/no-unresolved': 'off',
+      // FIXME: Enable later
+      'svelte/no-navigation-without-resolve': 'off',
     },
   },
 )

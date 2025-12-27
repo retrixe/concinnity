@@ -61,7 +61,7 @@
     error={!!error}
     {disabled}
     type="password"
-  onkeypress={e => e.key === 'Enter' && onResetPassword() /* eslint-disable-line */}
+    onkeypress={e => e.key === 'Enter' && onResetPassword()}
   />
   {#if error === ''}
     <p class="center">

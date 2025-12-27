@@ -36,7 +36,7 @@
   {disabled}
   type="email"
   placeholder="e.g. aelia@retrixe.xyz"
-  onkeypress={e => e.key === 'Enter' && onForgotPassword() /* eslint-disable-line */}
+  onkeypress={e => e.key === 'Enter' && onForgotPassword()}
 />
 {#if error === ''}
   <p class="center">Sent reset link successfully! Keep an eye on your e-mail...</p>

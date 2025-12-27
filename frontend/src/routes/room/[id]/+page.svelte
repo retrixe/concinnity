@@ -28,7 +28,7 @@
   const systemUUID = '00000000-0000-0000-0000-000000000000'
   const timeout = 30000
 
-  const id = page.params.id
+  const id = page.params.id! // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
   let messages: ChatMessage[] = $state([])
   let playerState = $state(initialPlayerState)

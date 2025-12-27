@@ -24,12 +24,14 @@
     reconnecting,
     roomInfo,
     playerState,
-    subtitles = $bindable(),
+    subtitles = $bindable(), // eslint-disable-line @typescript-eslint/no-useless-default-assignment
     onPlayerStateChange,
-    transientVideo = $bindable(null),
+    transientVideo = $bindable(null), // eslint-disable-line @typescript-eslint/no-useless-default-assignment
     fullscreenEl,
   }: Props = $props()
 
+  // Ignoring this warning, but make sure this component is wrapped in a {#key roomInfo.target} block
+  // svelte-ignore state_referenced_locally
   let currentVideo = $state<File | string | null>(
     roomInfo.type === RoomType.RemoteFile
       ? roomInfo.target.substring(roomInfo.target.indexOf(':') + 1)
