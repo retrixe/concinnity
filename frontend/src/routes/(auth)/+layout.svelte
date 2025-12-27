@@ -1,13 +1,14 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   import { goto } from '$app/navigation'
+  import { resolve } from '$app/paths'
   import { page } from '$app/state'
   import { Box } from 'heliodor'
 
   const { children }: { children: Snippet } = $props()
   const { username } = $derived(page.data)
   $effect(() => {
-    if (username) goto('/').catch(console.error)
+    if (username) goto(resolve('/')).catch(console.error)
   })
 </script>
 

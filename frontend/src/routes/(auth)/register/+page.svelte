@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths'
   import ky from '$lib/api/ky'
   import { Button, TextInput } from 'heliodor'
 
@@ -72,7 +73,7 @@
   <p class="center">Registered successfully! Check your e-mail to verify your account.</p>
 {:else if error === ''}
   <p class="center">
-    Registered successfully! Go to the <a href="/login">login page</a> to get started.
+    Registered successfully! Go to the <a href={resolve('/login')}>login page</a> to get started.
   </p>
 {:else if !!error}
   <p class="center error">{error}</p>
@@ -80,5 +81,7 @@
 <div class="spacer"></div>
 <Button {disabled} onclick={onRegister}>Sign Up</Button>
 <div class="spacer"></div>
-<p class="center">Already have an account? <a href="/login">Log in</a></p>
-<p class="center">Forgot your password? <a href="/forgot-password">Reset via e-mail</a></p>
+<p class="center">Already have an account? <a href={resolve('/login')}>Log in</a></p>
+<p class="center">
+  Forgot your password? <a href={resolve('/forgot-password')}>Reset via e-mail</a>
+</p>

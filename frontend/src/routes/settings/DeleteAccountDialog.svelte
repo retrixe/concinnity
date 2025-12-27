@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto, invalidate } from '$app/navigation'
+  import { resolve } from '$app/paths'
   import ky from '$lib/api/ky'
   import { Button, Dialog, TextInput } from 'heliodor'
 
@@ -24,7 +25,7 @@
       error = ''
       // Don't bother cleaning up the timeout, what if the user closes the dialog?
       localStorage.removeItem('concinnity:token')
-      setTimeout(() => goto('/').then(() => invalidate('app:auth')), 3000)
+      setTimeout(() => goto(resolve('/')).then(() => invalidate('app:auth')), 3000)
     } catch (e: unknown) {
       error = e instanceof Error ? e.message : (e?.toString() ?? `Failed to delete account!`)
     }
@@ -63,7 +64,8 @@
     <p class="gutter-bottom error">{error}</p>
   {:else if error === ''}
     <p class="gutter-bottom">
-      Account deleted successfully! You will be redirected to the <a href="/">homepage</a> shortly...
+      Account deleted successfully! You will be redirected to the
+      <a href={resolve('/')}>homepage</a> shortly...
     </p>
   {/if}
   <Button class="delete-account-btn" {disabled} onclick={handleDeleteAccount}>Confirm</Button>

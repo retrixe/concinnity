@@ -1,5 +1,6 @@
 <script lang="ts">
   import { invalidate } from '$app/navigation'
+  import { resolve } from '$app/paths'
   import ky from '$lib/api/ky'
   import { Button, TextInput } from 'heliodor'
 
@@ -57,5 +58,7 @@
 <div class="spacer"></div>
 <Button {disabled} onclick={onLogin}>Login</Button>
 <div class="spacer"></div>
-<p class="center">Don't have an account? <a href="/register">Sign up</a></p>
-<p class="center">Forgot your password? <a href="/forgot-password">Reset via e-mail</a></p>
+<p class="center">Don't have an account? <a href={resolve('/register')}>Sign up</a></p>
+<p class="center">
+  Forgot your password? <a href={resolve('/forgot-password')}>Reset via e-mail</a>
+</p>

@@ -69,8 +69,6 @@ export default defineConfig(
       'n/no-unsupported-features/node-builtins': 'off',
       'n/no-unsupported-features/es-syntax': 'off',
       'import/no-unresolved': 'off',
-      // FIXME: Enable later
-      'svelte/no-navigation-without-resolve': 'off',
     },
   },
 )

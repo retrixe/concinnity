@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation'
+  import { resolve } from '$app/paths'
   import { page } from '$app/state'
   import ky from '$lib/api/ky'
   import { Button, LinearProgress, TextInput } from 'heliodor'
@@ -29,7 +30,7 @@
         .post(`api/reset-password`, { json: { token, password } })
         .json<{ success: boolean }>()
       error = success ? '' : 'Failed to reset password!'
-      redirectTimeoutId = setTimeout(() => goto('/login'), 5000)
+      redirectTimeoutId = setTimeout(() => goto(resolve('/login')), 5000)
     } catch (e: unknown) {
       error = e instanceof Error ? e.message : (e?.toString() ?? `Failed to reset password!`)
       disabled = false
@@ -66,7 +67,7 @@
   {#if error === ''}
     <p class="center">
       Reset password successfully! Redirecting you to the
-      <a href="/login">login page</a> in 5s...
+      <a href={resolve('/login')}>login page</a> in 5s...
     </p>
   {:else if !!error}
     <p class="center error">{error}</p>
@@ -83,4 +84,4 @@
   <hr class="spacer" />
 {/await}
 <div class="spacer"></div>
-<p class="center">Want to try logging in? <a href="/login">Log in</a></p>
+<p class="center">Want to try logging in? <a href={resolve('/login')}>Log in</a></p>

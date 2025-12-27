@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { FormEventHandler } from 'svelte/elements'
   import { goto } from '$app/navigation'
+  import { resolve } from '$app/paths'
   import { page } from '$app/state'
   import ky from '$lib/api/ky'
   import { Button, TextInput } from 'heliodor'
@@ -22,7 +23,7 @@
       const { id } = await ky
         .post('api/room', { json: roomId ? { id: roomId } : {} })
         .json<{ id: string }>()
-      goto(`/room/${id}`).catch(console.error)
+      goto(resolve(`/room/${id}`)).catch(console.error)
       status = null
     } catch (e) {
       status = e instanceof Error ? e.message : (e?.toString() ?? 'Failed to create room!')
@@ -49,7 +50,7 @@
       />
       <Button onclick={handleCreateRoom} disabled={status === ''}>Create room</Button>
     {:else}
-      <a href="/login">
+      <a href={resolve('/login')}>
         <Button>Login / Sign Up</Button>
       </a>
     {/if}

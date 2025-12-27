@@ -2,6 +2,7 @@
   import { Box, Button, IconButton, Toast } from 'heliodor'
   import { Check, Pencil, Trash, User, X, XCircle } from 'phosphor-svelte'
   import { goto, invalidate } from '$app/navigation'
+  import { resolve } from '$app/paths'
   import { page } from '$app/state'
   import { PUBLIC_BACKEND_URL } from '$env/static/public'
   import { openFileOrFiles } from '$lib/utils/openFile'
@@ -15,7 +16,7 @@
   const { userId, username, email, avatar } = $derived(page.data)
 
   $effect(() => {
-    if (!username) goto('/login', { replaceState: true }).catch(console.error)
+    if (!username) goto(resolve('/login'), { replaceState: true }).catch(console.error)
   })
 
   let currentDialog:

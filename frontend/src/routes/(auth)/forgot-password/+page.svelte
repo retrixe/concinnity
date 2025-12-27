@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths'
   import ky from '$lib/api/ky'
   import { Button, TextInput } from 'heliodor'
 
@@ -46,4 +47,4 @@
 <div class="spacer"></div>
 <Button {disabled} onclick={onForgotPassword}>Send E-mail</Button>
 <div class="spacer"></div>
-<p class="center">Want to try logging in? <a href="/login">Log in</a></p>
+<p class="center">Want to try logging in? <a href={resolve('/login')}>Log in</a></p>
