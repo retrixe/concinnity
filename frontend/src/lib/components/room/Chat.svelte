@@ -103,7 +103,11 @@
       messagesEl.scrollTop = messagesEl.scrollHeight - messagesEl.clientHeight
   })
 
-  const remarkable = new Remarkable('commonmark', { linkTarget: '_blank' }).use(linkify as Plugin)
+  const remarkable = new Remarkable('commonmark', {
+    html: false,
+    xhtmlOut: false,
+    linkTarget: '_blank',
+  }).use(linkify as Plugin)
   remarkable.inline.ruler.enable('del')
 </script>
 
