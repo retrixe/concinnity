@@ -215,13 +215,28 @@
   .message-content {
     margin-top: 0.5rem;
     &,
-    :global(blockquote) {
+    :global(blockquote),
+    :global(ol),
+    :global(ul) {
+      // TODO: Instead of this, fix the margins and paddings for the elements
       display: flex;
       flex-direction: column;
     }
+    :global(ol),
+    :global(ul) {
+      gap: 0.25rem;
+      padding-left: 2rem;
+    }
     :global(blockquote) {
+      min-height: 1rem; // Workaround for empty blockquotes
       padding-left: 1rem;
       border-left: 4px solid gray;
+    }
+    :global(pre) {
+      background-color: var(--divider-color);
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      overflow-x: auto;
     }
   }
 </style>
