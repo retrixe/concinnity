@@ -45,6 +45,12 @@ export default defineConfig(
     },
     rules: {
       '@typescript-eslint/no-confusing-void-expression': 'off',
+      '@typescript-eslint/no-deprecated': [
+        'error',
+        {
+          allow: [{ from: 'file', name: 'assets', path: '$app/paths' }],
+        },
+      ],
       '@typescript-eslint/no-import-type-side-effects': ['error'],
       '@typescript-eslint/consistent-type-imports': [
         'error',

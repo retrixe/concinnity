@@ -1,10 +1,10 @@
-import { asset } from '$app/paths'
+import { assets } from '$app/paths'
 import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = () => {
   return {
     title: 'Reset Password - concinnity',
-    image: asset('/favicon.png'),
+    image: assets + '/favicon.png',
     description: 'Reset your concinnity account password.',
   }
 }

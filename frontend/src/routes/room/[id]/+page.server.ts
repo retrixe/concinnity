@@ -1,10 +1,10 @@
-import { asset } from '$app/paths'
+import { assets } from '$app/paths'
 import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = () => {
   return {
     title: 'Watch Together Room - concinnity',
-    image: asset('/favicon.png'),
+    image: assets + '/favicon.png',
     description: "You're invited to watch a video together with your friends on concinnity!",
   }
 }
