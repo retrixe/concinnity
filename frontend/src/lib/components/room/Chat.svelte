@@ -116,7 +116,17 @@
     <div class="spacer"></div>
     {#each messageGroups as messageGroup, i (i)}
       {#if messageGroup.userId === systemUUID}
-        <h5 style:text-align="center">
+        <h5 class="system-message">
+          {#if getAvatarUrl(messageGroup.messages[0].split(' ')[0])}
+            <img
+              src={getAvatarUrl(messageGroup.messages[0].split(' ')[0])}
+              alt={`Avatar of ${getUsername(messageGroup.messages[0].split(' ')[0])}`}
+              height="16"
+              width="16"
+            />
+          {:else}
+            <UserIcon size={16} />
+          {/if}
           {replaceLeadingUUID(messageGroup.messages[0])} — {parseTimestamp(messageGroup.timestamp)}
         </h5>
       {:else}
@@ -190,8 +200,22 @@
     white-space: pre-line;
     overflow-y: scroll;
     margin-bottom: 1rem;
-    > h5 {
-      margin-top: 1rem;
+  }
+
+  .system-message {
+    margin-top: 1rem;
+    // This property and below align the system message content nicely with the avatar/icon
+    display: flex;
+    align-items: center;
+    justify-content: center; // replaced text-align: center;
+    gap: 0.5rem;
+    > img {
+      border-radius: 50%;
+    }
+    > img,
+    > :global(svg) {
+      min-height: 1em;
+      min-width: 1em;
     }
   }
 
