@@ -25,7 +25,11 @@
       error = ''
       // Don't bother cleaning up the timeout, what if the user closes the dialog?
       localStorage.removeItem('concinnity:token')
-      setTimeout(() => goto(resolve('/')).then(() => invalidate('app:auth')), 3000)
+      setTimeout(() => {
+        goto(resolve('/'))
+          .then(() => invalidate('app:auth'))
+          .catch(console.error)
+      }, 3000)
     } catch (e: unknown) {
       error = e instanceof Error ? e.message : (e?.toString() ?? `Failed to delete account!`)
     }

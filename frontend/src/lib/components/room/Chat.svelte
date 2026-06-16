@@ -16,7 +16,7 @@
   const systemUUID = '00000000-0000-0000-0000-000000000000'
 
   interface Props {
-    typingIndicators: SvelteMap<string, [number, number]>
+    typingIndicators: SvelteMap<string, [number, ReturnType<typeof setTimeout>]>
     disabled?: boolean
     messages: ChatMessage[]
     onSendMessage: (message: string) => void

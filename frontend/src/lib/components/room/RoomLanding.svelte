@@ -22,7 +22,7 @@
   }
 
   const id = page.params.id
-  // eslint-disable-next-line @typescript-eslint/no-useless-default-assignment
+  // eslint-disable-next-line @typescript-eslint/no-useless-default-assignment,no-useless-assignment
   let { error, connecting, reconnecting, transientVideo = $bindable(null) }: Props = $props()
 
   let menuOpen = $state(false)

@@ -34,7 +34,7 @@
   let playerState = $state(initialPlayerState)
   let roomInfo: RoomInfo | null = $state(null)
   let subtitles: Record<string, string | null> = $state({})
-  let typingIndicators = new SvelteMap<string, [number, number]>()
+  let typingIndicators = new SvelteMap<string, [number, ReturnType<typeof setTimeout>]>()
 
   let containerEl = $state(null) as Element | null
   let visibilityState = $state('visible') as DocumentVisibilityState
@@ -183,14 +183,16 @@
           pongDeadline = Date.now() + timeout // Reset pong deadline upon connect
         } catch (e: unknown) {
           if (e instanceof Error) wsError = e.message
-          if (reconnectAttempts === 0) reconnectInterval = setInterval(reconnect, 1000)
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          if (reconnectAttempts === 0) reconnectInterval = window.setInterval(reconnect, 1000)
           reconnectAttempts++
           // Exponential backoff 5 * (2^n-1), max 30 seconds
           reconnecting = Math.min(30, 5 * Math.pow(2, reconnectAttempts - 1))
         }
       }
       if (wsInitialConnect) {
-        reconnectInterval = setInterval(reconnect, 1000)
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        reconnectInterval = window.setInterval(reconnect, 1000)
       } else {
         reconnect() // eslint-disable-line @typescript-eslint/no-floating-promises
       }
@@ -205,7 +207,7 @@
     ws?.send(JSON.stringify({ type: 'player_state', data: newState }))
   }
 
-  let typingTimeout: number | null = null
+  let typingTimeout: ReturnType<typeof setTimeout> | null = null
   const onTyping = () => {
     if (typeof typingTimeout === 'number') return // Return if the function is throttled
     typingTimeout = setTimeout(() => (typingTimeout = null), 3000) // One typing msg every 3 seconds

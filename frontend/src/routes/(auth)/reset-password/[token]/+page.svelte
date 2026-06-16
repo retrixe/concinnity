@@ -17,7 +17,7 @@
   const tokenInfoRequest = $derived(
     ky.get(`api/forgot-password/${token}`).json<{ username: string }>(),
   )
-  let redirectTimeoutId: number | undefined
+  let redirectTimeoutId: ReturnType<typeof setTimeout> | undefined
   onDestroy(() => clearTimeout(redirectTimeoutId))
 
   async function onResetPassword() {
@@ -30,7 +30,9 @@
         .post(`api/reset-password`, { json: { token, password } })
         .json<{ success: boolean }>()
       error = success ? '' : 'Failed to reset password!'
-      redirectTimeoutId = setTimeout(() => goto(resolve('/login')), 5000)
+      redirectTimeoutId = setTimeout(() => {
+        goto(resolve('/login')).catch(console.error)
+      }, 5000)
     } catch (e: unknown) {
       error = e instanceof Error ? e.message : (e?.toString() ?? `Failed to reset password!`)
       disabled = false

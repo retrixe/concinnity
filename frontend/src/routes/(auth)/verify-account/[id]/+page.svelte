@@ -9,7 +9,9 @@
     try {
       // await ky.post(`api/register`, { json: register }).json<{ token: string; username: string }>()
       error = ''
-      const timeout = setTimeout(() => goto(resolve('/login')), 5000)
+      const timeout = setTimeout(() => {
+        goto(resolve('/login')).catch(console.error)
+      }, 5000)
       return () => clearTimeout(timeout)
     } catch (e: unknown) {
       error = e instanceof Error ? e.message : (e?.toString() ?? `Failed to reset password!`)
