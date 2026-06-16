@@ -142,7 +142,10 @@
             <UserIcon size={32} />
           {/if}
           <div>
-            <h4>{getUsername(messageGroup.userId)} — {parseTimestamp(messageGroup.timestamp)}</h4>
+            <div class="message-header">
+              <h4 class="message-header-username">{getUsername(messageGroup.userId)}</h4>
+              <span class="message-header-timestamp">{parseTimestamp(messageGroup.timestamp)}</span>
+            </div>
             {#each messageGroup.messages as message, i (i)}
               <div class="message-content">
                 <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -234,6 +237,23 @@
     > div {
       min-width: 0;
     }
+  }
+
+  .message-header {
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+  }
+
+  .message-header-username {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .message-header-timestamp {
+    font-size: 0.8rem;
+    flex-shrink: 0;
   }
 
   .message-content {
